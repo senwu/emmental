@@ -7,8 +7,6 @@ dev:
 
 dev_extra:
 	pip install -r requirements-dev.txt
-	pip install -e .[spacy_ja]
-	pip install -e .[spacy_zh]
 	pre-commit install
 
 test: dev check docs
@@ -28,7 +26,7 @@ docs:
 
 clean:
 	pip uninstall -y fonduer
-	rm -rf src/fonduer.egg-info
+	rm -rf src/emmental.egg-info
 	rm -rf _build/
 
 .PHONY: dev dev_extra test clean check docs

@@ -4,9 +4,9 @@ from os.path import basename, splitext
 
 from setuptools import find_packages, setup
 
-exec(open("src/multtm/_version.py").read())
+exec(open("src/emmental/_version.py").read())
 setup(
-    name="multtm",
+    name="emmental",
     version=__version__,
     description="A generic deep learning framework for multi-task learning.",
     long_description=open("README.rst").read(),
@@ -22,9 +22,9 @@ setup(
         "torch>=1.0, <2.0",
         "tqdm>=4.26.0, <5.0.0",
     ],
-    keywords=["multim", "multi task learning", "deep learing"],
+    keywords=["emmental", "multi task learning", "deep learing"],
     include_package_data=True,
-    url="https://github.com/SenWu/MultTM",
+    url="https://github.com/SenWu/emmental",
     classifiers=[  # https://pypi.python.org/pypi?:action=list_classifiers
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
@@ -35,8 +35,8 @@ setup(
         "Programming Language :: Python :: 3 :: Only",
     ],
     project_urls={
-        "Tracker": "https://github.com/SenWu/MultTM/issues",
-        "Source": "https://github.com/SenWu/MultTM",
+        "Tracker": "https://github.com/SenWu/emmental/issues",
+        "Source": "https://github.com/SenWu/emmental",
     },
     python_requires=">=3.6",
     author="Sen Wu",
