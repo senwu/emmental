@@ -1,3 +1,6 @@
+import logging
+import os
+
 import torch
 import torch.nn as nn
 
@@ -5,13 +8,15 @@ import torch.nn as nn
 class EmmentalModel(nn.Module):
     """A class for multi-task in Emmental MTL model.
 
-    :param tasks: a list of Task that trains jointly
-    :type tasks: list of Task project
     :param name: Name of the model
     :type name: str
+    :param tasks: a list of Task that trains jointly
+    :type tasks: list of Task project
     """
 
-    def __init__(self, tasks, name=None):
+    def __init__(self, name=None, tasks=None):
+        self.logger = logging.getLogger(__name__)
+
         super().__init__()
         self.name = name if name is not None else type(self).__name__
 
@@ -21,7 +26,9 @@ class EmmentalModel(nn.Module):
         self.loss_funcs = dict()
         self.output_funcs = dict()
 
-        self._build_network(tasks)
+        # Build network with given tasks
+        if tasks is not None:
+            self._build_network(tasks)
 
     def _build_network(self, tasks):
         """Build the MTL network using all tasks"""
@@ -74,6 +81,15 @@ class EmmentalModel(nn.Module):
         return f"{cls_name}(name={self.name})"
 
     def forward(self, X, task_names):
+        """Calculate the loss given the features and labels
+
+        :param X:
+        :type X:
+        :param Y_dict:
+        :type Y_dict:
+        :param task_names:
+        :type task_names:
+        """
         immediate_ouput_dict = dict()
 
         # Call forward for each task
@@ -95,9 +111,108 @@ class EmmentalModel(nn.Module):
             immediate_ouput_dict[task_name] = immediate_ouput
         return immediate_ouput_dict
 
-    def calculate_loss(self, X, Ys, task_names):
-        pass
+    def calculate_losses(self, X, Y_dict, task_names):
+        """Calculate the loss given the features and labels
+
+        :param X:
+        :type X:
+        :param Y_dict:
+        :type Y_dict:
+        :param task_names:
+        :type task_names:
+        """
+        loss_dict = dict()
+
+        immediate_ouput_dict = self.forward(X, task_names)
+
+        # Calculate loss for each task
+        for task_name in task_names:
+            loss_dict[task_name] = self.loss_funcs[task_name](
+                immediate_ouput_dict[task_name], Y_dict[task_name]
+            )
+
+        return loss_dict
 
     @torch.no_grad()
-    def calculate_probs(self, X, task_name):
-        pass
+    def calculate_preds(self, X, task_names):
+        """Calculate the loss given the features and labels
+
+        :param X:
+        :type X:
+        :param Y_dict:
+        :type Y_dict:
+        :param task_names:
+        :type task_names:
+        """
+        pred_dict = dict()
+
+        immediate_ouput_dict = self.forward(X, task_names)
+
+        # Calculate prediction for each task
+        for task_name in task_names:
+            pred_dict[task_name] = self.output_funcs[task_name](
+                immediate_ouput_dict[task_name]
+            )
+
+        return pred_dict
+
+    def save(self, model_file, save_dir, verbose=True):
+        """Save the current model
+        :param model_file: Saved model file name.
+        :type model_file: str
+        :param save_dir: Saved model directory.
+        :type save_dir: str
+        :param verbose: Print log or not
+        :type verbose: bool
+        """
+
+        # Check existence of model saving directory and create if does not exist.
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        params = {
+            "name": self.name,
+            "module_pool": self.module_pool,
+            "task_flows": self.task_flows,
+            "loss_funcs": self.loss_funcs,
+            "output_funcs": self.output_funcs,
+        }
+
+        try:
+            torch.save(params, f"{save_dir}/{model_file}")
+        except BaseException:
+            self.logger.warning("Saving failed... continuing anyway.")
+
+        if verbose:
+            self.logger.info(f"[{self.name}] Model saved as {model_file} in {save_dir}")
+
+    def load(self, model_file, save_dir, verbose=True):
+        """Load model from file and rebuild the model.
+        :param model_file: Saved model file name.
+        :type model_file: str
+        :param save_dir: Saved model directory.
+        :type save_dir: str
+        :param verbose: Print log or not
+        :type verbose: bool
+        """
+
+        if not os.path.exists(save_dir):
+            self.logger.error("Loading failed... Directory does not exist.")
+
+        try:
+            checkpoint = torch.load(f"{save_dir}/{model_file}")
+        except BaseException:
+            self.logger.error(
+                f"Loading failed... Cannot load model from {save_dir}/{model_file}"
+            )
+
+        self.name = checkpoint["name"]
+        self.module_pool = checkpoint["module_pool"]
+        self.task_flows = checkpoint["task_flows"]
+        self.loss_funcs = checkpoint["loss_funcs"]
+        self.output_funcs = checkpoint["output_funcs"]
+
+        if verbose:
+            self.logger.info(
+                f"[{self.name}] Model loaded as {model_file} in {save_dir}"
+            )
