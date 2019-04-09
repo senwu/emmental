@@ -1,7 +1,8 @@
 from collections import defaultdict
 
-from emmental.utils.utils import list_to_tensor
 from torch.utils.data import DataLoader, Dataset
+
+from emmental.utils.utils import list_to_tensor
 
 # TODO: add different batch size support for different label
 

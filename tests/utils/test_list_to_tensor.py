@@ -2,6 +2,7 @@
 import logging
 
 import torch
+
 from emmental.utils.utils import list_to_tensor
 
 

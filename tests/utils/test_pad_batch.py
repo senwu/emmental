@@ -2,6 +2,7 @@
 import logging
 
 import torch
+
 from emmental.utils.utils import pad_batch
 
 
