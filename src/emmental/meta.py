@@ -33,7 +33,7 @@ def init_logging(
             format=format,
             level=level,
             handlers=[
-                logging.FileHandler(os.path.join(log_path, "fonduer.log")),
+                logging.FileHandler(os.path.join(log_path, "emmental.log")),
                 logging.StreamHandler(),
             ],
         )
@@ -44,7 +44,7 @@ def init_logging(
     else:
         logger.info(
             f"Logging was already initialized to use {Meta.log_path}.  "
-            "To configure logging manually, call fonduer.init_logging before "
+            "To configure logging manually, call emmental.init_logging before "
             "initialiting Meta."
         )
 

@@ -1,0 +1,64 @@
+language: generic
+dist: xenial
+cache: pip
+
+
+matrix:
+  include:
+  - os: linux
+    env:
+      - PYTHON=3.6
+  - os: linux
+    env:
+      - PYTHON=3.7
+  - os: osx
+    env:
+      - PYTHON=3.6
+  - os: osx
+    env:
+      - PYTHON=3.7
+  fast_finish: true
+
+notifications:
+  email: false
+
+before_install:
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then OS=Linux-x86_64; else OS=MacOSX-x86_64; fi
+- wget -O miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-$OS.sh
+- bash miniconda.sh -b -p $HOME/miniconda
+- export PATH="$HOME/miniconda/bin:$PATH"
+- conda config --set always_yes yes --set changeps1 no
+- conda config --add channels conda-forge
+- conda update -q conda
+- conda install -q conda-build
+- if [ -n "$PYTHON" ]; then conda create -q -n test-environment python=${PYTHON}; fi
+- source activate test-environment
+- conda install -q pip
+
+# Check versions
+- python --version
+- pip --version
+
+# Install PyTorch for Linux with no CUDA support
+- |
+  if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+    if [ "${PYTHON}" = "3.6" ]; then
+      pip install https://download.pytorch.org/whl/cpu/torch-1.0.1.post2-cp36-cp36m-linux_x86_64.whl
+    fi
+    if [ "${PYTHON}" = "3.7" ]; then
+      pip install https://download.pytorch.org/whl/cpu/torch-1.0.1.post2-cp37-cp37m-linux_x86_64.whl
+    fi
+  fi
+
+install:
+# Install fonduer dev deps and check code style
+- make -s dev
+- make check
+- make docs
+- pip install -q coveralls
+
+script:
+- travis_wait 50 coverage run --source=fonduer -m pytest tests
+
+after_success:
+- coveralls

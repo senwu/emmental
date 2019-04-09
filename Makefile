@@ -1,12 +1,6 @@
-TESTDATA=tests/input
-
 dev:
 	pip install -r requirements-dev.txt
 	pip install -e .
-	pre-commit install
-
-dev_extra:
-	pip install -r requirements-dev.txt
 	pre-commit install
 
 test: dev check docs
@@ -29,4 +23,4 @@ clean:
 	rm -rf src/emmental.egg-info
 	rm -rf _build/
 
-.PHONY: dev dev_extra test clean check docs
+.PHONY: dev test clean check docs
