@@ -4,8 +4,6 @@ from torch.utils.data import DataLoader, Dataset
 
 from emmental.utils.utils import list_to_tensor
 
-# TODO: add different batch size support for different label
-
 
 class EmmentalDataset(Dataset):
     """An advanced dataset class to handle that the input data contains mulitple
