@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 def init_logging(
     log_dir=tempfile.gettempdir(),
+    log_name="emmental.log",
     format="[%(asctime)s][%(levelname)s] %(name)s:%(lineno)s - %(message)s",
     level=logging.INFO,
 ):
@@ -23,8 +24,9 @@ def init_logging(
 
     if not Meta.log_path:
         # Generate a new directory using the log_dir, if it doesn't exist
-        dt = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        log_path = os.path.join(log_dir, dt)
+        date = datetime.now().strftime("%Y_%m_%d")
+        time = datetime.now().strftime("%H_%M_%S")
+        log_path = os.path.join(log_dir, date, time)
         if not os.path.exists(log_path):
             os.makedirs(log_path)
 
@@ -33,7 +35,7 @@ def init_logging(
             format=format,
             level=level,
             handlers=[
-                logging.FileHandler(os.path.join(log_path, "emmental.log")),
+                logging.FileHandler(os.path.join(log_path, log_name)),
                 logging.StreamHandler(),
             ],
         )
