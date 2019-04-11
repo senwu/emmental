@@ -6,6 +6,9 @@ class Scheduler(ABC):
     training.
     """
 
+    def __init__(self, model, dataloaders):
+        pass
+
     @abstractmethod
     def get_batches(self, dataloaders):
         """Generate batch generator from all dataloaders in designed order for

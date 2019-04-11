@@ -37,7 +37,7 @@ def load_config(path=os.getcwd(), filename="emmental-config.yaml"):
         os.path.dirname(os.path.realpath(__file__)), "emmental-default-config.yaml"
     )
     with open(default_config_path, "r") as f:
-        config = yaml.safe_load(f)
+        config = yaml.load(f)
     logger.debug(f"Loading Emmental default config from {default_config_path}.")
 
     # Update the default setting with given config
@@ -45,7 +45,6 @@ def load_config(path=os.getcwd(), filename="emmental-config.yaml"):
     current_dir = path
     while current_dir and tries < MAX_CONFIG_SEARCH_DEPTH:
         potential_path = os.path.join(current_dir, filename)
-        print(potential_path, os.path.exists(potential_path))
         if os.path.exists(potential_path):
             with open(potential_path, "r") as f:
                 config = _merge(config, yaml.safe_load(f))

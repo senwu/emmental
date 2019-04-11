@@ -111,7 +111,7 @@ class EmmentalModel(nn.Module):
             immediate_ouput_dict[task_name] = immediate_ouput
         return immediate_ouput_dict
 
-    def calculate_losses(self, X, Y_dict, task_names):
+    def calculate_losses(self, X, Y_dict, task_names, label_names):
         """Calculate the loss given the features and labels
 
         :param X:
@@ -125,10 +125,13 @@ class EmmentalModel(nn.Module):
 
         immediate_ouput_dict = self.forward(X, task_names)
 
+        # print("immediate_ouput_dict", immediate_ouput_dict)
         # Calculate loss for each task
-        for task_name in task_names:
+        for task_name, label_name in zip(task_names, label_names):
+            # print(immediate_ouput_dict[task_name], Y_dict[label_name].size())
+
             loss_dict[task_name] = self.loss_funcs[task_name](
-                immediate_ouput_dict[task_name], Y_dict[task_name]
+                immediate_ouput_dict[task_name], Y_dict[label_name]
             )
 
         return loss_dict

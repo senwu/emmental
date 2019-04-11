@@ -6,6 +6,9 @@ class SequentialScheduler(Scheduler):
     training.
     """
 
+    def __init__(self, model, dataloaders):
+        super().__init__(model, dataloaders)
+
     def get_batches(self, dataloaders):
         """Generate batch generator from all dataloaders in sequential order for
         one epoch.
@@ -16,12 +19,13 @@ class SequentialScheduler(Scheduler):
         :rtype: genertor
         """
 
-        task_names = [dataloader.name for dataloader in dataloaders]
+        task_names = [dataloader.task_name for dataloader in dataloaders]
+        label_names = [dataloader.label_name for dataloader in dataloaders]
         batch_counts = [len(dataloader) for dataloader in dataloaders]
         data_loaders = [iter(dataloader) for dataloader in dataloaders]
 
-        for task_name, batch_count, data_loader in zip(
-            task_names, batch_counts, data_loaders
+        for task_name, label_name, batch_count, data_loader in zip(
+            task_names, label_names, batch_counts, data_loaders
         ):
-            for batch in batch_count:
-                yield task_name, next(data_loader)
+            for batch in range(batch_count):
+                yield task_name, label_name, next(data_loader)
