@@ -26,5 +26,10 @@ learner_config:
 evaluation_config:
 
 logging_config:
-    log_unit: epoch
-    log_freq: 1.0
+    counter_unit: epoch # [epoch, batch]
+    evaluation_freq: 1.0
+    checkpointing_freq: 2
+
+writer_config:
+    writer: tensorboard # [json, tensorboard]
+    verbose: True

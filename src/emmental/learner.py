@@ -4,6 +4,7 @@ import torch.optim as optim
 
 from emmental.schedulers.sequential_scheduler import SequentialScheduler
 from emmental.utils.config import _merge
+from emmental.utils.logging import Counter, LogWriter, TensorBoardWriter
 
 try:
     from IPython import get_ipython
@@ -37,6 +38,22 @@ class EmmentalLearner(object):
             torch.cuda.manual_seed(seed)
             torch.cuda.manual_seed_all(seed)
 
+    def _set_writer(self):
+        writer_config = self.config["writer_config"]
+        opt = writer_config["writer"]
+
+        if opt is None:
+            self.writer = None
+        elif opt == "json":
+            self.writer = LogWriter()
+        elif opt == "tensorboard":
+            self.writer = TensorBoardWriter()
+        else:
+            raise ValueError(f"Unrecognized writer option '{opt}'")
+
+    def _set_counter(self):
+        self.counter = Counter(self.config, self.n_batches_per_epoch)
+
     def _set_optimizer(self, model):
         # TODO: add more optimizer support
         optimizer_config = self.config["learner_config"]["optimizer_config"]
@@ -59,7 +76,7 @@ class EmmentalLearner(object):
                 weight_decay=optimizer_config["l2"],
             )
         else:
-            raise ValueError(f"Did not recognize optimizer option '{opt}'")
+            raise ValueError(f"Unrecognized optimizer option '{opt}'")
 
         self.optimizer = optimizer
 
@@ -83,7 +100,7 @@ class EmmentalLearner(object):
                 self.optimizer, **lr_scheduler_config["multi_step_config"]
             )
         else:
-            raise ValueError(f"Did not recognize lr scheduler option '{opt}'")
+            raise ValueError(f"Unrecognized lr scheduler option '{opt}'")
 
         self.lr_scheduler = lr_scheduler
 
@@ -100,7 +117,25 @@ class EmmentalLearner(object):
         if opt == "sequential":
             self.task_scheduler = SequentialScheduler(model, dataloaders)
         else:
-            raise ValueError(f"Did not recognize task scheduler option '{opt}'")
+            raise ValueError(f"Unrecognized task scheduler option '{opt}'")
+
+    def _evaluating_checkpointing(self, model, dataloaders):
+
+        model.eval()
+        metric_dict = dict()
+
+        metric_dict.update(self.calculate_metrics(model, dataloaders, split="train"))
+
+        metric_dict.update(
+            self.model.calculate_metrics(model, dataloaders, split="train")
+        )
+        # self.logger.update()
+
+        # if self.logger.trigger_evaluation():
+
+        # if self.logger.trigger_checkpointing():
+
+        return metric_dict
 
     def learn(self, model, dataloaders, config={}):
         self.config = _merge(self.config, config)
@@ -108,24 +143,23 @@ class EmmentalLearner(object):
         train_dataloaders = [
             dataloader for dataloader in dataloaders if dataloader.split == "train"
         ]
-        # valid_dataloaders = [
-        #     dataloader for dataloader in dataloaders if dataloader.split == "valid"
-        # ]
 
+        self.n_batches_per_epoch = sum(
+            [len(dataloader) for dataloader in train_dataloaders]
+        )
+
+        self._set_writer()
+        self._set_counter()
         self._set_optimizer(model)
         self._set_lr_scheduler(model)
         self._set_task_scheduler(model, dataloaders)
 
-        self.n_batchs_per_epoch = sum(
-            [len(dataloader) for dataloader in train_dataloaders]
-        )
-
         model.train()
-        print(self.n_batchs_per_epoch)
+        print(self.n_batches_per_epoch)
         for epoch in range(self.config["learner_config"]["n_epochs"]):
             batches = tqdm(
                 enumerate(self.task_scheduler.get_batches(train_dataloaders)),
-                total=self.n_batchs_per_epoch,
+                total=self.n_batches_per_epoch,
                 disable=(
                     not (
                         self.config["learner_config"]["progress_bar"]
@@ -137,21 +171,21 @@ class EmmentalLearner(object):
             #     print(i)
             for batch_num, (task_name, label_name, batch) in batches:
 
-                total_batch_num = epoch * self.n_batchs_per_epoch + batch_num
+                total_batch_num = epoch * self.n_batches_per_epoch + batch_num
                 # print(batch_num)
                 X, Ys = batch
                 # print(X, Ys)
                 # Set gradients of all model parameters to zero
                 self.optimizer.zero_grad()
 
-                # Perform forward pass and calcualte the loss
-                loss_dict = model.calculate_losses(
+                # Perform forward pass and calcualte the loss and count
+                loss_dict, count_dict = model.calculate_losses(
                     X["data"], Ys, [task_name], [label_name]
                 )
 
                 # Calculate the average loss
                 loss = sum(loss_dict.values())
-                print(task_name, loss.item())
+                # print(task_name, loss.item())
                 # Perform backward pass to calculate gradients
                 loss.backward()
 
@@ -167,6 +201,8 @@ class EmmentalLearner(object):
 
                 # Update lr using lr scheduler
                 self._update_lr_scheduler(model, total_batch_num)
+
+                # metric_dict = self._evaluate_checkpoint(model, dataloaders)
 
                 # batches.set_postfix(loss_dict)
         # pass

@@ -54,3 +54,14 @@ def pad_batch(batch, max_len=0, pad_value=0, left_padded=False):
     )
 
     return padded_batch, mask_batch
+
+
+def prob_to_pred(probs):
+    """Identify the class with the maximum probability (add 1 since we assume label
+    class starts from 1)
+
+    :param probs: probabilities
+    :type probs: np.array
+    """
+
+    return np.argmax(probs, axis=-1) + 1

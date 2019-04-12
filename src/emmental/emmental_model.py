@@ -1,8 +1,11 @@
 import logging
 import os
+from collections import defaultdict
 
 import torch
 import torch.nn as nn
+
+from emmental.utils.utils import prob_to_pred
 
 
 class EmmentalModel(nn.Module):
@@ -121,7 +124,9 @@ class EmmentalModel(nn.Module):
         :param task_names:
         :type task_names:
         """
+
         loss_dict = dict()
+        count_dict = dict()
 
         immediate_ouput_dict = self.forward(X, task_names)
 
@@ -134,16 +139,16 @@ class EmmentalModel(nn.Module):
                 immediate_ouput_dict[task_name], Y_dict[label_name]
             )
 
-        return loss_dict
+            count_dict[task_name] = Y_dict[label_name].size(0)
+
+        return loss_dict, count_dict
 
     @torch.no_grad()
-    def calculate_preds(self, X, task_names):
-        """Calculate the loss given the features and labels
+    def calculate_probs(self, X, task_names):
+        """Calculate the probs given the features
 
         :param X:
         :type X:
-        :param Y_dict:
-        :type Y_dict:
         :param task_names:
         :type task_names:
         """
@@ -153,11 +158,45 @@ class EmmentalModel(nn.Module):
 
         # Calculate prediction for each task
         for task_name in task_names:
-            pred_dict[task_name] = self.output_funcs[task_name](
-                immediate_ouput_dict[task_name]
+            pred_dict[task_name] = (
+                self.output_funcs[task_name](immediate_ouput_dict[task_name])
+                .cpu()
+                .numpy()
             )
 
         return pred_dict
+
+    @torch.no_grad()
+    def predict(self, dataloader, retrun_preds=False):
+
+        Y_dict = defaultdict(list)
+        Y_prob_dict = defaultdict(list)
+
+        for batch_num, (X_batch_dict, Y_batch_dict) in enumerate(dataloader):
+            Y_batch_prob_dict = self.calculate_probs(
+                X_batch_dict["data"], [dataloader.task_name]
+            )
+            for task_name, Y_batch_prob in Y_batch_prob_dict.items():
+                Y_prob_dict[task_name].extend(Y_batch_prob)
+            Y_dict[task_name].extend(Y_batch_dict[dataloader.label_name].cpu().numpy())
+
+        if retrun_preds:
+            Y_pred_dict = defaultdict(list)
+            for task_name, Y_prob in Y_prob_dict.items():
+                Y_pred_dict[task_name] = prob_to_pred(Y_prob)
+
+        if retrun_preds:
+            return Y_dict, Y_prob_dict, Y_pred_dict
+        else:
+            return Y_dict, Y_prob_dict
+
+    # @torch.no_grad()
+    # def score(self, dataloader, metrics=[]):
+
+    #     if isinstance(metrics, str):
+    #         metrics = [metrics]
+
+    #     return metric_dict
 
     def save(self, model_file, save_dir, verbose=True):
         """Save the current model
