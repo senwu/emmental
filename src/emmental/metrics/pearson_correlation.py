@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import pearsonr
 
 
-def pearson_correlation_scorer(gold, preds, probs):
+def pearson_correlation_scorer(gold, probs, preds):
     correlation, pvalue = pearsonr(gold, preds)
     if np.isnan(correlation):
         correlation = 0.0

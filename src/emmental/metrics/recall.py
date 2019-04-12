@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def recall_scorer(gold, preds, probs, pos_label=1):
+def recall_scorer(gold, probs, preds, pos_label=1):
     pred_pos = np.where(preds == pos_label, True, False)
     gt_pos = np.where(gold == pos_label, True, False)
     TP = np.sum(pred_pos * gt_pos)

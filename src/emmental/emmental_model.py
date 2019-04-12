@@ -1,15 +1,18 @@
 import logging
 import os
 from collections import defaultdict
+from collections.abc import Iterable
 
+import numpy as np
 import torch
 import torch.nn as nn
 
+from emmental.task import Task
 from emmental.utils.utils import prob_to_pred
 
 
 class EmmentalModel(nn.Module):
-    """A class for multi-task in Emmental MTL model.
+    """A class to build multi-task model.
 
     :param name: Name of the model
     :type name: str
@@ -28,6 +31,7 @@ class EmmentalModel(nn.Module):
         self.task_flows = dict()
         self.loss_funcs = dict()
         self.output_funcs = dict()
+        self.scorers = dict()
 
         # Build network with given tasks
         if tasks is not None:
@@ -35,7 +39,11 @@ class EmmentalModel(nn.Module):
 
     def _build_network(self, tasks):
         """Build the MTL network using all tasks"""
+        if not isinstance(tasks, Iterable):
+            tasks = [tasks]
         for task in tasks:
+            if not isinstance(task, Task):
+                raise ValueError(f"Unrecognized task type {task}")
             self._add_task(task)
 
     def _add_task(self, task):
@@ -52,6 +60,8 @@ class EmmentalModel(nn.Module):
         self.loss_funcs[task.name] = task.loss_func
         # Collect output functions
         self.output_funcs[task.name] = task.output_func
+        # Collect scorers
+        self.scorers[task.name] = task.scorer
 
     def _update_task(self, task):
         """Update a existing task in MTL network"""
@@ -65,6 +75,8 @@ class EmmentalModel(nn.Module):
         self.loss_funcs[task.name] = task.loss_func
         # Update output functions
         self.output_funcs[task.name] = task.output_func
+        # Collect scorers
+        self.scorers[task.name] = task.scorer
 
     def _remove_task(self, task_name):
         """Remove a existing task from MTL network"""
@@ -73,10 +85,11 @@ class EmmentalModel(nn.Module):
             return
 
         # Remove task by task_name
-        print(f"Removing Task ({task_name})..")
+        self.logger.info(f"Removing Task {task_name}.")
         del self.task_flows[task_name]
         del self.loss_funcs[task_name]
         del self.output_funcs[task_name]
+        del self.scorers[task_name]
         # TODO: remove the modules only associate with that task
 
     def __repr__(self):
@@ -130,11 +143,8 @@ class EmmentalModel(nn.Module):
 
         immediate_ouput_dict = self.forward(X, task_names)
 
-        # print("immediate_ouput_dict", immediate_ouput_dict)
         # Calculate loss for each task
         for task_name, label_name in zip(task_names, label_names):
-            # print(immediate_ouput_dict[task_name], Y_dict[label_name].size())
-
             loss_dict[task_name] = self.loss_funcs[task_name](
                 immediate_ouput_dict[task_name], Y_dict[label_name]
             )
@@ -152,51 +162,60 @@ class EmmentalModel(nn.Module):
         :param task_names:
         :type task_names:
         """
-        pred_dict = dict()
+        prob_dict = dict()
 
         immediate_ouput_dict = self.forward(X, task_names)
 
         # Calculate prediction for each task
         for task_name in task_names:
-            pred_dict[task_name] = (
+            prob_dict[task_name] = (
                 self.output_funcs[task_name](immediate_ouput_dict[task_name])
                 .cpu()
                 .numpy()
             )
 
-        return pred_dict
+        return prob_dict
 
     @torch.no_grad()
-    def predict(self, dataloader, retrun_preds=False):
+    def predict(self, dataloader, return_preds=False):
 
-        Y_dict = defaultdict(list)
-        Y_prob_dict = defaultdict(list)
+        gold_dict = defaultdict(list)
+        prob_dict = defaultdict(list)
 
         for batch_num, (X_batch_dict, Y_batch_dict) in enumerate(dataloader):
-            Y_batch_prob_dict = self.calculate_probs(
+            prob_batch_dict = self.calculate_probs(
                 X_batch_dict["data"], [dataloader.task_name]
             )
-            for task_name, Y_batch_prob in Y_batch_prob_dict.items():
-                Y_prob_dict[task_name].extend(Y_batch_prob)
-            Y_dict[task_name].extend(Y_batch_dict[dataloader.label_name].cpu().numpy())
+            for task_name, prob_batch in prob_batch_dict.items():
+                prob_dict[task_name].extend(prob_batch)
+            gold_dict[task_name].extend(
+                Y_batch_dict[dataloader.label_name].cpu().numpy()
+            )
+        for task_name in gold_dict:
+            gold_dict[task_name] = np.array(gold_dict[task_name]).reshape(-1)
+            prob_dict[task_name] = np.array(prob_dict[task_name])
 
-        if retrun_preds:
-            Y_pred_dict = defaultdict(list)
-            for task_name, Y_prob in Y_prob_dict.items():
-                Y_pred_dict[task_name] = prob_to_pred(Y_prob)
+        if return_preds:
+            pred_dict = defaultdict(list)
+            for task_name, prob in prob_dict.items():
+                pred_dict[task_name] = prob_to_pred(prob)
 
-        if retrun_preds:
-            return Y_dict, Y_prob_dict, Y_pred_dict
+        if return_preds:
+            return gold_dict, prob_dict, pred_dict
         else:
-            return Y_dict, Y_prob_dict
+            return gold_dict, prob_dict
 
-    # @torch.no_grad()
-    # def score(self, dataloader, metrics=[]):
+    @torch.no_grad()
+    def score(self, dataloader):
 
-    #     if isinstance(metrics, str):
-    #         metrics = [metrics]
+        gold_dict, prob_dict, pred_dict = self.predict(dataloader, return_preds=True)
 
-    #     return metric_dict
+        for task_name in gold_dict.keys():
+            metric_dict = self.scorers[task_name].score(
+                gold_dict[task_name], prob_dict[task_name], pred_dict[task_name]
+            )
+
+        return metric_dict
 
     def save(self, model_file, save_dir, verbose=True):
         """Save the current model

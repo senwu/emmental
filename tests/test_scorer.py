@@ -16,12 +16,12 @@ def test_scorer(caplog):
     preds = np.array([1, 1, 1, 1, 1, 0])
     probs = np.array([0.8, 0.6, 0.9, 0.7, 0.7, 0.2])
 
-    def sum(gold, preds, probs):
+    def sum(gold, probs, preds):
         return np.sum(preds)
 
     scorer = Scorer(metrics=["accuracy", "f1"], customize_metric_funcs={"sum": sum})
 
-    assert scorer.score(golds, preds, probs) == {
+    assert scorer.score(golds, probs, preds) == {
         "accuracy": 0.6666666666666666,
         "f1": 0.7499999999999999,
         "sum": 5,

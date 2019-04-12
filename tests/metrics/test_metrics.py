@@ -21,7 +21,7 @@ def test_metrics(caplog):
     res = dict()
 
     for metric_name, metric in metrics.items():
-        res.update(metric(golds, preds, probs))
+        res.update(metric(golds, probs, preds))
 
     assert res == {
         "accuracy": 0.6666666666666666,
