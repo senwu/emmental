@@ -207,7 +207,11 @@ class EmmentalModel(nn.Module):
 
     @torch.no_grad()
     def score(self, dataloader):
+        """Score the data from dataloader with the model
 
+        :param dataloader: the dataloader that performs scoring
+        :type dataloader: dataloader
+        """
         gold_dict, prob_dict, pred_dict = self.predict(dataloader, return_preds=True)
 
         for task_name in gold_dict.keys():
