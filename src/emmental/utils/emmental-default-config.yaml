@@ -10,6 +10,8 @@ learner_config:
     verbose: True
     progress_bar: True
     n_epochs: 1
+    train_split: train
+    valid_split: dev
     optimizer_config:
         optimizer: adam
         lr: 0.001

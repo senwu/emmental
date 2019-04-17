@@ -20,12 +20,13 @@ class SequentialScheduler(Scheduler):
         """
 
         task_names = [dataloader.task_name for dataloader in dataloaders]
+        data_names = [dataloader.data_name for dataloader in dataloaders]
         label_names = [dataloader.label_name for dataloader in dataloaders]
         batch_counts = [len(dataloader) for dataloader in dataloaders]
         data_loaders = [iter(dataloader) for dataloader in dataloaders]
 
-        for task_name, label_name, batch_count, data_loader in zip(
-            task_names, label_names, batch_counts, data_loaders
+        for task_name, data_name, label_name, batch_count, data_loader in zip(
+            task_names, data_names, label_names, batch_counts, data_loaders
         ):
             for batch in range(batch_count):
-                yield task_name, label_name, next(data_loader)
+                yield task_name, data_name, label_name, next(data_loader)

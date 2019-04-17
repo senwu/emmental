@@ -18,16 +18,23 @@ else:
 
 
 class EmmentalLearner(object):
-    """Learning function of MTL."""
+    """A class for emmental multi-task learning.
+
+    :param config: The learning config
+    :type config: dict
+    """
 
     def __init__(self, config):
         self.config = config
 
+        # Set random seed for learning
         if "seed" not in self.config:
             self.config["seed"] = np.random.randint(1e5)
         self._set_random_seed(self.config["seed"])
 
     def _set_random_seed(self, seed):
+        """Set random seed."""
+
         # Set random seed for all numpy operations
         self.rand_state = np.random.RandomState(seed=seed)
         np.random.seed(seed=seed)
@@ -39,6 +46,8 @@ class EmmentalLearner(object):
             torch.cuda.manual_seed_all(seed)
 
     def _set_writer(self):
+        """Set learning log writer."""
+
         writer_config = self.config["writer_config"]
         opt = writer_config["writer"]
 
@@ -52,9 +61,13 @@ class EmmentalLearner(object):
             raise ValueError(f"Unrecognized writer option '{opt}'")
 
     def _set_counter(self):
+        """Set counter for learning process."""
+
         self.counter = Counter(self.config, self.n_batches_per_epoch)
 
     def _set_optimizer(self, model):
+        """Set optimizer for learning process."""
+
         # TODO: add more optimizer support
         optimizer_config = self.config["learner_config"]["optimizer_config"]
         opt = optimizer_config["optimizer"]
@@ -81,6 +94,8 @@ class EmmentalLearner(object):
         self.optimizer = optimizer
 
     def _set_lr_scheduler(self, model):
+        """Set learning rate scheduler for learning process."""
+
         # TODO: add more lr scheduler support
         opt = self.config["learner_config"]["lr_scheduler_config"]["lr_scheduler"]
         lr_scheduler_config = self.config["learner_config"]["lr_scheduler_config"]
@@ -105,12 +120,13 @@ class EmmentalLearner(object):
         self.lr_scheduler = lr_scheduler
 
     def _update_lr_scheduler(self, model, step):
-        """Update the lr using lr_scheduler with each batch"""
+        """Update the lr using lr_scheduler with each batch."""
 
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
 
     def _set_task_scheduler(self, model, dataloaders):
+        """Set task scheduler for learning process"""
         # TODO: add more task scheduler support
         opt = self.config["learner_config"]["task_scheduler"]
 
@@ -119,7 +135,8 @@ class EmmentalLearner(object):
         else:
             raise ValueError(f"Unrecognized task scheduler option '{opt}'")
 
-    def _evaluating_checkpointing(self, model, dataloaders):
+    def _evaluating_checkpointing(self, model, dataloaders, batch_size):
+        """Checking if it's time to evaluting or checkpointing"""
 
         model.eval()
         metric_dict = dict()
@@ -138,24 +155,45 @@ class EmmentalLearner(object):
         return metric_dict
 
     def learn(self, model, dataloaders, config={}):
+        """The learning procedure of emmental MTL
+
+        :param model: The emmental model that needs to learn
+        :type model: emmental.model
+        :param dataloaders: a list of dataloaders used to learn the model
+        :type dataloaders: list
+        :param config: the config to update the existing config, defaults to {}
+        :type config: dict, optional
+        """
+
+        # Update the existing config
         self.config = _merge(self.config, config)
 
+        # Generate the list of dataloaders for learning process
         train_dataloaders = [
-            dataloader for dataloader in dataloaders if dataloader.split == "train"
+            dataloader
+            for dataloader in dataloaders
+            if dataloader.split == self.config["learner_config"]["train_split"]
         ]
 
+        # Calculate the total number of batches per epoch
         self.n_batches_per_epoch = sum(
             [len(dataloader) for dataloader in train_dataloaders]
         )
 
-        self._set_writer()
+        # Set up counter
         self._set_counter()
+        # Set up optimizer
         self._set_optimizer(model)
+        # Set up lr_scheduler
         self._set_lr_scheduler(model)
+        # Set up task_scheduler
         self._set_task_scheduler(model, dataloaders)
+        # Set up writer
+        self._set_writer()
 
+        # Set to training mode
         model.train()
-        print(self.n_batches_per_epoch)
+
         for epoch in range(self.config["learner_config"]["n_epochs"]):
             batches = tqdm(
                 enumerate(self.task_scheduler.get_batches(train_dataloaders)),
@@ -167,20 +205,17 @@ class EmmentalLearner(object):
                     )
                 ),
             )
-            # for i in batches:
-            #     print(i)
-            for batch_num, (task_name, label_name, batch) in batches:
-
+            for batch_num, (task_name, data_name, label_name, batch) in batches:
                 total_batch_num = epoch * self.n_batches_per_epoch + batch_num
-                # print(batch_num)
-                X, Ys = batch
-                # print(X, Ys)
+
+                X_dict, Y_dict = batch
+
                 # Set gradients of all model parameters to zero
                 self.optimizer.zero_grad()
 
                 # Perform forward pass and calcualte the loss and count
                 loss_dict, count_dict = model.calculate_losses(
-                    X["data"], Ys, [task_name], [label_name]
+                    X_dict["data"], Y_dict, [task_name], [label_name]
                 )
 
                 # Calculate the average loss
