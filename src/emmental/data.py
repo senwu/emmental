@@ -9,17 +9,17 @@ class EmmentalDataset(Dataset):
     """An advanced dataset class to handle that the input data contains mulitple
     fields and the output data contains multiple label sets
 
+    :param name: the name of the dataset
+    :type name: str
     :param X_dict: the feature dict where key is the feature name and value is the
     feature
     :type X_dict: dict
     :param Y_dict: the label dict where key is the label name and value is
     the label
     :type Y_dict: dict
-    :param name: the name of the dataset
-    :type name: dict
     """
 
-    def __init__(self, X_dict, Y_dict, name=None):
+    def __init__(self, name, X_dict, Y_dict):
         self.name = name
         self.X_dict = X_dict
         self.Y_dict = Y_dict
@@ -128,5 +128,6 @@ class EmmentalDataLoader(DataLoader):
         super().__init__(dataset, collate_fn=collate_fn, **kwargs)
 
         self.task_name = task_name
+        self.data_name = dataset.name
         self.label_name = label_name
         self.split = split
