@@ -215,7 +215,7 @@ class EmmentalLearner(object):
 
                 # Perform forward pass and calcualte the loss and count
                 loss_dict, count_dict = model.calculate_losses(
-                    X_dict["data"], Y_dict, [task_name], [label_name]
+                    X_dict, Y_dict, [task_name], [label_name]
                 )
 
                 # Calculate the average loss

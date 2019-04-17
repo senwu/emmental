@@ -124,7 +124,7 @@ class EmmentalModel(nn.Module):
         # Call forward for each task
         for task_name in task_names:
             task_flow = self.task_flows[task_name]
-            immediate_ouput = [[X]]
+            immediate_ouput = [X]
 
             for action in task_flow:
                 input = [
@@ -196,9 +196,7 @@ class EmmentalModel(nn.Module):
         prob_dict = defaultdict(list)
 
         for batch_num, (X_batch_dict, Y_batch_dict) in enumerate(dataloader):
-            prob_batch_dict = self.calculate_probs(
-                X_batch_dict["data"], [dataloader.task_name]
-            )
+            prob_batch_dict = self.calculate_probs(X_batch_dict, [dataloader.task_name])
             for task_name, prob_batch in prob_batch_dict.items():
                 prob_dict[task_name].extend(prob_batch)
             gold_dict[task_name].extend(
