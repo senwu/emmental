@@ -10,6 +10,8 @@ import torch.nn as nn
 from emmental.task import Task
 from emmental.utils.utils import prob_to_pred
 
+logger = logging.getLogger(__name__)
+
 
 class EmmentalModel(nn.Module):
     """A class to build multi-task model.
@@ -21,13 +23,12 @@ class EmmentalModel(nn.Module):
     """
 
     def __init__(self, name=None, tasks=None):
-        self.logger = logging.getLogger(__name__)
-
         super().__init__()
         self.name = name if name is not None else type(self).__name__
 
         # Initiate the model attributes
         self.module_pool = nn.ModuleDict()
+        self.task_names = set()
         self.task_flows = dict()
         self.loss_funcs = dict()
         self.output_funcs = dict()
@@ -37,13 +38,22 @@ class EmmentalModel(nn.Module):
         if tasks is not None:
             self._build_network(tasks)
 
+        logger.info(
+            f"Created emmental model {self.name} that contains task {self.task_names}."
+        )
+
     def _build_network(self, tasks):
         """Build the MTL network using all tasks"""
         if not isinstance(tasks, Iterable):
             tasks = [tasks]
         for task in tasks:
+            if task.name in self.task_names:
+                raise ValueError(
+                    f"Found duplicate task {task.name}, different task should use "
+                    f"different task name."
+                )
             if not isinstance(task, Task):
-                raise ValueError(f"Unrecognized task type {task}")
+                raise ValueError(f"Unrecognized task type {task}.")
             self._add_task(task)
 
     def _add_task(self, task):
@@ -54,6 +64,8 @@ class EmmentalModel(nn.Module):
                 task.module_pool[key] = self.module_pool[key]
             else:
                 self.module_pool[key] = task.module_pool[key]
+        # Collect task names
+        self.task_names.add(task.name)
         # Collect task flows
         self.task_flows[task.name] = task.task_flow
         # Collect loss functions
@@ -85,7 +97,8 @@ class EmmentalModel(nn.Module):
             return
 
         # Remove task by task_name
-        self.logger.info(f"Removing Task {task_name}.")
+        logger.info(f"Removing Task {task_name}.")
+        self.task_names.remove(task_name)
         del self.task_flows[task_name]
         del self.loss_funcs[task_name]
         del self.output_funcs[task_name]
@@ -246,10 +259,10 @@ class EmmentalModel(nn.Module):
         try:
             torch.save(params, f"{save_dir}/{model_file}")
         except BaseException:
-            self.logger.warning("Saving failed... continuing anyway.")
+            logger.warning("Saving failed... continuing anyway.")
 
         if verbose:
-            self.logger.info(f"[{self.name}] Model saved as {model_file} in {save_dir}")
+            logger.info(f"[{self.name}] Model saved as {model_file} in {save_dir}")
 
     def load(self, model_file, save_dir, verbose=True):
         """Load model from file and rebuild the model.
@@ -262,12 +275,12 @@ class EmmentalModel(nn.Module):
         """
 
         if not os.path.exists(save_dir):
-            self.logger.error("Loading failed... Directory does not exist.")
+            logger.error("Loading failed... Directory does not exist.")
 
         try:
             checkpoint = torch.load(f"{save_dir}/{model_file}")
         except BaseException:
-            self.logger.error(
+            logger.error(
                 f"Loading failed... Cannot load model from {save_dir}/{model_file}"
             )
 
@@ -278,6 +291,4 @@ class EmmentalModel(nn.Module):
         self.output_funcs = checkpoint["output_funcs"]
 
         if verbose:
-            self.logger.info(
-                f"[{self.name}] Model loaded as {model_file} in {save_dir}"
-            )
+            logger.info(f"[{self.name}] Model loaded as {model_file} in {save_dir}")
