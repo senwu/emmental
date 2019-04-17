@@ -17,6 +17,7 @@ setup(
         "numpy>=1.11, <2.0",
         "pandas>=0.23.4, <0.24.0",
         "pyyaml>=4.2b1, <5.0",
+        "scikit-learn>=0.20.3, < 0.21.0",
         "scipy>=1.1.0, <2.0.0",
         "tensorboardX>=1.6, <2.0",
         "torch>=1.0, <2.0",
