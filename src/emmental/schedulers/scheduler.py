@@ -6,7 +6,7 @@ class Scheduler(ABC):
     training.
     """
 
-    def __init__(self, model, dataloaders):
+    def __init__(self):
 
         pass
 

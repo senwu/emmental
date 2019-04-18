@@ -6,8 +6,8 @@ class SequentialScheduler(Scheduler):
     training.
     """
 
-    def __init__(self, model, dataloaders):
-        super().__init__(model, dataloaders)
+    def __init__(self):
+        super().__init__()
 
     def get_batches(self, dataloaders):
         """Generate batch generator from all dataloaders in sequential order for
