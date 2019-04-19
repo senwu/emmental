@@ -7,8 +7,7 @@ from emmental.utils.logging.log_writer import LogWriter
 
 
 class TensorBoardWriter(LogWriter):
-    """A class for logging to Tensorboard during training process.
-    """
+    """A class for logging to Tensorboard during training process."""
 
     def __init__(self, config=None, verbose=True):
         super().__init__(config=config, verbose=verbose)

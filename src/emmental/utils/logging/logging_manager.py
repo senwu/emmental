@@ -1,8 +1,14 @@
 import logging
 
+from emmental.utils.logging.checkpointer import Checkpointer
+from emmental.utils.logging.log_writer import LogWriter
+from emmental.utils.logging.tensorboard_writer import TensorBoardWriter
 
-class Counter(object):
-    """A class to log training progress
+logger = logging.getLogger(__name__)
+
+
+class LoggingManager(object):
+    """A class to manage logging during training progress
 
     :param config: the config object for counter
     :type config: dict
@@ -13,8 +19,9 @@ class Counter(object):
     """
 
     def __init__(self, config, n_batches_per_epoch):
-        self.logger = logging.getLogger(__name__)
         self.n_batches_per_epoch = n_batches_per_epoch
+
+        # Set up counter
 
         # Set up evaluation/checkpointing unit (sample, batch, epoch)
         self.counter_unit = config["logging_config"]["counter_unit"]
@@ -24,13 +31,13 @@ class Counter(object):
 
         # Set up evaluation frequency
         self.evaluation_freq = config["logging_config"]["evaluation_freq"]
-        self.logger.info(
-            f"Evaluating every {self.evaluation_freq} {self.counter_unit}."
-        )
+        logger.info(f"Evaluating every {self.evaluation_freq} {self.counter_unit}.")
 
         # Set up checkpointing frequency
-        self.checkpointing_freq = int(config["logging_config"]["checkpointing_freq"])
-        self.logger.info(
+        self.checkpointing_freq = int(
+            config["logging_config"]["checkpointer_config"]["checkpoint_freq"]
+        )
+        logger.info(
             f"Checkpointing every "
             f"{self.checkpointing_freq * self.evaluation_freq} {self.counter_unit}."
         )
@@ -57,6 +64,22 @@ class Counter(object):
 
         # Set up count that triggers the evaluation since last checkpointing
         self.trigger_count = 0
+
+        # Set up log writer
+        writer_opt = config["logging_config"]["writer_config"]["writer"]
+
+        if writer_opt is None:
+            self.writer = None
+        elif writer_opt == "json":
+            self.writer = LogWriter()
+        elif writer_opt == "tensorboard":
+            self.writer = TensorBoardWriter()
+        else:
+            raise ValueError(f"Unrecognized writer option '{writer_opt}'")
+
+        # Set up checkpointer
+        # checkpointer_config = config["logging_config"]["checkpointer_config"]
+        self.checkpointer = Checkpointer(config)
 
     def update(self, batch_size):
         """Update the count and total number"""
@@ -105,3 +128,12 @@ class Counter(object):
         self.batch_count = 0
         self.epoch_count = 0
         self.unit_count = 0
+
+    def write_log(self, metric_dict):
+        for metric_name, metric_value in metric_dict.items():
+            self.writer.add_scalar(metric_name, metric_value, self.unit_total)
+
+    def checkpoint_model(self, model, optimizer, lr_scheduler, metric_dict):
+        self.checkpointer.checkpoint(
+            self.unit_total, model, optimizer, lr_scheduler, metric_dict
+        )

@@ -1,10 +1,28 @@
+import random
+
 import numpy as np
 import torch
 
 
+def set_random_seed(seed):
+    """Set random seed."""
+
+    seed = int(seed)
+
+    # Set random seed for random
+    random.seed(seed)
+    # Set random seed for all numpy operations
+    np.random.seed(seed=seed)
+
+    # Set random seed for PyTorch
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
+
 def list_to_tensor(item_list):
-    """Convert the list of items into a tensor
-    """
+    """Convert the list of items into a tensor."""
 
     # Convert 2 or more-D tensor with the same shape
     if all(
@@ -20,7 +38,7 @@ def list_to_tensor(item_list):
 
 
 def pad_batch(batch, max_len=0, pad_value=0, left_padded=False):
-    """Convert the batch into a padded tensor and mask tensor
+    """Convert the batch into a padded tensor and mask tensor.
 
     :param batch: The data for padding.
     :type batch: list of torch.Tensor
