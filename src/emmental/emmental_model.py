@@ -109,13 +109,11 @@ class EmmentalModel(nn.Module):
         cls_name = type(self).__name__
         return f"{cls_name}(name={self.name})"
 
-    def forward(self, X, task_names):
+    def forward(self, X_dict, task_names):
         """Calculate the loss given the features and labels
 
-        :param X:
-        :type X:
-        :param Y_dict:
-        :type Y_dict:
+        :param X_dict:
+        :type X_dict:
         :param task_names:
         :type task_names:
         """
@@ -124,7 +122,7 @@ class EmmentalModel(nn.Module):
         # Call forward for each task
         for task_name in task_names:
             task_flow = self.task_flows[task_name]
-            immediate_ouput = [X]
+            immediate_ouput = [X_dict]
 
             for action in task_flow:
                 input = [
@@ -140,11 +138,13 @@ class EmmentalModel(nn.Module):
             immediate_ouput_dict[task_name] = immediate_ouput
         return immediate_ouput_dict
 
-    def calculate_losses(self, X, Y_dict, task_names, label_names):
+    def calculate_losses(
+        self, X_dict, Y_dict, task_names, data_names, label_names, split
+    ):
         """Calculate the loss given the features and labels
 
-        :param X:
-        :type X:
+        :param X_dict:
+        :type X_dict:
         :param Y_dict:
         :type Y_dict:
         :param task_names:
@@ -154,30 +154,33 @@ class EmmentalModel(nn.Module):
         loss_dict = dict()
         count_dict = dict()
 
-        immediate_ouput_dict = self.forward(X, task_names)
+        immediate_ouput_dict = self.forward(X_dict, task_names)
 
         # Calculate loss for each task
-        for task_name, label_name in zip(task_names, label_names):
-            loss_dict[task_name] = self.loss_funcs[task_name](
+        for task_name, data_name, label_name in zip(
+            task_names, data_names, label_names
+        ):
+            identifier = "/".join([task_name, data_name, split, "loss"])
+            loss_dict[identifier] = self.loss_funcs[task_name](
                 immediate_ouput_dict[task_name], Y_dict[label_name]
             )
 
-            count_dict[task_name] = Y_dict[label_name].size(0)
+            count_dict[identifier] = Y_dict[label_name].size(0)
 
         return loss_dict, count_dict
 
     @torch.no_grad()
-    def calculate_probs(self, X, task_names):
+    def _calculate_probs(self, X_dict, task_names):
         """Calculate the probs given the features
 
-        :param X:
-        :type X:
+        :param X_dict:
+        :type X_dict:
         :param task_names:
         :type task_names:
         """
         prob_dict = dict()
 
-        immediate_ouput_dict = self.forward(X, task_names)
+        immediate_ouput_dict = self.forward(X_dict, task_names)
 
         # Calculate prediction for each task
         for task_name in task_names:
@@ -196,7 +199,9 @@ class EmmentalModel(nn.Module):
         prob_dict = defaultdict(list)
 
         for batch_num, (X_batch_dict, Y_batch_dict) in enumerate(dataloader):
-            prob_batch_dict = self.calculate_probs(X_batch_dict, [dataloader.task_name])
+            prob_batch_dict = self._calculate_probs(
+                X_batch_dict, [dataloader.task_name]
+            )
             for task_name, prob_batch in prob_batch_dict.items():
                 prob_dict[task_name].extend(prob_batch)
             gold_dict[task_name].extend(
@@ -217,20 +222,32 @@ class EmmentalModel(nn.Module):
             return gold_dict, prob_dict
 
     @torch.no_grad()
-    def score(self, dataloader):
+    def score(self, dataloaders):
         """Score the data from dataloader with the model
 
-        :param dataloader: the dataloader that performs scoring
-        :type dataloader: dataloader
+        :param dataloaders: the dataloader that performs scoring
+        :type dataloaders: dataloader
         """
-        gold_dict, prob_dict, pred_dict = self.predict(dataloader, return_preds=True)
+        if not isinstance(dataloaders, list):
+            dataloaders = [dataloaders]
 
-        for task_name in gold_dict.keys():
-            metric_dict = self.scorers[task_name].score(
-                gold_dict[task_name], prob_dict[task_name], pred_dict[task_name]
+        metric_score_dict = dict()
+
+        for dataloader in dataloaders:
+            gold_dict, prob_dict, pred_dict = self.predict(
+                dataloader, return_preds=True
             )
+            for task_name in gold_dict.keys():
+                metric_score = self.scorers[task_name].score(
+                    gold_dict[task_name], prob_dict[task_name], pred_dict[task_name]
+                )
+                for metric_name, metric_value in metric_score.items():
+                    identifier = "/".join(
+                        [task_name, dataloader.data_name, dataloader.split, metric_name]
+                    )
+                    metric_score_dict[identifier] = metric_value
 
-        return metric_dict
+        return metric_score_dict
 
     def save(self, model_file, save_dir, verbose=True):
         """Save the current model
