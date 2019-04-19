@@ -11,9 +11,10 @@ learner_config:
     progress_bar: True
     n_epochs: 1
     train_split: train
-    valid_split: dev
+    valid_split: valid
+    test_split: test
     optimizer_config:
-        optimizer: adam
+        optimizer: adam # [sgd, adam]
         lr: 0.001
         l2: 0.0
         grad_clip: 1.0
@@ -22,16 +23,31 @@ learner_config:
         adam_config:
             betas: !!python/tuple [0.9, 0.999]
     lr_scheduler_config:
-        lr_scheduler:
+        lr_scheduler: # [linear, exponential, reduce_on_plateau]
+        warmup_steps: 0.0
+        warmup_unit: epoch # [epoch, batch]
+        min_lr: 0.0
+        linear_config:
+            min_lr: 0.0
+        exponential_config:
+            gamma: 0.9
+        plateau_config:
+            factor: 0.5
+            patience: 10
+            threshold: 0.0001
     task_scheduler: sequential
 
-evaluation_config:
-
 logging_config:
-    counter_unit: epoch # [epoch, batch]
-    evaluation_freq: 1.0
-    checkpointing_freq: 2
+    counter_unit: batch # [epoch, batch]
+    evaluation_freq: 10
+    writer_config:
+        writer: tensorboard # [json, tensorboard]
+        verbose: True
+    checkpointint: True
+    checkpointer_config:
+        checkpoint_path:
+        checkpoint_freq: 2
+        checkpoint_metric: task1/da1/valid/f1
+        checkpoint_metric_mode: max # [min, max]
+        checkpoint_runway: 0
 
-writer_config:
-    writer: tensorboard # [json, tensorboard]
-    verbose: True
