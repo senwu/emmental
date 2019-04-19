@@ -53,7 +53,7 @@ class EmmentalModel(nn.Module):
             if torch.cuda.is_available():
                 if self.config["model_config"]["verbose"]:
                     logger.info("Moving model to GPU.")
-                self.to(torch.device(f"cuda:{self.config['device']}"))
+                self.to(torch.device(f"cuda:{self.config['model_config']['device']}"))
             else:
                 if self.config["model_config"]["verbose"]:
                     logger.info("No cuda device available. Switch to cpu instead.")
