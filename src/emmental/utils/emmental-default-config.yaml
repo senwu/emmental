@@ -1,7 +1,7 @@
 model_config:
     seed:
     verbose: True
-    device: cpu # cpu or cuda (cuda:1)
+    device: 0 # -1 for cpu or gpu id (e.g., 0 for cuda:0)
     fp16: False # whether to use half precision
     model_path: # the path to pretrained model
 

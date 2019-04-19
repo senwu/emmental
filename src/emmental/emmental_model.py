@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 
 from emmental.task import Task
-from emmental.utils.utils import prob_to_pred
+from emmental.utils.utils import move_to_device, prob_to_pred
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +22,10 @@ class EmmentalModel(nn.Module):
     :type tasks: list of Task project
     """
 
-    def __init__(self, name=None, tasks=None):
+    def __init__(self, name, config, tasks=None):
         super().__init__()
         self.name = name if name is not None else type(self).__name__
+        self.config = config
 
         # Initiate the model attributes
         self.module_pool = nn.ModuleDict()
@@ -41,6 +42,21 @@ class EmmentalModel(nn.Module):
         logger.info(
             f"Created emmental model {self.name} that contains task {self.task_names}."
         )
+
+        # Move model to specified device
+        self._move_to_device()
+
+    def _move_to_device(self):
+        """Move model to specified device."""
+
+        if self.config["model_config"]["device"] >= 0:
+            if torch.cuda.is_available():
+                if self.config["model_config"]["verbose"]:
+                    logger.info("Moving model to GPU.")
+                self.to(torch.device(f"cuda:{self.config['device']}"))
+            else:
+                if self.config["model_config"]["verbose"]:
+                    logger.info("No cuda device available. Switch to cpu instead.")
 
     def _build_network(self, tasks):
         """Build the MTL network using all tasks"""
@@ -75,6 +91,9 @@ class EmmentalModel(nn.Module):
         # Collect scorers
         self.scorers[task.name] = task.scorer
 
+        # Move model to specified device
+        self._move_to_device()
+
     def _update_task(self, task):
         """Update a existing task in MTL network"""
         # Update module_pool with task
@@ -89,6 +108,9 @@ class EmmentalModel(nn.Module):
         self.output_funcs[task.name] = task.output_func
         # Collect scorers
         self.scorers[task.name] = task.scorer
+
+        # Move model to specified device
+        self._move_to_device()
 
     def _remove_task(self, task_name):
         """Remove a existing task from MTL network"""
@@ -118,6 +140,8 @@ class EmmentalModel(nn.Module):
         :type task_names:
         """
         immediate_ouput_dict = dict()
+
+        X_dict = move_to_device(X_dict, self.config["model_config"]["device"])
 
         # Call forward for each task
         for task_name in task_names:
@@ -162,7 +186,10 @@ class EmmentalModel(nn.Module):
         ):
             identifier = "/".join([task_name, data_name, split, "loss"])
             loss_dict[identifier] = self.loss_funcs[task_name](
-                immediate_ouput_dict[task_name], Y_dict[label_name]
+                immediate_ouput_dict[task_name],
+                move_to_device(
+                    Y_dict[label_name], self.config["model_config"]["device"]
+                ),
             )
 
             count_dict[identifier] = Y_dict[label_name].size(0)
