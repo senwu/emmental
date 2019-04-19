@@ -83,3 +83,27 @@ def prob_to_pred(probs):
     """
 
     return np.argmax(probs, axis=-1) + 1
+
+
+def move_to_device(obj, device=-1):
+    """
+    Given a structure (possibly) containing Tensors on the CPU, move all the Tensors
+    to the specified GPU (or do nothing, if they should beon the CPU).
+    device = -1 -> "cpu"
+    device =  0 -> "cuda:0"
+    Originally from:
+    https://github.com/HazyResearch/metal/blob/mmtl_clean/metal/utils.py
+    """
+
+    if device < 0 or not torch.cuda.is_available():
+        return obj
+    elif isinstance(obj, torch.Tensor):
+        return obj.cuda(device)
+    elif isinstance(obj, dict):
+        return {key: move_to_device(value, device) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [move_to_device(item, device) for item in obj]
+    elif isinstance(obj, tuple):
+        return tuple([move_to_device(item, device) for item in obj])
+    else:
+        return obj
