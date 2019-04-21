@@ -14,7 +14,7 @@ learner_config:
     valid_split: valid
     test_split: test
     optimizer_config:
-        optimizer: adam # [sgd, adam]
+        optimizer: sgd # [sgd, adam]
         lr: 0.001
         l2: 0.0
         grad_clip: 1.0
@@ -35,18 +35,18 @@ learner_config:
             factor: 0.5
             patience: 10
             threshold: 0.0001
-    task_scheduler: sequential
+    task_scheduler: round_robin # [sequential, round_robin]
 
 logging_config:
     counter_unit: batch # [epoch, batch]
-    evaluation_freq: 10
+    evaluation_freq: 2
     writer_config:
         writer: tensorboard # [json, tensorboard]
         verbose: True
     checkpointint: True
     checkpointer_config:
         checkpoint_path:
-        checkpoint_freq: 2
+        checkpoint_freq: 1
         checkpoint_metric: task1/da1/valid/f1
         checkpoint_metric_mode: max # [min, max]
         checkpoint_runway: 0
