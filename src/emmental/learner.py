@@ -1,13 +1,12 @@
 import logging
 
-import numpy as np
 import torch
 import torch.optim as optim
 
+from emmental import Meta
+from emmental.schedulers.round_robin_scheduler import RoundRobinScheduler
 from emmental.schedulers.sequential_scheduler import SequentialScheduler
-from emmental.utils.config import _merge
 from emmental.utils.logging import LoggingManager
-from emmental.utils.utils import set_random_seed
 
 try:
     from IPython import get_ipython
@@ -29,45 +28,19 @@ class EmmentalLearner(object):
     :type config: dict
     """
 
-    def __init__(self, config):
-        # Set the config
-        self.config = config
-
-        # Set random seed for learning
-        if "seed" not in self.config:
-            self.config["seed"] = np.random.randint(1e5)
-        set_random_seed(self.config["seed"])
-
-    # def _set_writer(self):
-    #     """Set learning log writer."""
-
-    #     writer_config = self.config["writer_config"]
-    #     opt = writer_config["writer"]
-
-    #     if opt is None:
-    #         self.writer = None
-    #     elif opt == "json":
-    #         self.writer = LogWriter()
-    #     elif opt == "tensorboard":
-    #         self.writer = TensorBoardWriter()
-    #     else:
-    #         raise ValueError(f"Unrecognized writer option '{opt}'")
+    def __init__(self):
+        pass
 
     def _set_logging_manager(self):
         """Set logging manager."""
 
-        self.logging_manager = LoggingManager(self.config, self.n_batches_per_epoch)
-
-    # def _set_counter(self):
-    #     """Set counter for learning process."""
-
-    #     self.counter = Counter(self.config, self.n_batches_per_epoch)
+        self.logging_manager = LoggingManager(self.n_batches_per_epoch)
 
     def _set_optimizer(self, model):
         """Set optimizer for learning process."""
 
         # TODO: add more optimizer support and fp16
-        optimizer_config = self.config["learner_config"]["optimizer_config"]
+        optimizer_config = Meta.config["learner_config"]["optimizer_config"]
         opt = optimizer_config["optimizer"]
 
         parameters = filter(lambda p: p.requires_grad, model.parameters())
@@ -99,14 +72,14 @@ class EmmentalLearner(object):
 
         # Set lr scheduler
         # TODO: add more lr scheduler support
-        opt = self.config["learner_config"]["lr_scheduler_config"]["lr_scheduler"]
-        lr_scheduler_config = self.config["learner_config"]["lr_scheduler_config"]
+        opt = Meta.config["learner_config"]["lr_scheduler_config"]["lr_scheduler"]
+        lr_scheduler_config = Meta.config["learner_config"]["lr_scheduler_config"]
 
         if opt is None:
             lr_scheduler = None
         elif opt == "linear":
             total_steps = (
-                self.n_batches_per_epoch * self.config["learner_config"]["n_epochs"]
+                self.n_batches_per_epoch * Meta.config["learner_config"]["n_epochs"]
             )
             linear_decay_func = lambda x: (total_steps - self.warmup_steps - x) / (
                 total_steps - self.warmup_steps
@@ -140,13 +113,13 @@ class EmmentalLearner(object):
     def _set_warmup_scheduler(self, model):
         """Set warmup learning rate scheduler for learning process."""
 
-        if self.config["learner_config"]["lr_scheduler_config"]["warmup_steps"]:
-            warmup_steps = self.config["learner_config"]["lr_scheduler_config"][
+        if Meta.config["learner_config"]["lr_scheduler_config"]["warmup_steps"]:
+            warmup_steps = Meta.config["learner_config"]["lr_scheduler_config"][
                 "warmup_steps"
             ]
             if warmup_steps < 0:
                 raise ValueError(f"warmup_steps much greater or equal than 0.")
-            warmup_unit = self.config["learner_config"]["lr_scheduler_config"][
+            warmup_unit = Meta.config["learner_config"]["lr_scheduler_config"][
                 "warmup_unit"
             ]
             if warmup_unit == "epoch":
@@ -174,17 +147,19 @@ class EmmentalLearner(object):
             self.warmup_scheduler.step()
         elif self.lr_scheduler is not None:
             self.lr_scheduler.step()
-            min_lr = self.config["learner_config"]["lr_scheduler_config"]["min_lr"]
+            min_lr = Meta.config["learner_config"]["lr_scheduler_config"]["min_lr"]
             if min_lr and self.optimizer.param_groups[0]["lr"] < min_lr:
                 self.optimizer.param_groups[0]["lr"] = min_lr
 
     def _set_task_scheduler(self, model, dataloaders):
         """Set task scheduler for learning process"""
         # TODO: add more task scheduler support
-        opt = self.config["learner_config"]["task_scheduler"]
+        opt = Meta.config["learner_config"]["task_scheduler"]
 
         if opt == "sequential":
             self.task_scheduler = SequentialScheduler()
+        elif opt == "round_robin":
+            self.task_scheduler = RoundRobinScheduler()
         else:
             raise ValueError(f"Unrecognized task scheduler option '{opt}'")
 
@@ -205,7 +180,7 @@ class EmmentalLearner(object):
         if self.logging_manager.trigger_evaluation():
             metric_dict.update(
                 self._evaluate(
-                    model, dataloaders, self.config["learner_config"]["valid_split"]
+                    model, dataloaders, Meta.config["learner_config"]["valid_split"]
                 )
             )
 
@@ -226,31 +201,26 @@ class EmmentalLearner(object):
 
         return metric_dict
 
-    def learn(self, model, dataloaders, config={}):
+    def learn(self, model, dataloaders):
         """The learning procedure of emmental MTL
 
         :param model: The emmental model that needs to learn
         :type model: emmental.model
         :param dataloaders: a list of dataloaders used to learn the model
         :type dataloaders: list
-        :param config: the config to update the existing config, defaults to {}
-        :type config: dict, optional
         """
-
-        # Update the existing config
-        self.config = _merge(self.config, config)
 
         # Generate the list of dataloaders for learning process
         train_dataloaders = [
             dataloader
             for dataloader in dataloaders
-            if dataloader.split == self.config["learner_config"]["train_split"]
+            if dataloader.split == Meta.config["learner_config"]["train_split"]
         ]
 
         if not train_dataloaders:
             raise ValueError(
                 f"Cannot find the specified train_split "
-                f'{self.config["learner_config"]["train_split"]} in datloaders.'
+                f'{Meta.config["learner_config"]["train_split"]} in datloaders.'
             )
 
         # Calculate the total number of batches per epoch
@@ -276,20 +246,15 @@ class EmmentalLearner(object):
 
         logger.info(f"Start learning...")
 
-        for epoch in range(self.config["learner_config"]["n_epochs"]):
+        for epoch in range(Meta.config["learner_config"]["n_epochs"]):
             batches = tqdm(
                 enumerate(self.task_scheduler.get_batches(train_dataloaders)),
                 total=self.n_batches_per_epoch,
-                disable=(
-                    not (
-                        self.config["learner_config"]["progress_bar"]
-                        and self.config["learner_config"]["verbose"]
-                    )
-                ),
+                disable=(not Meta.config["meta_config"]["verbose"]),
             )
             for batch_num, (task_name, data_name, label_name, batch) in batches:
                 X_dict, Y_dict = batch
-
+                print(task_name)
                 total_batch_num = epoch * self.n_batches_per_epoch + batch_num
                 batch_size = len(next(iter(Y_dict.values())))
 
@@ -303,7 +268,7 @@ class EmmentalLearner(object):
                     [task_name],
                     [data_name],
                     [label_name],
-                    self.config["learner_config"]["train_split"],
+                    Meta.config["learner_config"]["train_split"],
                 )
 
                 # Skip the backward pass if no loss is calcuated
@@ -323,10 +288,10 @@ class EmmentalLearner(object):
                 #     )
 
                 # Clip gradient norm
-                if self.config["learner_config"]["optimizer_config"]["grad_clip"]:
+                if Meta.config["learner_config"]["optimizer_config"]["grad_clip"]:
                     torch.nn.utils.clip_grad_norm_(
                         model.parameters(),
-                        self.config["learner_config"]["optimizer_config"]["grad_clip"],
+                        Meta.config["learner_config"]["optimizer_config"]["grad_clip"],
                     )
 
                 # Update the parameters

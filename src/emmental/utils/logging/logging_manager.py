@@ -1,5 +1,6 @@
 import logging
 
+from emmental import Meta
 from emmental.utils.logging.checkpointer import Checkpointer
 from emmental.utils.logging.log_writer import LogWriter
 from emmental.utils.logging.tensorboard_writer import TensorBoardWriter
@@ -10,32 +11,30 @@ logger = logging.getLogger(__name__)
 class LoggingManager(object):
     """A class to manage logging during training progress
 
-    :param config: the config object for counter
-    :type config: dict
     :param n_batches_per_epoch: total number batches per epoch
     :type n_batches_per_epoch: int
     :param verbose: print out the log or not
     :type verbose: bool
     """
 
-    def __init__(self, config, n_batches_per_epoch):
+    def __init__(self, n_batches_per_epoch):
         self.n_batches_per_epoch = n_batches_per_epoch
 
         # Set up counter
 
         # Set up evaluation/checkpointing unit (sample, batch, epoch)
-        self.counter_unit = config["logging_config"]["counter_unit"]
+        self.counter_unit = Meta.config["logging_config"]["counter_unit"]
 
         if self.counter_unit not in ["sample", "batch", "epoch"]:
             raise ValueError(f"Unrecognized unit: {self.counter_unit}")
 
         # Set up evaluation frequency
-        self.evaluation_freq = config["logging_config"]["evaluation_freq"]
+        self.evaluation_freq = Meta.config["logging_config"]["evaluation_freq"]
         logger.info(f"Evaluating every {self.evaluation_freq} {self.counter_unit}.")
 
         # Set up checkpointing frequency
         self.checkpointing_freq = int(
-            config["logging_config"]["checkpointer_config"]["checkpoint_freq"]
+            Meta.config["logging_config"]["checkpointer_config"]["checkpoint_freq"]
         )
         logger.info(
             f"Checkpointing every "
@@ -66,7 +65,7 @@ class LoggingManager(object):
         self.trigger_count = 0
 
         # Set up log writer
-        writer_opt = config["logging_config"]["writer_config"]["writer"]
+        writer_opt = Meta.config["logging_config"]["writer_config"]["writer"]
 
         if writer_opt is None:
             self.writer = None
@@ -78,8 +77,7 @@ class LoggingManager(object):
             raise ValueError(f"Unrecognized writer option '{writer_opt}'")
 
         # Set up checkpointer
-        # checkpointer_config = config["logging_config"]["checkpointer_config"]
-        self.checkpointer = Checkpointer(config)
+        self.checkpointer = Checkpointer()
 
     def update(self, batch_size):
         """Update the count and total number"""

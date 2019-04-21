@@ -14,10 +14,7 @@ class LogWriter(object):
     :type object: [type]
     """
 
-    def __init__(self, config=None, verbose=True):
-        self.verbose = verbose
-
-        self.config = config
+    def __init__(self):
         self.run_log = defaultdict(list)
 
     def add_config(self, config):

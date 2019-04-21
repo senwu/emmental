@@ -7,7 +7,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from emmental.task import Task
+from emmental.meta import Meta
+from emmental.task import EmmentalTask
 from emmental.utils.utils import move_to_device, prob_to_pred
 
 logger = logging.getLogger(__name__)
@@ -22,10 +23,9 @@ class EmmentalModel(nn.Module):
     :type tasks: list of Task project
     """
 
-    def __init__(self, name, config, tasks=None):
+    def __init__(self, name, tasks=None):
         super().__init__()
         self.name = name if name is not None else type(self).__name__
-        self.config = config
 
         # Initiate the model attributes
         self.module_pool = nn.ModuleDict()
@@ -39,9 +39,11 @@ class EmmentalModel(nn.Module):
         if tasks is not None:
             self._build_network(tasks)
 
-        logger.info(
-            f"Created emmental model {self.name} that contains task {self.task_names}."
-        )
+        if Meta.config["meta_config"]["verbose"]:
+            logger.info(
+                f"Created emmental model {self.name} that contains "
+                f"task {self.task_names}."
+            )
 
         # Move model to specified device
         self._move_to_device()
@@ -49,13 +51,13 @@ class EmmentalModel(nn.Module):
     def _move_to_device(self):
         """Move model to specified device."""
 
-        if self.config["model_config"]["device"] >= 0:
+        if Meta.config["meta_config"]["device"] >= 0:
             if torch.cuda.is_available():
-                if self.config["model_config"]["verbose"]:
+                if Meta.config["meta_config"]["verbose"]:
                     logger.info("Moving model to GPU.")
-                self.to(torch.device(f"cuda:{self.config['model_config']['device']}"))
+                self.to(torch.device(f"cuda:{Meta.config['meta_config']['device']}"))
             else:
-                if self.config["model_config"]["verbose"]:
+                if Meta.config["meta_config"]["verbose"]:
                     logger.info("No cuda device available. Switch to cpu instead.")
 
     def _build_network(self, tasks):
@@ -68,7 +70,7 @@ class EmmentalModel(nn.Module):
                     f"Found duplicate task {task.name}, different task should use "
                     f"different task name."
                 )
-            if not isinstance(task, Task):
+            if not isinstance(task, EmmentalTask):
                 raise ValueError(f"Unrecognized task type {task}.")
             self._add_task(task)
 
@@ -115,11 +117,13 @@ class EmmentalModel(nn.Module):
     def _remove_task(self, task_name):
         """Remove a existing task from MTL network"""
         if task_name not in self.task_flows:
-            print(f"Task ({task_name}) not in the current model, skip...")
+            if Meta.config["meta_config"]["verbose"]:
+                logger.info(f"Task ({task_name}) not in the current model, skip...")
             return
 
         # Remove task by task_name
-        logger.info(f"Removing Task {task_name}.")
+        if Meta.config["meta_config"]["verbose"]:
+            logger.info(f"Removing Task {task_name}.")
         self.task_names.remove(task_name)
         del self.task_flows[task_name]
         del self.loss_funcs[task_name]
@@ -141,7 +145,7 @@ class EmmentalModel(nn.Module):
         """
         immediate_ouput_dict = dict()
 
-        X_dict = move_to_device(X_dict, self.config["model_config"]["device"])
+        X_dict = move_to_device(X_dict, Meta.config["meta_config"]["device"])
 
         # Call forward for each task
         for task_name in task_names:
@@ -188,7 +192,7 @@ class EmmentalModel(nn.Module):
             loss_dict[identifier] = self.loss_funcs[task_name](
                 immediate_ouput_dict[task_name],
                 move_to_device(
-                    Y_dict[label_name], self.config["model_config"]["device"]
+                    Y_dict[label_name], Meta.config["meta_config"]["device"]
                 ),
             )
 
@@ -276,14 +280,12 @@ class EmmentalModel(nn.Module):
 
         return metric_score_dict
 
-    def save(self, model_file, save_dir, verbose=True):
+    def save(self, model_file, save_dir):
         """Save the current model
         :param model_file: Saved model file name.
         :type model_file: str
         :param save_dir: Saved model directory.
         :type save_dir: str
-        :param verbose: Print log or not
-        :type verbose: bool
         """
 
         # Check existence of model saving directory and create if does not exist.
@@ -303,17 +305,15 @@ class EmmentalModel(nn.Module):
         except BaseException:
             logger.warning("Saving failed... continuing anyway.")
 
-        if verbose:
+        if Meta.config["meta_config"]["verbose"]:
             logger.info(f"[{self.name}] Model saved as {model_file} in {save_dir}")
 
-    def load(self, model_file, save_dir, verbose=True):
+    def load(self, model_file, save_dir):
         """Load model from file and rebuild the model.
         :param model_file: Saved model file name.
         :type model_file: str
         :param save_dir: Saved model directory.
         :type save_dir: str
-        :param verbose: Print log or not
-        :type verbose: bool
         """
 
         if not os.path.exists(save_dir):
@@ -332,5 +332,5 @@ class EmmentalModel(nn.Module):
         self.loss_funcs = checkpoint["loss_funcs"]
         self.output_funcs = checkpoint["output_funcs"]
 
-        if verbose:
+        if Meta.config["meta_config"]["verbose"]:
             logger.info(f"[{self.name}] Model loaded as {model_file} in {save_dir}")

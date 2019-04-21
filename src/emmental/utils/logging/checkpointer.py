@@ -12,17 +12,9 @@ logger = logging.getLogger(__name__)
 class Checkpointer(object):
     """Checkpointing Training logging class to log train infomation"""
 
-    def __init__(self, config):
-
-        # checkpointer_config:
-        #     checkpoint_path:
-        #     checkpoint_freq: 2
-        #     checkpoint_metric:
-        #     checkpoint_metric_mode:
-        #     checkpoint_runway: 0
-
+    def __init__(self):
         # Set up checkpoint directory
-        self.checkpoint_path = config["logging_config"]["checkpointer_config"][
+        self.checkpoint_path = Meta.config["logging_config"]["checkpointer_config"][
             "checkpoint_path"
         ]
         if self.checkpoint_path is None:
@@ -33,8 +25,8 @@ class Checkpointer(object):
             os.makedirs(self.checkpoint_path)
 
         self.checkpoint_freq = int(
-            config["logging_config"]["evaluation_freq"]
-            * config["logging_config"]["checkpointer_config"]["checkpoint_freq"]
+            Meta.config["logging_config"]["evaluation_freq"]
+            * Meta.config["logging_config"]["checkpointer_config"]["checkpoint_freq"]
         )
 
         if self.checkpoint_freq <= 0:
@@ -43,22 +35,22 @@ class Checkpointer(object):
                 f"must be greater 0."
             )
 
-        self.checkpoint_unit = config["logging_config"]["counter_unit"]
+        self.checkpoint_unit = Meta.config["logging_config"]["counter_unit"]
 
         logger.info(
             f"Save checkpoints at {self.checkpoint_path} every "
             f"{self.checkpoint_freq} {self.checkpoint_unit}"
         )
 
-        self.checkpoint_metric = config["logging_config"]["checkpointer_config"][
+        self.checkpoint_metric = Meta.config["logging_config"]["checkpointer_config"][
             "checkpoint_metric"
         ]
         if not isinstance(self.checkpoint_metric, list):
             self.checkpoint_metric = [self.checkpoint_metric]
 
-        self.checkpoint_metric_mode = config["logging_config"]["checkpointer_config"][
-            "checkpoint_metric_mode"
-        ].lower()
+        self.checkpoint_metric_mode = Meta.config["logging_config"][
+            "checkpointer_config"
+        ]["checkpoint_metric_mode"].lower()
 
         if self.checkpoint_metric_mode not in ["min", "max"]:
             raise ValueError(
@@ -66,7 +58,7 @@ class Checkpointer(object):
                 f"must be 'min' or 'max'."
             )
 
-        self.checkpoint_runway = config["logging_config"]["checkpointer_config"][
+        self.checkpoint_runway = Meta.config["logging_config"]["checkpointer_config"][
             "checkpoint_runway"
         ]
         logger.info(

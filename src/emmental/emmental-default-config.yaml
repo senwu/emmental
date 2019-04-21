@@ -2,10 +2,10 @@
 meta_config:
     seed: 0
     verbose: True
+    device: 0 # -1 for cpu or gpu id (e.g., 0 for cuda:0)
 
 # This part is for learning configuration
 learner_config:
-    device: 0 # -1 for cpu or gpu id (e.g., 0 for cuda:0)
     fp16: False # whether to use half precision
     model_path: # the path to pretrained model
     seed:

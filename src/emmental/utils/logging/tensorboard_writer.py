@@ -9,8 +9,8 @@ from emmental.utils.logging.log_writer import LogWriter
 class TensorBoardWriter(LogWriter):
     """A class for logging to Tensorboard during training process."""
 
-    def __init__(self, config=None, verbose=True):
-        super().__init__(config=config, verbose=verbose)
+    def __init__(self):
+        super().__init__()
 
         # Set up tensorboard summary writer
         self.writer = SummaryWriter(Meta.log_path)
@@ -22,7 +22,7 @@ class TensorBoardWriter(LogWriter):
 
     def write_config(self, config_filename="config.yaml"):
         """Dump the config to file"""
-        config = json.dumps(self.config)
+        config = json.dumps(Meta.config)
         self.writer.add_text(tag="config", text_string=config)
 
         super().write_config(config_filename)

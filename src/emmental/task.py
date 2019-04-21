@@ -5,7 +5,7 @@ from torch import nn
 logger = logging.getLogger(__name__)
 
 
-class Task(object):
+class EmmentalTask(object):
     """Task class to define task in Emmental model.
 
     :param name: The name of the task (Primary key).
