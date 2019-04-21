@@ -1,11 +1,13 @@
-model_config:
-    seed:
+# This part is for meta configuration
+meta_config:
+    seed: 0
     verbose: True
+
+# This part is for learning configuration
+learner_config:
     device: 0 # -1 for cpu or gpu id (e.g., 0 for cuda:0)
     fp16: False # whether to use half precision
     model_path: # the path to pretrained model
-
-learner_config:
     seed:
     verbose: True
     progress_bar: True
@@ -37,6 +39,7 @@ learner_config:
             threshold: 0.0001
     task_scheduler: round_robin # [sequential, round_robin]
 
+# This part is for logging configuration
 logging_config:
     counter_unit: batch # [epoch, batch]
     evaluation_freq: 2

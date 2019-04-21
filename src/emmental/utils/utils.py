@@ -107,3 +107,17 @@ def move_to_device(obj, device=-1):
         return tuple([move_to_device(item, device) for item in obj])
     else:
         return obj
+
+
+def merge(x, y):
+    """Merge two nested dictionaries. Overwrite values in x with values in y."""
+
+    merged = {**x, **y}
+
+    xkeys = x.keys()
+
+    for key in xkeys:
+        if isinstance(x[key], dict) and key in y:
+            merged[key] = merge(x[key], y[key])
+
+    return merged
