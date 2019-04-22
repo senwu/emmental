@@ -3,6 +3,17 @@ Emmental
 
 |Travis| |CodeClimate| |Coveralls| |ReadTheDocs| |GitHubStars| |License| |CodeStyle|
 
+Emmental is a framework for building multi-modal multi-task learning systems.
+
+Note that Emmental is still *actively under development*, so feedback and
+contributions are welcome. Submit bugs in the Issues_ section or feel free to
+submit your contributions as a pull request.
+
+Getting Started
+---------------
+
+    make dev
+
 
 .. |CodeClimate| image:: https://img.shields.io/codeclimate/maintainability/SenWu/emmental.svg
    :alt: Code Climate
@@ -19,3 +30,5 @@ Emmental
    :target: https://github.com/SenWu/emmental/blob/master/LICENSE
 .. |CodeStyle| image:: https://img.shields.io/badge/code%20style-black-000000.svg
    :target: https://github.com/ambv/black
+
+.. _Issues: https://github.com/SenWu/emmental/issues/
