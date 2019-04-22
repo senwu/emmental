@@ -2,8 +2,8 @@ import json
 
 from tensorboardX import SummaryWriter
 
+from emmental.logging.log_writer import LogWriter
 from emmental.meta import Meta
-from emmental.utils.logging.log_writer import LogWriter
 
 
 class TensorBoardWriter(LogWriter):

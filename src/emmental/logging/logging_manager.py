@@ -1,9 +1,9 @@
 import logging
 
 from emmental import Meta
-from emmental.utils.logging.checkpointer import Checkpointer
-from emmental.utils.logging.log_writer import LogWriter
-from emmental.utils.logging.tensorboard_writer import TensorBoardWriter
+from emmental.logging.checkpointer import Checkpointer
+from emmental.logging.log_writer import LogWriter
+from emmental.logging.tensorboard_writer import TensorBoardWriter
 
 logger = logging.getLogger(__name__)
 
