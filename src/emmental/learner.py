@@ -175,37 +175,34 @@ class EmmentalLearner(object):
         # Log the loss
         self.logging_manager.write_log(loss_dict)
 
+        # Log the learning rate
+        lr = self.optimizer.param_groups[0]["lr"]
+        self.logging_manager.write_log(
+            {f"model/{Meta.config['learner_config']['train_split']}/lr": lr}
+        )
+
+        # Switch to eval mode for evaluation
         model.eval()
         metric_dict = dict()
 
         self.logging_manager.update(batch_size)
-        # print(self.counter.unit_total, self.counter.trigger_evaluation())
+
+        # Evaluate the model and log the metric
         if self.logging_manager.trigger_evaluation():
             metric_dict.update(
                 self._evaluate(
                     model, dataloaders, Meta.config["learner_config"]["valid_split"]
                 )
             )
-
             self.logging_manager.write_log(metric_dict)
-            # for metric_name, metric_value in metric_dict.items():
-            #     print(metric_name, metric_value, self.logging_manager.unit_total)
-            #     self.writer.add_scalar(
-            #         metric_name, metric_value, self.counter.unit_total
-            #     )
-            #     self.writer.add_scalar("model/loss",
-            # self.optimizer.param_groups[0]["lr"],
-            #  self.counter.unit_total)
 
+        # Checkpoint the model
         if self.logging_manager.trigger_checkpointing():
             self.logging_manager.checkpoint_model(
                 model, self.optimizer, self.lr_scheduler, metric_dict
             )
-        lr = self.optimizer.param_groups[0]["lr"]
-        self.logging_manager.write_log(
-            {f"model/{Meta.config['learner_config']['train_split']}/lr": lr}
-        )
 
+        # Switch to train mode
         model.train()
 
         return metric_dict
@@ -239,16 +236,12 @@ class EmmentalLearner(object):
 
         # Set up logging manager
         self._set_logging_manager()
-        # # Set up counter
-        # self._set_counter()
         # Set up optimizer
         self._set_optimizer(model)
         # Set up lr_scheduler
         self._set_lr_scheduler(model)
         # Set up task_scheduler
         self._set_task_scheduler(model, dataloaders)
-        # # Set up writer
-        # self._set_writer()
 
         # Set to training mode
         model.train()
@@ -263,7 +256,7 @@ class EmmentalLearner(object):
             )
             for batch_num, (task_name, data_name, label_name, batch) in batches:
                 X_dict, Y_dict = batch
-                print(task_name)
+
                 total_batch_num = epoch * self.n_batches_per_epoch + batch_num
                 batch_size = len(next(iter(Y_dict.values())))
 
@@ -292,12 +285,6 @@ class EmmentalLearner(object):
 
                 # Perform backward pass to calculate gradients
                 loss.backward()
-
-                # self.logging_manager.write_log(loss_dict)
-                # for loss_name, loss_value in loss_dict.items():
-                #     self.writer.add_scalar(
-                #         loss_name, loss_value.item(), total_batch_num
-                #     )
 
                 # Clip gradient norm
                 if Meta.config["learner_config"]["optimizer_config"]["grad_clip"]:
