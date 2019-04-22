@@ -4,9 +4,9 @@ import torch
 import torch.optim as optim
 
 from emmental import Meta
+from emmental.logging import LoggingManager
 from emmental.schedulers.round_robin_scheduler import RoundRobinScheduler
 from emmental.schedulers.sequential_scheduler import SequentialScheduler
-from emmental.utils.logging import LoggingManager
 
 try:
     from IPython import get_ipython
@@ -28,8 +28,8 @@ class EmmentalLearner(object):
     :type config: dict
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, name=None):
+        self.name = name if name is not None else type(self).__name__
 
     def _set_logging_manager(self):
         """Set logging manager."""
@@ -136,7 +136,7 @@ class EmmentalLearner(object):
             )
         else:
             warmup_scheduler = None
-            self.warmup_step = 0
+            self.warmup_steps = 0
 
         self.warmup_scheduler = warmup_scheduler
 
@@ -169,8 +169,11 @@ class EmmentalLearner(object):
         ]
         return model.score(valid_dataloaders)
 
-    def _logging(self, model, dataloaders, batch_size):
+    def _logging(self, model, dataloaders, batch_size, loss_dict):
         """Checking if it's time to evaluting or checkpointing"""
+
+        # Log the loss
+        self.logging_manager.write_log(loss_dict)
 
         model.eval()
         metric_dict = dict()
@@ -198,6 +201,12 @@ class EmmentalLearner(object):
             self.logging_manager.checkpoint_model(
                 model, self.optimizer, self.lr_scheduler, metric_dict
             )
+        lr = self.optimizer.param_groups[0]["lr"]
+        self.logging_manager.write_log(
+            {f"model/{Meta.config['learner_config']['train_split']}/lr": lr}
+        )
+
+        model.train()
 
         return metric_dict
 
@@ -258,6 +267,9 @@ class EmmentalLearner(object):
                 total_batch_num = epoch * self.n_batches_per_epoch + batch_num
                 batch_size = len(next(iter(Y_dict.values())))
 
+                # Update lr using lr scheduler
+                self._update_lr_scheduler(model, total_batch_num)
+
                 # Set gradients of all model parameters to zero
                 self.optimizer.zero_grad()
 
@@ -297,12 +309,6 @@ class EmmentalLearner(object):
                 # Update the parameters
                 self.optimizer.step()
 
-                metrics_dict = self._logging(model, dataloaders, batch_size)
-
-                self.logging_manager.write_log(loss_dict)
-
-                # print(metrics_dict)
-                # Update lr using lr scheduler
-                self._update_lr_scheduler(model, total_batch_num)
+                metrics_dict = self._logging(model, dataloaders, batch_size, loss_dict)
 
                 batches.set_postfix(metrics_dict)
