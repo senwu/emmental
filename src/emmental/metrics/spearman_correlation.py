@@ -15,7 +15,8 @@ def spearman_correlation_scorer(gold, probs, preds):
     :rtype: dict
     """
 
-    correlation, pvalue = spearmanr(gold, preds)
+    probs = np.vstack(probs).squeeze()
+    correlation, pvalue = spearmanr(gold, probs)
     if np.isnan(correlation):
         correlation = 0.0
     return {"spearman_correlation": correlation, "spearman_pvalue": pvalue}

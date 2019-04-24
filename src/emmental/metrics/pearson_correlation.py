@@ -15,7 +15,8 @@ def pearson_correlation_scorer(gold, probs, preds):
     :rtype: dict
     """
 
-    correlation, pvalue = pearsonr(gold, preds)
+    probs = np.vstack(probs).squeeze()
+    correlation, pvalue = pearsonr(gold, probs)
     if np.isnan(correlation):
         correlation = 0.0
     return {"pearson_correlation": correlation, "pearson_pvalue": pvalue}

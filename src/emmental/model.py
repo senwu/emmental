@@ -259,6 +259,9 @@ class EmmentalModel(nn.Module):
         :param dataloaders: the dataloader that performs scoring
         :type dataloaders: dataloader
         """
+
+        self.eval()
+
         if not isinstance(dataloaders, list):
             dataloaders = [dataloaders]
 

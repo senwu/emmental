@@ -24,6 +24,11 @@ def set_random_seed(seed):
 def list_to_tensor(item_list):
     """Convert the list of items into a tensor."""
 
+    # Covert to tensor type
+    for idx in range(len(item_list)):
+        if not isinstance(item_list[idx], torch.Tensor):
+            item_list[idx] = torch.from_numpy(np.array(item_list[idx]))
+
     # Convert 2 or more-D tensor with the same shape
     if all(
         (item_list[i].size() == item_list[0].size()) and (len(item_list[i].size()) != 1)
