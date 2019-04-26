@@ -54,7 +54,10 @@ class EmmentalModel(nn.Module):
         if Meta.config["meta_config"]["device"] >= 0:
             if torch.cuda.is_available():
                 if Meta.config["meta_config"]["verbose"]:
-                    logger.info("Moving model to GPU.")
+                    logger.info(
+                        f"Moving model to GPU "
+                        f"(cuda:{Meta.config['meta_config']['device']})."
+                    )
                 self.to(torch.device(f"cuda:{Meta.config['meta_config']['device']}"))
             else:
                 if Meta.config["meta_config"]["verbose"]:
@@ -79,9 +82,9 @@ class EmmentalModel(nn.Module):
         # Combine module_pool from all tasks
         for key in task.module_pool.keys():
             if key in self.module_pool.keys():
-                task.module_pool[key] = self.module_pool[key]
+                task.module_pool[key] = nn.DataParallel(self.module_pool[key])
             else:
-                self.module_pool[key] = task.module_pool[key]
+                self.module_pool[key] = nn.DataParallel(task.module_pool[key])
         # Collect task names
         self.task_names.add(task.name)
         # Collect task flows
@@ -101,7 +104,7 @@ class EmmentalModel(nn.Module):
         # Update module_pool with task
         for key in task.module_pool.keys():
             # Update the model's module with the task's module
-            self.module_pool[key] = task.module_pool[key]
+            self.module_pool[key] = nn.DataParallel(task.module_pool[key])
         # Update task flows
         self.task_flows[task.name] = task.task_flow
         # Update loss functions
