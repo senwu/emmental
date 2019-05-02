@@ -211,9 +211,12 @@ class EmmentalModel(nn.Module):
             Y = Y_dict[label_name]
 
             # Select the active samples
-            active = torch.any(
-                Y.detach() != Meta.config["learner_config"]["ignore_index"], dim=1
-            )
+            if len(Y.size()) == 1:
+                active = Y.detach() != Meta.config["learner_config"]["ignore_index"]
+            else:
+                active = torch.any(
+                    Y.detach() != Meta.config["learner_config"]["ignore_index"], dim=1
+                )
             count_dict[identifier] = active.sum().item()
 
             loss_dict[identifier] = self.loss_funcs[task_name](

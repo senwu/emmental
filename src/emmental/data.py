@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 
+import torch
 from torch.utils.data import DataLoader, Dataset
 
 from emmental.utils.utils import list_to_tensor
@@ -26,6 +27,10 @@ class EmmentalDataset(Dataset):
         self.name = name
         self.X_dict = X_dict
         self.Y_dict = Y_dict
+
+        for name, label in self.Y_dict.items():
+            if not isinstance(label, torch.Tensor):
+                raise ValueError(f"Label {name} should be torch.Tensor.")
 
     def __getitem__(self, index):
         x_dict = {name: feature[index] for name, feature in self.X_dict.items()}
@@ -92,7 +97,9 @@ def emmental_collate_fn(batch):
             Y_batch[label_name].append(value)
 
     for field_name, values in X_batch.items():
-        X_batch[field_name] = list_to_tensor(values)
+        # Only merge list of tensors
+        if isinstance(values[0], torch.Tensor):
+            X_batch[field_name] = list_to_tensor(values)
 
     for label_name, values in Y_batch.items():
         Y_batch[label_name] = list_to_tensor(values)
