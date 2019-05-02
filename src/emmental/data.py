@@ -64,6 +64,10 @@ class EmmentalDataset(Dataset):
         :type Y_dict: dict
         """
 
+        for name, label in Y_dict.items():
+            if not isinstance(label, torch.Tensor):
+                raise ValueError(f"Label {name} should be torch.Tensor.")
+
         self._update_dict(self.Y_dict, Y_dict)
 
     def remove_feature(self, feature_name):
