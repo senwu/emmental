@@ -1,6 +1,6 @@
 import json
 
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 from emmental.logging.log_writer import LogWriter
 from emmental.meta import Meta

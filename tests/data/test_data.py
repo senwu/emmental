@@ -111,9 +111,8 @@ def test_emmental_dataloader(caplog):
     )
 
     dataloader1 = EmmentalDataLoader(
-        task_name="task1",
+        task_to_label_dict={"task1": "label1"},
         dataset=dataset,
-        label_name="label1",
         split="train",
         batch_size=2,
     )
@@ -121,8 +120,7 @@ def test_emmental_dataloader(caplog):
     x_batch, y_batch = next(iter(dataloader1))
 
     # Check if the dataloader is correctly constructed
-    assert dataloader1.task_name == "task1"
-    assert dataloader1.label_name == "label1"
+    assert dataloader1.task_to_label_dict == {"task1": "label1"}
     assert dataloader1.split == "train"
     assert torch.equal(x_batch["data1"], torch.Tensor([[1, 0], [1, 2]]))
     assert torch.equal(
@@ -132,9 +130,8 @@ def test_emmental_dataloader(caplog):
     assert torch.equal(y_batch["label2"], torch.Tensor([[1], [1]]))
 
     dataloader2 = EmmentalDataLoader(
-        task_name="task2",
+        task_to_label_dict={"task2": "label2"},
         dataset=dataset,
-        label_name="label2",
         split="test",
         batch_size=3,
     )
@@ -142,8 +139,7 @@ def test_emmental_dataloader(caplog):
     x_batch, y_batch = next(iter(dataloader2))
 
     # Check if the dataloader with differet batch size is correctly constructed
-    assert dataloader2.task_name == "task2"
-    assert dataloader2.label_name == "label2"
+    assert dataloader2.task_to_label_dict == {"task2": "label2"}
     assert dataloader2.split == "test"
     assert torch.equal(
         x_batch["data1"], torch.Tensor([[1, 0, 0], [1, 2, 0], [1, 2, 3]])

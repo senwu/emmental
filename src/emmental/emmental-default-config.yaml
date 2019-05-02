@@ -1,20 +1,18 @@
 # This part is for meta configuration
 meta_config:
-    seed: 0
-    verbose: True
+    seed: 0  # random seed for the model and learning
+    verbose: True # whether to print the log information
     device: 0 # -1 for cpu or gpu id (e.g., 0 for cuda:0)
 
 # This part is for learning configuration
 learner_config:
     fp16: False # whether to use half precision
     model_path: # the path to pretrained model
-    seed:
-    verbose: True
-    progress_bar: True
     n_epochs: 1
-    train_split: train
-    valid_split: valid
+    train_split: train # accept str or list of strs
+    valid_split: valid # accept str or list of strs
     test_split: test
+    ignore_index: -100
     optimizer_config:
         optimizer: sgd # [sgd, adam]
         lr: 0.001
@@ -25,9 +23,9 @@ learner_config:
         adam_config:
             betas: !!python/tuple [0.9, 0.999]
     lr_scheduler_config:
-        lr_scheduler: # [linear, exponential, reduce_on_plateau]
-        warmup_steps: 0.0
-        warmup_unit: epoch # [epoch, batch]
+        lr_scheduler: linear # [linear, exponential, reduce_on_plateau]
+        warmup_steps: 0
+        warmup_unit: batch # [epoch, batch]
         min_lr: 0.0
         linear_config:
             min_lr: 0.0
@@ -50,7 +48,7 @@ logging_config:
     checkpointer_config:
         checkpoint_path:
         checkpoint_freq: 1
-        checkpoint_metric: task1/da1/valid/f1
+        checkpoint_metric: model/train/all/loss
         checkpoint_metric_mode: max # [min, max]
         checkpoint_runway: 0
 

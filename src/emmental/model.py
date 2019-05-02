@@ -65,6 +65,7 @@ class EmmentalModel(nn.Module):
 
     def _build_network(self, tasks):
         """Build the MTL network using all tasks"""
+
         if not isinstance(tasks, Iterable):
             tasks = [tasks]
         for task in tasks:
@@ -75,10 +76,11 @@ class EmmentalModel(nn.Module):
                 )
             if not isinstance(task, EmmentalTask):
                 raise ValueError(f"Unrecognized task type {task}.")
-            self._add_task(task)
+            self.add_task(task)
 
-    def _add_task(self, task):
+    def add_task(self, task):
         """Add a single task into MTL network"""
+
         # Combine module_pool from all tasks
         for key in task.module_pool.keys():
             if key in self.module_pool.keys():
@@ -99,8 +101,9 @@ class EmmentalModel(nn.Module):
         # Move model to specified device
         self._move_to_device()
 
-    def _update_task(self, task):
+    def update_task(self, task):
         """Update a existing task in MTL network"""
+
         # Update module_pool with task
         for key in task.module_pool.keys():
             # Update the model's module with the task's module
@@ -117,7 +120,7 @@ class EmmentalModel(nn.Module):
         # Move model to specified device
         self._move_to_device()
 
-    def _remove_task(self, task_name):
+    def remove_task(self, task_name):
         """Remove a existing task from MTL network"""
         if task_name not in self.task_flows:
             if Meta.config["meta_config"]["verbose"]:
@@ -127,6 +130,7 @@ class EmmentalModel(nn.Module):
         # Remove task by task_name
         if Meta.config["meta_config"]["verbose"]:
             logger.info(f"Removing Task {task_name}.")
+
         self.task_names.remove(task_name)
         del self.task_flows[task_name]
         del self.loss_funcs[task_name]
@@ -139,67 +143,86 @@ class EmmentalModel(nn.Module):
         return f"{cls_name}(name={self.name})"
 
     def forward(self, X_dict, task_names):
-        """Calculate the loss given the features and labels
+        """Forward based on input and task
+        Note: We assume that all shared the modules from all tasks are based on the
+        the same input.
 
-        :param X_dict:
-        :type X_dict:
-        :param task_names:
-        :type task_names:
+        :param X_dict: The input data
+        :type X_dict: dict of tensor
+        :param task_names: The task names that needs to forward
+        :type task_names: list of str
+        :return: The output of all forwarded modules
+        :rtype: dict
         """
-        immediate_ouput_dict = dict()
 
         X_dict = move_to_device(X_dict, Meta.config["meta_config"]["device"])
+
+        immediate_ouput_dict = dict()
+        immediate_ouput_dict["_input_"] = X_dict
 
         # Call forward for each task
         for task_name in task_names:
             task_flow = self.task_flows[task_name]
-            immediate_ouput = [X_dict]
 
             for action in task_flow:
-                input = [
-                    immediate_ouput[action_index][output_index]
-                    for action_index, output_index in action["inputs"]
-                ]
-                output = self.module_pool[action["module"]].forward(*input)
-                if isinstance(output, tuple):
-                    output = list(output)
-                if not isinstance(output, list):
-                    output = [output]
-                immediate_ouput.append(output)
-            immediate_ouput_dict[task_name] = immediate_ouput
+                if action["name"] not in immediate_ouput_dict:
+                    try:
+                        input = [
+                            immediate_ouput_dict[action_name][output_index]
+                            for action_name, output_index in action["inputs"]
+                        ]
+                    except Exception:
+                        raise ValueError(f"Unrecognized action {action}.")
+                    output = self.module_pool[action["module"]].forward(*input)
+                    if isinstance(output, tuple):
+                        output = list(output)
+                    if not isinstance(output, list):
+                        output = [output]
+                    immediate_ouput_dict[action["name"]] = output
+
         return immediate_ouput_dict
 
-    def calculate_losses(
-        self, X_dict, Y_dict, task_names, data_names, label_names, split
-    ):
-        """Calculate the loss given the features and labels
+    def calculate_loss(self, X_dict, Y_dict, task_to_label_dict, data_name, split):
+        """Calculate the loss
 
-        :param X_dict:
-        :type X_dict:
-        :param Y_dict:
-        :type Y_dict:
-        :param task_names:
-        :type task_names:
+        :param X_dict: The input data
+        :type X_dict: dict of tensors
+        :param Y_dict: The output data
+        :type Y_dict: dict of tensors
+        :param task_to_label_dict: The task to label mapping
+        :type task_to_label_dict: dict
+        :param data_name: The dataset name
+        :type data_name: str
+        :param split: The data split
+        :type split: str
+        :return: The loss and the number of samples in the batch of all tasks
+        :rtype: dict, dict
         """
 
         loss_dict = dict()
         count_dict = dict()
 
-        immediate_ouput_dict = self.forward(X_dict, task_names)
+        immediate_ouput_dict = self.forward(X_dict, task_to_label_dict.keys())
 
         # Calculate loss for each task
-        for task_name, data_name, label_name in zip(
-            task_names, data_names, label_names
-        ):
+        for task_name, label_name in task_to_label_dict.items():
             identifier = "/".join([task_name, data_name, split, "loss"])
+
+            Y = Y_dict[label_name]
+
+            # Select the active samples
+            active = torch.any(
+                Y.detach() != Meta.config["learner_config"]["ignore_index"], dim=1
+            )
+            count_dict[identifier] = active.sum().item()
+
             loss_dict[identifier] = self.loss_funcs[task_name](
-                immediate_ouput_dict[task_name],
+                immediate_ouput_dict,
                 move_to_device(
                     Y_dict[label_name], Meta.config["meta_config"]["device"]
                 ),
+                move_to_device(active, Meta.config["meta_config"]["device"]),
             )
-
-            count_dict[identifier] = Y_dict[label_name].size(0)
 
         return loss_dict, count_dict
 
@@ -207,11 +230,12 @@ class EmmentalModel(nn.Module):
     def _calculate_probs(self, X_dict, task_names):
         """Calculate the probs given the features
 
-        :param X_dict:
-        :type X_dict:
-        :param task_names:
-        :type task_names:
+        :param X_dict: The input data
+        :type X_dict: dict of tensor
+        :param task_names: The task names that needs to forward
+        :type task_names: list of str
         """
+
         prob_dict = dict()
 
         immediate_ouput_dict = self.forward(X_dict, task_names)
@@ -219,9 +243,7 @@ class EmmentalModel(nn.Module):
         # Calculate prediction for each task
         for task_name in task_names:
             prob_dict[task_name] = (
-                self.output_funcs[task_name](immediate_ouput_dict[task_name])
-                .cpu()
-                .numpy()
+                self.output_funcs[task_name](immediate_ouput_dict).cpu().numpy()
             )
 
         return prob_dict
@@ -234,16 +256,22 @@ class EmmentalModel(nn.Module):
 
         for batch_num, (X_batch_dict, Y_batch_dict) in enumerate(dataloader):
             prob_batch_dict = self._calculate_probs(
-                X_batch_dict, [dataloader.task_name]
+                X_batch_dict, dataloader.task_to_label_dict.keys()
             )
-            for task_name, prob_batch in prob_batch_dict.items():
-                prob_dict[task_name].extend(prob_batch)
-            gold_dict[task_name].extend(
-                Y_batch_dict[dataloader.label_name].cpu().numpy()
-            )
+            for task_name in dataloader.task_to_label_dict.keys():
+                prob_dict[task_name].extend(prob_batch_dict[task_name])
+                gold_dict[task_name].extend(
+                    Y_batch_dict[dataloader.task_to_label_dict[task_name]].cpu().numpy()
+                )
         for task_name in gold_dict:
             gold_dict[task_name] = np.array(gold_dict[task_name]).reshape(-1)
             prob_dict[task_name] = np.array(prob_dict[task_name])
+            active = (
+                gold_dict[task_name] != Meta.config["learner_config"]["ignore_index"]
+            ).reshape(-1)
+            if 0 in active:
+                gold_dict[task_name] = gold_dict[task_name][active]
+                prob_dict[task_name] = prob_dict[task_name][active]
 
         if return_preds:
             pred_dict = defaultdict(list)
@@ -275,6 +303,7 @@ class EmmentalModel(nn.Module):
                 dataloader, return_preds=True
             )
             for task_name in gold_dict.keys():
+                # import pdb; pdb.set_trace()
                 metric_score = self.scorers[task_name].score(
                     gold_dict[task_name], prob_dict[task_name], pred_dict[task_name]
                 )
@@ -301,9 +330,11 @@ class EmmentalModel(nn.Module):
         params = {
             "name": self.name,
             "module_pool": self.module_pool,
+            "task_names": self.task_names,
             "task_flows": self.task_flows,
             "loss_funcs": self.loss_funcs,
             "output_funcs": self.output_funcs,
+            "scorers": self.scorers,
         }
 
         try:
@@ -334,9 +365,11 @@ class EmmentalModel(nn.Module):
 
         self.name = checkpoint["name"]
         self.module_pool = checkpoint["module_pool"]
+        self.task_names = checkpoint["task_names"]
         self.task_flows = checkpoint["task_flows"]
         self.loss_funcs = checkpoint["loss_funcs"]
         self.output_funcs = checkpoint["output_funcs"]
+        self.scorers = checkpoint["scorers"]
 
         if Meta.config["meta_config"]["verbose"]:
             logger.info(f"[{self.name}] Model loaded as {model_file} in {save_dir}")

@@ -1,8 +1,11 @@
+import logging
 from collections import defaultdict
 
 from torch.utils.data import DataLoader, Dataset
 
 from emmental.utils.utils import list_to_tensor
+
+logger = logging.getLogger(__name__)
 
 
 class EmmentalDataset(Dataset):
@@ -98,16 +101,15 @@ def emmental_collate_fn(batch):
 
 
 class EmmentalDataLoader(DataLoader):
-    """An advanced dataloader class which captures task name, label name (which
-    label to use in dataset's Y_dict for this task), and split (which part this
-    dataset belongs to) information
+    """An advanced dataloader class which contains mapping from task to label (which
+    label(s) to use in dataset's Y_dict for this task), and split (which part this
+    dataset belongs to) information.
 
-    :param task_name: the name of task which uses this dataset
-    :type task_name: str
+    :param task_to_label_dict: the task to label mapping where key is the task name and
+    value is the label(s) for that task and should be the key in Y_dict
+    :type task_to_label_dict: dict
     :param dataset: the dataset to construct the dataloader
     :type dataset: torch.utils.data.Datasetwe
-    :param label_name: label name for the task
-    :param label_name: str
     :param split: the split information, defaults to "train"
     :param split: str, optional
     :param collate_fn: the function that merges a list of samples to form a
@@ -117,17 +119,28 @@ class EmmentalDataLoader(DataLoader):
 
     def __init__(
         self,
-        task_name,
+        task_to_label_dict,
         dataset,
-        label_name,
         split="train",
         collate_fn=emmental_collate_fn,
-        **kwargs
+        **kwargs,
     ):
+
         assert isinstance(dataset, EmmentalDataset)
         super().__init__(dataset, collate_fn=collate_fn, **kwargs)
 
-        self.task_name = task_name
+        self.task_to_label_dict = task_to_label_dict
         self.data_name = dataset.name
-        self.label_name = label_name
         self.split = split
+
+        for task_name, label_names in task_to_label_dict.items():
+            if not isinstance(label_names, list):
+                label_names = [label_names]
+            unrecognized_labels = set(label_names) - set(dataset.Y_dict.keys())
+            if len(unrecognized_labels) > 0:
+                msg = (
+                    f"Unrecognized Label {unrecognized_labels} of Task {task_name} in "
+                    f"dataset {dataset.name}"
+                )
+                logger.warn(msg)
+                raise ValueError(msg)
