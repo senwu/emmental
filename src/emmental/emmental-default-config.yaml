@@ -1,10 +1,10 @@
-# This part is for meta configuration
+# Meta information configuration
 meta_config:
     seed: 0  # random seed for the model and learning
     verbose: True # whether to print the log information
     device: 0 # -1 for cpu or gpu id (e.g., 0 for cuda:0)
 
-# This part is for learning configuration
+# Learning configuration
 learner_config:
     fp16: False # whether to use half precision
     model_path: # the path to pretrained model
@@ -37,7 +37,7 @@ learner_config:
             threshold: 0.0001
     task_scheduler: round_robin # [sequential, round_robin]
 
-# This part is for logging configuration
+# Logging configuration
 logging_config:
     counter_unit: batch # [epoch, batch]
     evaluation_freq: 2
