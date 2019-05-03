@@ -88,6 +88,22 @@ def prob_to_pred(probs):
     return np.argmax(probs, axis=-1) + 1
 
 
+def pred_to_prob(preds, n_classes):
+    """Converts predicted labels to probabilistic labels
+
+    :param preds: predicted labels
+    :type probs: np.array
+    """
+
+    preds = preds.reshape(-1)
+    probs = np.zeros((preds.shape[0], n_classes))
+
+    for idx, class_idx in enumerate(preds):
+        probs[idx, class_idx - 1] = 1.0
+
+    return probs
+
+
 def move_to_device(obj, device=-1):
     """
     Given a structure (possibly) containing Tensors on the CPU, move all the Tensors
