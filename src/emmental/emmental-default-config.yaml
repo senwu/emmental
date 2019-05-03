@@ -44,7 +44,7 @@ logging_config:
     writer_config:
         writer: tensorboard # [json, tensorboard]
         verbose: True
-    checkpointint: True
+    checkpointing: True
     checkpointer_config:
         checkpoint_path:
         checkpoint_freq: 1

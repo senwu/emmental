@@ -32,14 +32,23 @@ class LoggingManager(object):
         self.evaluation_freq = Meta.config["logging_config"]["evaluation_freq"]
         logger.info(f"Evaluating every {self.evaluation_freq} {self.counter_unit}.")
 
-        # Set up checkpointing frequency
-        self.checkpointing_freq = int(
-            Meta.config["logging_config"]["checkpointer_config"]["checkpoint_freq"]
-        )
-        logger.info(
-            f"Checkpointing every "
-            f"{self.checkpointing_freq * self.evaluation_freq} {self.counter_unit}."
-        )
+        if Meta.config["logging_config"]["checkpointing"]:
+            self.checkpointing = True
+
+            # Set up checkpointing frequency
+            self.checkpointing_freq = int(
+                Meta.config["logging_config"]["checkpointer_config"]["checkpoint_freq"]
+            )
+            logger.info(
+                f"Checkpointing every "
+                f"{self.checkpointing_freq * self.evaluation_freq} {self.counter_unit}."
+            )
+
+            # Set up checkpointer
+            self.checkpointer = Checkpointer()
+        else:
+            self.checkpointing = False
+            logger.info("No checkpointing.")
 
         # Set up number of samples passed since last evaluation/checkpointing and
         # total number of samples passed since learning process
@@ -75,9 +84,6 @@ class LoggingManager(object):
             self.writer = TensorBoardWriter()
         else:
             raise ValueError(f"Unrecognized writer option '{writer_opt}'")
-
-        # Set up checkpointer
-        self.checkpointer = Checkpointer()
 
     def update(self, batch_size):
         """Update the count and total number"""
@@ -115,6 +121,8 @@ class LoggingManager(object):
 
     def trigger_checkpointing(self):
         """Check if triggers the checkpointing"""
+        if not self.checkpointing:
+            return False
         satisfied = self.trigger_count >= self.checkpointing_freq
         if satisfied:
             self.trigger_count = 0
