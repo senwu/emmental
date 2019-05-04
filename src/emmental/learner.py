@@ -338,3 +338,5 @@ class EmmentalLearner(object):
                 self.metrics.update(self._logging(model, dataloaders, batch_size))
 
                 batches.set_postfix(self.metrics)
+
+        self.logging_manager.close()

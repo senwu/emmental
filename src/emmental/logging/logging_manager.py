@@ -143,3 +143,6 @@ class LoggingManager(object):
         self.checkpointer.checkpoint(
             self.unit_total, model, optimizer, lr_scheduler, metric_dict
         )
+
+    def close(self):
+        self.writer.close()
