@@ -217,15 +217,18 @@ class EmmentalModel(nn.Module):
                 active = torch.any(
                     Y.detach() != Meta.config["learner_config"]["ignore_index"], dim=1
                 )
-            count_dict[identifier] = active.sum().item()
 
-            loss_dict[identifier] = self.loss_funcs[task_name](
-                immediate_ouput_dict,
-                move_to_device(
-                    Y_dict[label_name], Meta.config["meta_config"]["device"]
-                ),
-                move_to_device(active, Meta.config["meta_config"]["device"]),
-            )
+            # Only calculate the loss when active example exists
+            if 1 in active:
+                count_dict[identifier] = active.sum().item()
+
+                loss_dict[identifier] = self.loss_funcs[task_name](
+                    immediate_ouput_dict,
+                    move_to_device(
+                        Y_dict[label_name], Meta.config["meta_config"]["device"]
+                    ),
+                    move_to_device(active, Meta.config["meta_config"]["device"]),
+                )
 
         return loss_dict, count_dict
 
