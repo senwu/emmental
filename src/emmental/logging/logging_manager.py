@@ -137,7 +137,7 @@ class LoggingManager(object):
 
     def write_log(self, metric_dict):
         for metric_name, metric_value in metric_dict.items():
-            self.writer.add_scalar(metric_name, metric_value, self.unit_total)
+            self.writer.add_scalar(metric_name, metric_value, self.batch_total)
 
     def checkpoint_model(self, model, optimizer, lr_scheduler, metric_dict):
         self.checkpointer.checkpoint(
