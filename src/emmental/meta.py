@@ -38,7 +38,7 @@ def init(
 
     init_logging(log_dir, log_name, format, level)
     init_config()
-    if config_dir is not None:
+    if config or config_dir is not None:
         Meta.update_config(config, config_dir, config_name)
 
     set_random_seed(Meta.config["meta_config"]["seed"])

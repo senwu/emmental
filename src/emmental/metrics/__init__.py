@@ -8,6 +8,7 @@ from emmental.metrics.pearson_correlation import pearson_correlation_scorer
 from emmental.metrics.pearson_spearman import pearson_spearman_scorer
 from emmental.metrics.precision import precision_scorer
 from emmental.metrics.recall import recall_scorer
+from emmental.metrics.roc_auc import roc_auc_scorer
 from emmental.metrics.spearman_correlation import spearman_correlation_scorer
 
 METRICS = {
@@ -21,4 +22,5 @@ METRICS = {
     "pearson_correlation": pearson_correlation_scorer,
     "pearson_spearman": pearson_spearman_scorer,
     "spearman_correlation": spearman_correlation_scorer,
+    "roc_auc": roc_auc_scorer,
 }

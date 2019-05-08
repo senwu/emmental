@@ -22,15 +22,13 @@ def set_random_seed(seed):
 
 
 def list_to_tensor(item_list):
-    """Convert the list of items into a tensor."""
+    """Convert the list of torch.Tensor into a torch.Tensor."""
 
-    # Covert to tensor type
-    for idx in range(len(item_list)):
-        if not isinstance(item_list[idx], torch.Tensor):
-            item_list[idx] = torch.from_numpy(np.array(item_list[idx]))
-
+    # Convert single value tensor
+    if all(item_list[i].dim() == 0 for i in range(len(item_list))):
+        item_tensor = torch.stack(item_list, dim=0)
     # Convert 2 or more-D tensor with the same shape
-    if all(
+    elif all(
         (item_list[i].size() == item_list[0].size()) and (len(item_list[i].size()) != 1)
         for i in range(len(item_list))
     ):
@@ -88,6 +86,22 @@ def prob_to_pred(probs):
     """
 
     return np.argmax(probs, axis=-1) + 1
+
+
+def pred_to_prob(preds, n_classes):
+    """Converts predicted labels to probabilistic labels
+
+    :param preds: predicted labels
+    :type probs: np.array
+    """
+
+    preds = preds.reshape(-1)
+    probs = np.zeros((preds.shape[0], n_classes))
+
+    for idx, class_idx in enumerate(preds):
+        probs[idx, class_idx - 1] = 1.0
+
+    return probs
 
 
 def move_to_device(obj, device=-1):

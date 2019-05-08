@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 
 import torch
 import torch.optim as optim
@@ -164,48 +165,79 @@ class EmmentalLearner(object):
             raise ValueError(f"Unrecognized task scheduler option '{opt}'")
 
     def _evaluate(self, model, dataloaders, split):
+        if not isinstance(split, list):
+            valid_split = [split]
+        else:
+            valid_split = split
+
         valid_dataloaders = [
-            dataloader for dataloader in dataloaders if dataloader.split == split
+            dataloader for dataloader in dataloaders if dataloader.split in valid_split
         ]
         return model.score(valid_dataloaders)
 
-    def _logging(self, model, dataloaders, batch_size, loss_dict):
+    def _logging(self, model, dataloaders, batch_size):
         """Checking if it's time to evaluting or checkpointing"""
-
-        # Log the loss
-        self.logging_manager.write_log(loss_dict)
-
-        # Log the learning rate
-        lr = self.optimizer.param_groups[0]["lr"]
-        self.logging_manager.write_log(
-            {f"model/{Meta.config['learner_config']['train_split']}/lr": lr}
-        )
 
         # Switch to eval mode for evaluation
         model.eval()
+
         metric_dict = dict()
 
         self.logging_manager.update(batch_size)
 
         # Evaluate the model and log the metric
         if self.logging_manager.trigger_evaluation():
+            # Log the loss and lr
+            metric_dict.update(self._aggregate_losses())
+
+            # Log task specific metric
             metric_dict.update(
                 self._evaluate(
                     model, dataloaders, Meta.config["learner_config"]["valid_split"]
                 )
             )
-            self.logging_manager.write_log(metric_dict)
+            self._reset_losses()
 
         # Checkpoint the model
         if self.logging_manager.trigger_checkpointing():
             self.logging_manager.checkpoint_model(
                 model, self.optimizer, self.lr_scheduler, metric_dict
             )
+            self._reset_losses()
+
+        self.logging_manager.write_log(metric_dict)
 
         # Switch to train mode
         model.train()
 
         return metric_dict
+
+    def _aggregate_losses(self):
+        """Calculate the task specific loss, average micro loss and learning rate."""
+
+        metric_dict = dict()
+
+        # Log task specific loss
+        for identifier in self.running_losses.keys():
+            if self.running_counts[identifier] > 0:
+                metric_dict[identifier] = (
+                    self.running_losses[identifier] / self.running_counts[identifier]
+                )
+
+        # Calculate average micro loss
+        total_loss = sum(self.running_losses.values())
+        total_count = sum(self.running_counts.values())
+        if total_count > 0:
+            metric_dict["model/train/all/loss"] = total_loss / total_count
+
+        # Log the learning rate
+        metric_dict["model/train/all/lr"] = self.optimizer.param_groups[0]["lr"]
+
+        return metric_dict
+
+    def _reset_losses(self):
+        self.running_losses = defaultdict(float)
+        self.running_counts = defaultdict(int)
 
     def learn(self, model, dataloaders):
         """The learning procedure of emmental MTL
@@ -217,10 +249,12 @@ class EmmentalLearner(object):
         """
 
         # Generate the list of dataloaders for learning process
+        train_split = Meta.config["learner_config"]["train_split"]
+        if isinstance(train_split, str):
+            train_split = [train_split]
+
         train_dataloaders = [
-            dataloader
-            for dataloader in dataloaders
-            if dataloader.split == Meta.config["learner_config"]["train_split"]
+            dataloader for dataloader in dataloaders if dataloader.split in train_split
         ]
 
         if not train_dataloaders:
@@ -248,16 +282,19 @@ class EmmentalLearner(object):
 
         logger.info(f"Start learning...")
 
-        for epoch in range(Meta.config["learner_config"]["n_epochs"]):
+        self.metrics = dict()
+        self._reset_losses()
+
+        for epoch_num in range(Meta.config["learner_config"]["n_epochs"]):
             batches = tqdm(
                 enumerate(self.task_scheduler.get_batches(train_dataloaders)),
                 total=self.n_batches_per_epoch,
                 disable=(not Meta.config["meta_config"]["verbose"]),
             )
-            for batch_num, (task_name, data_name, label_name, batch) in batches:
+            for batch_num, (batch, task_to_label_dict, data_name, split) in batches:
                 X_dict, Y_dict = batch
 
-                total_batch_num = epoch * self.n_batches_per_epoch + batch_num
+                total_batch_num = epoch_num * self.n_batches_per_epoch + batch_num
                 batch_size = len(next(iter(Y_dict.values())))
 
                 # Update lr using lr scheduler
@@ -267,14 +304,16 @@ class EmmentalLearner(object):
                 self.optimizer.zero_grad()
 
                 # Perform forward pass and calcualte the loss and count
-                loss_dict, count_dict = model.calculate_losses(
-                    X_dict,
-                    Y_dict,
-                    [task_name],
-                    [data_name],
-                    [label_name],
-                    Meta.config["learner_config"]["train_split"],
+                loss_dict, count_dict = model.calculate_loss(
+                    X_dict, Y_dict, task_to_label_dict, data_name, split
                 )
+
+                # Update running loss and count
+                for identifier in loss_dict.keys():
+                    self.running_losses[identifier] += (
+                        loss_dict[identifier].item() * count_dict[identifier]
+                    )
+                    self.running_counts[identifier] += count_dict[identifier]
 
                 # Skip the backward pass if no loss is calcuated
                 if not loss_dict:
@@ -296,6 +335,8 @@ class EmmentalLearner(object):
                 # Update the parameters
                 self.optimizer.step()
 
-                metrics_dict = self._logging(model, dataloaders, batch_size, loss_dict)
+                self.metrics.update(self._logging(model, dataloaders, batch_size))
 
-                batches.set_postfix(metrics_dict)
+                batches.set_postfix(self.metrics)
+
+        self.logging_manager.close()
