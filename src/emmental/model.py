@@ -23,7 +23,7 @@ class EmmentalModel(nn.Module):
     :type tasks: list of Task project
     """
 
-    def __init__(self, name, tasks=None):
+    def __init__(self, name=None, tasks=None):
         super().__init__()
         self.name = name if name is not None else type(self).__name__
 
@@ -321,61 +321,60 @@ class EmmentalModel(nn.Module):
 
         return metric_score_dict
 
-    def save(self, model_file, save_dir):
+    def save(self, model_path):
         """Save the current model
-        :param model_file: Saved model file name.
-        :type model_file: str
-        :param save_dir: Saved model directory.
-        :type save_dir: str
+        :param model_path: Saved model path.
+        :type model_path: str
         """
 
         # Check existence of model saving directory and create if does not exist.
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
+        if not os.path.exists(os.path.dirname(model_path)):
+            os.makedirs(os.path.dirname(model_path))
 
-        params = {
-            "name": self.name,
-            "module_pool": self.module_pool,
-            "task_names": self.task_names,
-            "task_flows": self.task_flows,
-            "loss_funcs": self.loss_funcs,
-            "output_funcs": self.output_funcs,
-            "scorers": self.scorers,
+        state_dict = {
+            "model": {
+                "name": self.name,
+                "module_pool": self.module_pool,
+                "task_names": self.task_names,
+                "task_flows": self.task_flows,
+                "loss_funcs": self.loss_funcs,
+                "output_funcs": self.output_funcs,
+                "scorers": self.scorers,
+            }
         }
 
         try:
-            torch.save(params, f"{save_dir}/{model_file}")
+            torch.save(state_dict, model_path)
         except BaseException:
             logger.warning("Saving failed... continuing anyway.")
 
         if Meta.config["meta_config"]["verbose"]:
-            logger.info(f"[{self.name}] Model saved as {model_file} in {save_dir}")
+            logger.info(f"[{self.name}] Model saved in {model_path}")
 
-    def load(self, model_file, save_dir):
+    def load(self, model_path):
         """Load model from file and rebuild the model.
-        :param model_file: Saved model file name.
-        :type model_file: str
-        :param save_dir: Saved model directory.
-        :type save_dir: str
+        :param model_path: Saved model path.
+        :type model_path: str
         """
 
-        if not os.path.exists(save_dir):
-            logger.error("Loading failed... Directory does not exist.")
+        if not os.path.exists(model_path):
+            logger.error("Loading failed... Model does not exist.")
 
         try:
-            checkpoint = torch.load(f"{save_dir}/{model_file}")
+            checkpoint = torch.load(model_path)
         except BaseException:
-            logger.error(
-                f"Loading failed... Cannot load model from {save_dir}/{model_file}"
-            )
+            logger.error(f"Loading failed... Cannot load model from {model_path}")
 
-        self.name = checkpoint["name"]
-        self.module_pool = checkpoint["module_pool"]
-        self.task_names = checkpoint["task_names"]
-        self.task_flows = checkpoint["task_flows"]
-        self.loss_funcs = checkpoint["loss_funcs"]
-        self.output_funcs = checkpoint["output_funcs"]
-        self.scorers = checkpoint["scorers"]
+        self.name = checkpoint["model"]["name"]
+        self.module_pool = checkpoint["model"]["module_pool"]
+        self.task_names = checkpoint["model"]["task_names"]
+        self.task_flows = checkpoint["model"]["task_flows"]
+        self.loss_funcs = checkpoint["model"]["loss_funcs"]
+        self.output_funcs = checkpoint["model"]["output_funcs"]
+        self.scorers = checkpoint["model"]["scorers"]
 
         if Meta.config["meta_config"]["verbose"]:
-            logger.info(f"[{self.name}] Model loaded as {model_file} in {save_dir}")
+            logger.info(f"[{self.name}] Model loaded from {model_path}")
+
+        # Move model to specified device
+        self._move_to_device()

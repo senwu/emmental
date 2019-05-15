@@ -165,6 +165,7 @@ class Checkpointer(object):
             "output_funcs": model.output_funcs,
             "scorers": model.scorers,
         }
+
         state_dict = {
             "iteration": iteration,
             "model": model_params,
