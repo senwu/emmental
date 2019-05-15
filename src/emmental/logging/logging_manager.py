@@ -144,5 +144,9 @@ class LoggingManager(object):
             self.unit_total, model, optimizer, lr_scheduler, metric_dict
         )
 
-    def close(self):
+    def close(self, model):
         self.writer.close()
+        if self.checkpointing:
+            self.checkpointer.clear()
+            model = self.checkpointer.load_best_model(model)
+        return model

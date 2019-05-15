@@ -1,3 +1,4 @@
+import glob
 import logging
 import os
 from shutil import copyfile
@@ -45,18 +46,25 @@ class Checkpointer(object):
         self.checkpoint_metric = Meta.config["logging_config"]["checkpointer_config"][
             "checkpoint_metric"
         ]
-        if not isinstance(self.checkpoint_metric, list):
-            self.checkpoint_metric = [self.checkpoint_metric]
 
-        self.checkpoint_metric_mode = Meta.config["logging_config"][
+        self.checkpoint_all_metrics = Meta.config["logging_config"][
             "checkpointer_config"
-        ]["checkpoint_metric_mode"].lower()
+        ]["checkpoint_task_metrics"]
 
-        if self.checkpoint_metric_mode not in ["min", "max"]:
-            raise ValueError(
-                f"Unrecognized checkpoint metric mode {self.checkpoint_metric_mode}, "
-                f"must be 'min' or 'max'."
-            )
+        # Collect all metrics to checkpoint
+        if self.checkpoint_all_metrics is None:
+            self.checkpoint_all_metrics = dict()
+
+        if self.checkpoint_metric:
+            self.checkpoint_all_metrics.update(self.checkpoint_metric)
+
+        # Check evaluation metric mode
+        for metric, mode in self.checkpoint_all_metrics.items():
+            if mode not in ["min", "max"]:
+                raise ValueError(
+                    f"Unrecognized checkpoint metric mode {mode} for metric {metric}, "
+                    f"must be 'min' or 'max'."
+                )
 
         self.checkpoint_runway = Meta.config["logging_config"]["checkpointer_config"][
             "checkpoint_runway"
@@ -66,13 +74,21 @@ class Checkpointer(object):
             f"{self.checkpoint_unit}."
         )
 
+        # Set up checkpoint clear
+        self.checkpoint_clear = Meta.config["logging_config"]["checkpointer_config"][
+            "checkpoint_clear"
+        ]
+
+        self.checkpoint_condition_met = False
+
         self.best_metric_dict = dict()
 
     def checkpoint(self, iteration, model, optimizer, lr_scheduler, metric_dict):
         # Check the checkpoint_runway condition is met
         if iteration < self.checkpoint_runway:
             return
-        elif iteration == self.checkpoint_runway:
+        elif not self.checkpoint_condition_met and iteration >= self.checkpoint_runway:
+            self.checkpoint_condition_met = True
             logger.info(
                 f"checkpoint_runway condition has been met. Start checkpoining."
             )
@@ -88,7 +104,9 @@ class Checkpointer(object):
                 f"at {checkpoint_path}."
             )
 
-            if not set(self.checkpoint_metric).isdisjoint(metric_dict):
+            if not set(self.checkpoint_all_metrics.keys()).isdisjoint(
+                set(metric_dict.keys())
+            ):
                 new_best_metrics = self.is_new_best(metric_dict)
                 for metric in new_best_metrics:
                     copyfile(
@@ -105,18 +123,20 @@ class Checkpointer(object):
     def is_new_best(self, metric_dict):
         best_metric = set()
 
-        for metric in self.checkpoint_metric:
+        for metric in metric_dict:
+            if metric not in self.checkpoint_all_metrics:
+                continue
             if metric not in self.best_metric_dict:
                 self.best_metric_dict[metric] = metric_dict[metric]
                 best_metric.add(metric)
             elif (
-                self.checkpoint_metric_mode == "max"
+                self.checkpoint_all_metrics[metric] == "max"
                 and metric_dict[metric] > self.best_metric_dict[metric]
             ):
                 self.best_metric_dict[metric] = metric_dict[metric]
                 best_metric.add(metric)
             elif (
-                self.checkpoint_metric_mode == "min"
+                self.checkpoint_all_metrics[metric] == "min"
                 and metric_dict[metric] < self.best_metric_dict[metric]
             ):
                 self.best_metric_dict[metric] = metric_dict[metric]
@@ -124,16 +144,26 @@ class Checkpointer(object):
 
         return best_metric
 
+    def clear(self):
+        if self.checkpoint_clear:
+            logger.info("Clear all immediate checkpoints.")
+            file_list = glob.glob(f"{self.checkpoint_path}/checkpoint_*.pth")
+            for file in file_list:
+                os.remove(file)
+
     def collect_state_dict(
         self, iteration, model, optimizer, lr_scheduler, metric_dict
     ):
         """Generate the state dict of the model."""
+
         model_params = {
             "name": model.name,
             "module_pool": model.module_pool,
+            "task_names": model.task_names,
             "task_flows": model.task_flows,
             "loss_funcs": model.loss_funcs,
             "output_funcs": model.output_funcs,
+            "scorers": model.scorers,
         }
         state_dict = {
             "iteration": iteration,
@@ -147,19 +177,23 @@ class Checkpointer(object):
 
     def load_best_model(self, model):
         """Load the best model from the checkpoint."""
-        if not bool(self.best_metric_dict):
+        if list(self.checkpoint_metric.keys())[0] not in self.best_metric_dict:
             logger.info(f"No best model found.")
         else:
-            # TODO: only load the best model of the first metric in best_metric_dict
-            metric = self.best_metric_dict.keys()[0]
+            # Load the best model of checkpoint_metric
+            metric = list(self.checkpoint_metric.keys())[0]
             state_dict = torch.load(
                 f"{self.checkpoint_path}/best_model_{metric.replace('/', '_')}.pth",
                 map_location=torch.device("cpu"),
             )
         model.name = state_dict["model"]["name"]
         model.module_pool = state_dict["model"]["module_pool"]
+        model.task_names = state_dict["model"]["task_names"]
         model.task_flows = state_dict["model"]["task_flows"]
         model.loss_funcs = state_dict["model"]["loss_funcs"]
         model.output_funcs = state_dict["model"]["output_funcs"]
+        model.scorers = state_dict["model"]["scorers"]
+
+        model._move_to_device()
 
         return model

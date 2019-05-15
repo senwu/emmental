@@ -2,6 +2,8 @@ import logging
 
 from emmental.metrics import METRICS
 
+logger = logging.getLogger(__name__)
+
 
 class Scorer(object):
     """A class to score tasks
@@ -14,8 +16,6 @@ class Scorer(object):
     """
 
     def __init__(self, metrics=[], customize_metric_funcs={}):
-        self.logger = logging.getLogger(__name__)
-
         self.metrics = dict()
         for metric in metrics:
             if metric not in METRICS:

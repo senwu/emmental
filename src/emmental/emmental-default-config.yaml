@@ -48,7 +48,9 @@ logging_config:
     checkpointer_config:
         checkpoint_path:
         checkpoint_freq: 1
-        checkpoint_metric: model/train/all/loss
-        checkpoint_metric_mode: max # [min, max]
+        checkpoint_metric: # metric_name: mode, where mode in [min, max]
+            model/train/all/loss: min
+        checkpoint_task_metrics: # task_metric_name: mode
         checkpoint_runway: 0
+        checkpoint_clear: True
 
