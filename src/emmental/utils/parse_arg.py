@@ -19,14 +19,13 @@ def str2dict(v):
     return dict
 
 
-def parse_arg():
+def parse_arg(parser=None):
     """Parse the command line"""
-    parser = argparse.ArgumentParser(
-        "Emmental configuration", formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
-
-    parser.register("type", "bool", str2bool)
-    parser.register("type", "dict", str2dict)
+    if parser is None:
+        parser = argparse.ArgumentParser(
+            "Emmental configuration",
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        )
 
     # Load meta configuration
     meta_config = parser.add_argument_group("Meta configuration")
@@ -40,7 +39,7 @@ def parse_arg():
 
     meta_config.add_argument(
         "--verbose",
-        type="bool",
+        type=str2bool,
         default=True,
         help="Whether to print the log information",
     )
@@ -68,7 +67,7 @@ def parse_arg():
 
     learner_config.add_argument(
         "--fp16",
-        type="bool",
+        type=str2bool,
         default=False,
         help="Whether to use half precision to train",
     )
@@ -218,7 +217,7 @@ def parse_arg():
 
     logging_config.add_argument(
         "--checkpointing",
-        type="bool",
+        type=str2bool,
         default=True,
         help="Whether to checkpoint the model",
     )
@@ -236,7 +235,7 @@ def parse_arg():
 
     logging_config.add_argument(
         "--checkpoint_metric",
-        type="dict",
+        type=str2dict,
         default={"model/train/all/loss": "min"},
         help=(
             "Checkpointing metric (metric_name:mode), ",
@@ -246,7 +245,7 @@ def parse_arg():
 
     logging_config.add_argument(
         "--checkpoint_task_metrics",
-        type="dict",
+        type=str2dict,
         default=None,
         help=(
             "Task specific checkpointing metric ",
@@ -263,19 +262,16 @@ def parse_arg():
 
     logging_config.add_argument(
         "--checkpoint_clear",
-        type="bool",
+        type=str2bool,
         default=True,
         help="Whether to clear immedidate checkpointing",
     )
 
-    args = parser.parse_args()
-
-    return args
+    return parser
 
 
-def parse_arg_to_config():
-    """Parse the command line to config dict"""
-    args = parse_arg()
+def parse_arg_to_config(args):
+    """Parse the arguments to config dict"""
 
     config = {
         "meta_config": {
