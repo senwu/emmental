@@ -51,14 +51,14 @@ class EmmentalModel(nn.Module):
     def _move_to_device(self):
         """Move model to specified device."""
 
-        if Meta.config["meta_config"]["device"] >= 0:
+        if Meta.config["model_config"]["device"] >= 0:
             if torch.cuda.is_available():
                 if Meta.config["meta_config"]["verbose"]:
                     logger.info(
                         f"Moving model to GPU "
-                        f"(cuda:{Meta.config['meta_config']['device']})."
+                        f"(cuda:{Meta.config['model_config']['device']})."
                     )
-                self.to(torch.device(f"cuda:{Meta.config['meta_config']['device']}"))
+                self.to(torch.device(f"cuda:{Meta.config['model_config']['device']}"))
             else:
                 if Meta.config["meta_config"]["verbose"]:
                     logger.info("No cuda device available. Switch to cpu instead.")
@@ -155,7 +155,7 @@ class EmmentalModel(nn.Module):
         :rtype: dict
         """
 
-        X_dict = move_to_device(X_dict, Meta.config["meta_config"]["device"])
+        X_dict = move_to_device(X_dict, Meta.config["model_config"]["device"])
 
         immediate_ouput_dict = dict()
         immediate_ouput_dict["_input_"] = X_dict
@@ -225,9 +225,9 @@ class EmmentalModel(nn.Module):
                 loss_dict[identifier] = self.loss_funcs[task_name](
                     immediate_ouput_dict,
                     move_to_device(
-                        Y_dict[label_name], Meta.config["meta_config"]["device"]
+                        Y_dict[label_name], Meta.config["model_config"]["device"]
                     ),
-                    move_to_device(active, Meta.config["meta_config"]["device"]),
+                    move_to_device(active, Meta.config["model_config"]["device"]),
                 )
 
         return loss_dict, count_dict
