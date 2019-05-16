@@ -25,4 +25,4 @@ def test_meta(caplog):
 
     # Check the config is created
     assert isinstance(Meta.config, dict) is True
-    assert Meta.config["meta_config"] == {"seed": 0, "verbose": True, "device": 0}
+    assert Meta.config["meta_config"] == {"seed": 0, "verbose": True, "log_path": None}
