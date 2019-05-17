@@ -25,7 +25,7 @@ class Checkpointer(object):
         if not os.path.exists(self.checkpoint_path):
             os.makedirs(self.checkpoint_path)
 
-        self.checkpoint_freq = int(
+        self.checkpoint_freq = (
             Meta.config["logging_config"]["evaluation_freq"]
             * Meta.config["logging_config"]["checkpointer_config"]["checkpoint_freq"]
         )

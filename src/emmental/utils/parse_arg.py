@@ -208,7 +208,7 @@ def parse_arg(parser=None):
     )
 
     logging_config.add_argument(
-        "--evaluation_freq", type=int, default=2, help="Logging evaluation frequency"
+        "--evaluation_freq", type=float, default=2, help="Logging evaluation frequency"
     )
 
     logging_config.add_argument(
