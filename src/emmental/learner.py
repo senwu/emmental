@@ -305,6 +305,7 @@ class EmmentalLearner(object):
                 enumerate(self.task_scheduler.get_batches(train_dataloaders)),
                 total=self.n_batches_per_epoch,
                 disable=(not Meta.config["meta_config"]["verbose"]),
+                desc=f"Epoch {epoch_num}:",
             )
             for batch_num, (batch, task_to_label_dict, data_name, split) in batches:
                 X_dict, Y_dict = batch
