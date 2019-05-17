@@ -28,8 +28,9 @@ learner_config:
             betas: !!python/tuple [0.9, 0.999]
     lr_scheduler_config:
         lr_scheduler: linear # [linear, exponential, reduce_on_plateau]
-        warmup_steps: 0 # warm up steps
+        warmup_steps: # warm up steps
         warmup_unit: batch # [epoch, batch]
+        warmup_percentage: # warm up percentage
         min_lr: 0.0 # minimum learning rate
         linear_config:
             min_lr: 0.0

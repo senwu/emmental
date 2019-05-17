@@ -135,6 +135,21 @@ class EmmentalLearner(object):
             warmup_scheduler = optim.lr_scheduler.LambdaLR(
                 self.optimizer, linear_warmup_func
             )
+            logger.info(f"Warmup {self.warmup_steps} batchs.")
+        elif Meta.config["learner_config"]["lr_scheduler_config"]["warmup_percentage"]:
+            warmup_percentage = Meta.config["learner_config"]["lr_scheduler_config"][
+                "warmup_percentage"
+            ]
+            self.warmup_steps = int(
+                warmup_percentage
+                * Meta.config["learner_config"]["n_epochs"]
+                * self.n_batches_per_epoch
+            )
+            linear_warmup_func = lambda x: x / self.warmup_steps
+            warmup_scheduler = optim.lr_scheduler.LambdaLR(
+                self.optimizer, linear_warmup_func
+            )
+            logger.info(f"Warmup {self.warmup_steps} batchs.")
         else:
             warmup_scheduler = None
             self.warmup_steps = 0

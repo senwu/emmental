@@ -134,7 +134,7 @@ def parse_arg(parser=None):
     )
 
     scheduler_config.add_argument(
-        "--warmup_steps", type=float, default=0.0, help="Warm up steps"
+        "--warmup_steps", type=float, default=None, help="Warm up steps"
     )
 
     scheduler_config.add_argument(
@@ -143,6 +143,10 @@ def parse_arg(parser=None):
         default="batch",
         choices=["epoch", "batch"],
         help="Warm up unit",
+    )
+
+    scheduler_config.add_argument(
+        "--warmup_percentage", type=float, default=None, help="Warm up percentage"
     )
 
     scheduler_config.add_argument(
@@ -299,6 +303,7 @@ def parse_arg_to_config(args):
                 "lr_scheduler": args.lr_scheduler,
                 "warmup_steps": args.warmup_steps,
                 "warmup_unit": args.warmup_unit,
+                "warmup_percentage": args.warmup_percentage,
                 "min_lr": args.min_lr,
                 "linear_config": {"min_lr": args.linear_lr_scheduler_min_lr},
                 "exponential_config": {"gamma": args.exponential_lr_scheduler_gamma},
