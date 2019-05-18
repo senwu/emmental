@@ -242,8 +242,8 @@ def parse_arg(parser=None):
         type=str2dict,
         default={"model/train/all/loss": "min"},
         help=(
-            "Checkpointing metric (metric_name:mode), ",
-            "e.g., `model/train/all/loss:min`",
+            "Checkpointing metric (metric_name:mode), "
+            "e.g., `model/train/all/loss:min`"
         ),
     )
 
@@ -252,8 +252,8 @@ def parse_arg(parser=None):
         type=str2dict,
         default=None,
         help=(
-            "Task specific checkpointing metric ",
-            "(metric_name1:mode2;metric_name2:mode2)",
+            "Task specific checkpointing metric "
+            "(metric_name1:mode2;metric_name2:mode2)"
         ),
     )
 
