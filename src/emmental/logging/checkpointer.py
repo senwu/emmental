@@ -179,22 +179,23 @@ class Checkpointer(object):
     def load_best_model(self, model):
         """Load the best model from the checkpoint."""
         if list(self.checkpoint_metric.keys())[0] not in self.best_metric_dict:
-            logger.info(f"No best model found.")
+            logger.info(f"No best model found, use the original model.")
         else:
             # Load the best model of checkpoint_metric
             metric = list(self.checkpoint_metric.keys())[0]
-            state_dict = torch.load(
-                f"{self.checkpoint_path}/best_model_{metric.replace('/', '_')}.pth",
-                map_location=torch.device("cpu"),
+            best_model_path = (
+                f"{self.checkpoint_path}/best_model_{metric.replace('/', '_')}.pth"
             )
-        model.name = state_dict["model"]["name"]
-        model.module_pool = state_dict["model"]["module_pool"]
-        model.task_names = state_dict["model"]["task_names"]
-        model.task_flows = state_dict["model"]["task_flows"]
-        model.loss_funcs = state_dict["model"]["loss_funcs"]
-        model.output_funcs = state_dict["model"]["output_funcs"]
-        model.scorers = state_dict["model"]["scorers"]
+            logger.info(f"Loading the best model from {best_model_path}.")
+            state_dict = torch.load(best_model_path, map_location=torch.device("cpu"))
+            model.name = state_dict["model"]["name"]
+            model.module_pool = state_dict["model"]["module_pool"]
+            model.task_names = state_dict["model"]["task_names"]
+            model.task_flows = state_dict["model"]["task_flows"]
+            model.loss_funcs = state_dict["model"]["loss_funcs"]
+            model.output_funcs = state_dict["model"]["output_funcs"]
+            model.scorers = state_dict["model"]["scorers"]
 
-        model._move_to_device()
+            model._move_to_device()
 
         return model
