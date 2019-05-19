@@ -12,7 +12,7 @@ def str2bool(v):
 
 def str2dict(v):
     dict = {}
-    for token in v.split(";"):
+    for token in v.split(","):
         key, value = token.split(":")
         dict[key] = value
 
