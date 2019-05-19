@@ -253,7 +253,7 @@ def parse_arg(parser=None):
         default=None,
         help=(
             "Task specific checkpointing metric "
-            "(metric_name1:mode2;metric_name2:mode2)"
+            "(metric_name1:mode1,metric_name2:mode2)"
         ),
     )
 
