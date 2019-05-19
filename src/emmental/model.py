@@ -319,6 +319,14 @@ class EmmentalModel(nn.Module):
                     )
                     metric_score_dict[identifier] = metric_value
 
+        # TODO: have a better to handle global evaluation metric
+        if Meta.config["learner_config"]["global_evaluation_metric_dict"]:
+            global_evaluation_metric_dict = Meta.config["learner_config"][
+                "global_evaluation_metric_dict"
+            ]
+            for metric_name, metric in global_evaluation_metric_dict.items():
+                metric_score_dict[metric_name] = metric(metric_score_dict)
+
         return metric_score_dict
 
     def save(self, model_path):
