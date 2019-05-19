@@ -5,6 +5,7 @@ import logging
 import numpy as np
 
 from emmental.metrics.accuracy import accuracy_scorer
+from emmental.metrics.accuracy_f1 import accuracy_f1_scorer
 from emmental.metrics.fbeta import f1_scorer, fbeta_scorer
 from emmental.metrics.matthews_correlation import (
     matthews_correlation_coefficient_scorer,
@@ -204,3 +205,19 @@ def test_roc_auc(caplog):
     metric_dict = roc_auc_scorer(golds, probs, None)
 
     assert isequal(metric_dict, {"roc_auc": 0.9444444444444444})
+
+
+def test_accuracy_f1(caplog):
+    """Unit test of accuracy_f1_scorer"""
+
+    caplog.set_level(logging.INFO)
+
+    golds = np.array([2, 1, 2, 1, 2, 1])
+    preds = np.array([2, 2, 2, 2, 2, 1])
+
+    metric_dict = accuracy_f1_scorer(golds, None, preds)
+
+    assert isequal(
+        metric_dict,
+        {"accuracy": 0.6666666666666666, "f1": 0.5, "accuracy_f1": 0.5833333333333333},
+    )

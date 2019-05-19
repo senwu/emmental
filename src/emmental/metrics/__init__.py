@@ -1,4 +1,5 @@
 from emmental.metrics.accuracy import accuracy_scorer
+from emmental.metrics.accuracy_f1 import accuracy_f1_scorer
 from emmental.metrics.fbeta import f1_scorer, fbeta_scorer
 from emmental.metrics.matthews_correlation import (
     matthews_correlation_coefficient_scorer,
@@ -13,6 +14,7 @@ from emmental.metrics.spearman_correlation import spearman_correlation_scorer
 
 METRICS = {
     "accuracy": accuracy_scorer,
+    "accuracy_f1": accuracy_f1_scorer,
     "precision": precision_scorer,
     "recall": recall_scorer,
     "f1": f1_scorer,
