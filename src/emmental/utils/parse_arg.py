@@ -62,6 +62,13 @@ def parse_arg(parser=None):
         help="Which device to use (-1 for cpu or gpu id (e.g., 0 for cuda:0))",
     )
 
+    model_config.add_argument(
+        "--dataparallel",
+        type=str2bool,
+        default=True,
+        help="Whether to use dataparallel or not",
+    )
+
     # Learning configuration
     learner_config = parser.add_argument_group("Learning configuration")
 
@@ -283,7 +290,11 @@ def parse_arg_to_config(args):
             "verbose": args.verbose,
             "log_path": args.log_path,
         },
-        "model_config": {"model_path": args.model_path, "device": args.device},
+        "model_config": {
+            "model_path": args.model_path,
+            "device": args.device,
+            "dataparallel": args.dataparallel,
+        },
         "learner_config": {
             "fp16": args.fp16,
             "n_epochs": args.n_epochs,
