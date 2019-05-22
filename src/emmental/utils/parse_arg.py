@@ -128,7 +128,7 @@ def parse_arg(parser=None):
     scheduler_config.add_argument(
         "--lr_scheduler",
         type=str,
-        default="linear",
+        default=None,
         choices=["linear", "exponential", "reduce_on_plateau"],
         help="Learning rate scheduler",
     )
