@@ -259,7 +259,7 @@ def parse_arg(parser=None):
 
     logging_config.add_argument(
         "--checkpoint_runway",
-        type=int,
+        type=float,
         default=0,
         help="Checkpointing runway (no checkpointing before k checkpointing unit)",
     )
