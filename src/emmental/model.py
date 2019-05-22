@@ -175,14 +175,19 @@ class EmmentalModel(nn.Module):
 
             for action in task_flow:
                 if action["name"] not in immediate_ouput_dict:
-                    try:
-                        input = [
-                            immediate_ouput_dict[action_name][output_index]
-                            for action_name, output_index in action["inputs"]
-                        ]
-                    except Exception:
-                        raise ValueError(f"Unrecognized action {action}.")
-                    output = self.module_pool[action["module"]].forward(*input)
+                    if action["inputs"]:
+                        try:
+                            input = [
+                                immediate_ouput_dict[action_name][output_index]
+                                for action_name, output_index in action["inputs"]
+                            ]
+                        except Exception:
+                            raise ValueError(f"Unrecognized action {action}.")
+                        output = self.module_pool[action["module"]].forward(*input)
+                    else:
+                        output = self.module_pool[action["module"]].forward(
+                            immediate_ouput_dict
+                        )
                     if isinstance(output, tuple):
                         output = list(output)
                     if not isinstance(output, list):
