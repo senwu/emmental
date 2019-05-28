@@ -175,14 +175,19 @@ class EmmentalModel(nn.Module):
 
             for action in task_flow:
                 if action["name"] not in immediate_ouput_dict:
-                    try:
-                        input = [
-                            immediate_ouput_dict[action_name][output_index]
-                            for action_name, output_index in action["inputs"]
-                        ]
-                    except Exception:
-                        raise ValueError(f"Unrecognized action {action}.")
-                    output = self.module_pool[action["module"]].forward(*input)
+                    if action["inputs"]:
+                        try:
+                            input = [
+                                immediate_ouput_dict[action_name][output_index]
+                                for action_name, output_index in action["inputs"]
+                            ]
+                        except Exception:
+                            raise ValueError(f"Unrecognized action {action}.")
+                        output = self.module_pool[action["module"]].forward(*input)
+                    else:
+                        output = self.module_pool[action["module"]].forward(
+                            immediate_ouput_dict
+                        )
                     if isinstance(output, tuple):
                         output = list(output)
                     if not isinstance(output, list):
@@ -279,11 +284,23 @@ class EmmentalModel(nn.Module):
                     Y_batch_dict[dataloader.task_to_label_dict[task_name]].cpu().numpy()
                 )
         for task_name in gold_dict:
-            gold_dict[task_name] = np.array(gold_dict[task_name]).reshape(-1)
+            gold_dict[task_name] = np.array(gold_dict[task_name])
             prob_dict[task_name] = np.array(prob_dict[task_name])
-            active = (
-                gold_dict[task_name] != Meta.config["learner_config"]["ignore_index"]
-            ).reshape(-1)
+            if len(gold_dict[task_name].shape) == 1:
+                active = (
+                    gold_dict[task_name]
+                    != Meta.config["learner_config"]["ignore_index"]
+                ).reshape(-1)
+            else:
+                active = (
+                    np.sum(
+                        gold_dict[task_name]
+                        == Meta.config["learner_config"]["ignore_index"],
+                        axis=1,
+                    )
+                    > 0
+                )
+
             if 0 in active:
                 gold_dict[task_name] = gold_dict[task_name][active]
                 prob_dict[task_name] = prob_dict[task_name][active]

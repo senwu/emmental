@@ -1,5 +1,7 @@
 import numpy as np
 
+from emmental.utils.utils import prob_to_pred
+
 
 def precision_scorer(golds, probs, preds, pos_label=1):
     """Precision.
@@ -13,7 +15,8 @@ def precision_scorer(golds, probs, preds, pos_label=1):
     :return: Precision.
     :rtype: dict
     """
-
+    if len(golds.shape) > 1:
+        golds = prob_to_pred(golds)
     pred_pos = np.where(preds == pos_label, True, False)
     gt_pos = np.where(golds == pos_label, True, False)
     TP = np.sum(pred_pos * gt_pos)
