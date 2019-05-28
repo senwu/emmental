@@ -200,10 +200,11 @@ class EmmentalLearner(object):
 
         self.logging_manager.update(batch_size)
 
+        # Log the loss and lr
+        metric_dict.update(self._aggregate_losses())
+
         # Evaluate the model and log the metric
         if self.logging_manager.trigger_evaluation():
-            # Log the loss and lr
-            metric_dict.update(self._aggregate_losses())
 
             # Log task specific metric
             metric_dict.update(
