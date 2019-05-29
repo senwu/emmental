@@ -100,7 +100,7 @@ class EmmentalLearner(object):
             lr_scheduler = optim.lr_scheduler.MultiStepLR(
                 self.optimizer, **lr_scheduler_config["multi_step_config"]
             )
-        elif lr_scheduler == "reduce_on_plateau":
+        elif opt == "reduce_on_plateau":
             lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
                 self.optimizer,
                 min_lr=lr_scheduler_config["min_lr"],
