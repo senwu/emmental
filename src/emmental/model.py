@@ -394,10 +394,11 @@ class EmmentalModel(nn.Module):
         if not os.path.exists(model_path):
             logger.error("Loading failed... Model does not exist.")
 
-        try:
-            checkpoint = torch.load(model_path)
-        except BaseException:
-            logger.error(f"Loading failed... Cannot load model from {model_path}")
+        # TODO: have a better way to handle warning
+        # try:
+        checkpoint = torch.load(model_path)
+        # except BaseException:
+        #     logger.error(f"Loading failed... Cannot load model from {model_path}")
 
         self.name = checkpoint["model"]["name"]
         self.module_pool = checkpoint["model"]["module_pool"]
