@@ -100,7 +100,7 @@ class EmmentalLearner(object):
             lr_scheduler = optim.lr_scheduler.MultiStepLR(
                 self.optimizer, **lr_scheduler_config["multi_step_config"]
             )
-        elif lr_scheduler == "reduce_on_plateau":
+        elif opt == "reduce_on_plateau":
             lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
                 self.optimizer,
                 min_lr=lr_scheduler_config["min_lr"],
@@ -212,6 +212,9 @@ class EmmentalLearner(object):
                     model, dataloaders, Meta.config["learner_config"]["valid_split"]
                 )
             )
+
+            self.logging_manager.write_log(metric_dict)
+
             self._reset_losses()
 
         # Checkpoint the model
@@ -219,9 +222,10 @@ class EmmentalLearner(object):
             self.logging_manager.checkpoint_model(
                 model, self.optimizer, self.lr_scheduler, metric_dict
             )
-            self._reset_losses()
 
-        self.logging_manager.write_log(metric_dict)
+            self.logging_manager.write_log(metric_dict)
+
+            self._reset_losses()
 
         # Switch to train mode
         model.train()

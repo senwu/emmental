@@ -93,32 +93,31 @@ class Checkpointer(object):
                 f"checkpoint_runway condition has been met. Start checkpoining."
             )
 
-        if iteration > 0 and iteration % self.checkpoint_freq == 0:
-            state_dict = self.collect_state_dict(
-                iteration, model, optimizer, lr_scheduler, metric_dict
-            )
-            checkpoint_path = f"{self.checkpoint_path}/checkpoint_{iteration}.pth"
-            torch.save(state_dict, checkpoint_path)
-            logger.info(
-                f"Save checkpoint of {iteration} {self.checkpoint_unit} "
-                f"at {checkpoint_path}."
-            )
+        state_dict = self.collect_state_dict(
+            iteration, model, optimizer, lr_scheduler, metric_dict
+        )
+        checkpoint_path = f"{self.checkpoint_path}/checkpoint_{iteration}.pth"
+        torch.save(state_dict, checkpoint_path)
+        logger.info(
+            f"Save checkpoint of {iteration} {self.checkpoint_unit} "
+            f"at {checkpoint_path}."
+        )
 
-            if not set(self.checkpoint_all_metrics.keys()).isdisjoint(
-                set(metric_dict.keys())
-            ):
-                new_best_metrics = self.is_new_best(metric_dict)
-                for metric in new_best_metrics:
-                    copyfile(
-                        checkpoint_path,
-                        f"{self.checkpoint_path}/best_model_"
-                        f"{metric.replace('/', '_')}.pth",
-                    )
+        if not set(self.checkpoint_all_metrics.keys()).isdisjoint(
+            set(metric_dict.keys())
+        ):
+            new_best_metrics = self.is_new_best(metric_dict)
+            for metric in new_best_metrics:
+                copyfile(
+                    checkpoint_path,
+                    f"{self.checkpoint_path}/best_model_"
+                    f"{metric.replace('/', '_')}.pth",
+                )
 
-                    logger.info(
-                        f"Save best model of metric {metric} at {self.checkpoint_path}"
-                        f"/best_model_{metric.replace('/', '_')}.pth"
-                    )
+                logger.info(
+                    f"Save best model of metric {metric} at {self.checkpoint_path}"
+                    f"/best_model_{metric.replace('/', '_')}.pth"
+                )
 
     def is_new_best(self, metric_dict):
         best_metric = set()
