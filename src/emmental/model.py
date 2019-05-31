@@ -359,7 +359,7 @@ class EmmentalModel(nn.Module):
                     preds["golds"][task_name],
                     preds["probs"][task_name],
                     preds["preds"][task_name],
-                    preds["uids"] if return_uids else None,
+                    preds["uids"][task_name] if return_uids else None,
                 )
                 for metric_name, metric_value in metric_score.items():
                     identifier = "/".join(
