@@ -269,8 +269,16 @@ class EmmentalModel(nn.Module):
         return prob_dict
 
     @torch.no_grad()
-    def predict(self, dataloader, return_preds=False):
+    def predict(self, dataloader, return_preds=False, return_uids=False):
 
+        uid_key = dataloader.dataset.uid
+
+        # Check uid exists
+        if return_uids and uid_key is None:
+            return_uids = False
+            logger.info("No uid exist, skip it...")
+
+        uid_dict = defaultdict(list)
         gold_dict = defaultdict(list)
         prob_dict = defaultdict(list)
 
@@ -279,6 +287,8 @@ class EmmentalModel(nn.Module):
                 X_batch_dict, dataloader.task_to_label_dict.keys()
             )
             for task_name in dataloader.task_to_label_dict.keys():
+                if return_uids:
+                    uid_dict[task_name].extend(X_batch_dict[uid_key])
                 prob_dict[task_name].extend(prob_batch_dict[task_name])
                 gold_dict[task_name].extend(
                     Y_batch_dict[dataloader.task_to_label_dict[task_name]].cpu().numpy()
@@ -304,16 +314,27 @@ class EmmentalModel(nn.Module):
             if 0 in active:
                 gold_dict[task_name] = gold_dict[task_name][active]
                 prob_dict[task_name] = prob_dict[task_name][active]
+                if return_uids:
+                    uid_dict[task_name] = [
+                        uid_dict[task_name][i]
+                        for i, value in enumerate(active)
+                        if value
+                    ]
 
         if return_preds:
             pred_dict = defaultdict(list)
             for task_name, prob in prob_dict.items():
                 pred_dict[task_name] = prob_to_pred(prob)
 
+        res = {"golds": gold_dict, "probs": prob_dict}
+
         if return_preds:
-            return gold_dict, prob_dict, pred_dict
-        else:
-            return gold_dict, prob_dict
+            res["preds"] = pred_dict
+
+        if return_uids:
+            res["uids"] = uid_dict
+
+        return res
 
     @torch.no_grad()
     def score(self, dataloaders):
@@ -331,13 +352,14 @@ class EmmentalModel(nn.Module):
         metric_score_dict = dict()
 
         for dataloader in dataloaders:
-            gold_dict, prob_dict, pred_dict = self.predict(
-                dataloader, return_preds=True
-            )
-            for task_name in gold_dict.keys():
-                # import pdb; pdb.set_trace()
+            return_uids = True if dataloader.dataset.uid else False
+            preds = self.predict(dataloader, return_preds=True, return_uids=return_uids)
+            for task_name in preds["golds"].keys():
                 metric_score = self.scorers[task_name].score(
-                    gold_dict[task_name], prob_dict[task_name], pred_dict[task_name]
+                    preds["golds"][task_name],
+                    preds["probs"][task_name],
+                    preds["preds"][task_name],
+                    preds["uids"] if return_uids else None,
                 )
                 for metric_name, metric_value in metric_score.items():
                     identifier = "/".join(

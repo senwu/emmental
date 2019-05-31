@@ -3,7 +3,7 @@ import numpy as np
 from emmental.utils.utils import prob_to_pred
 
 
-def precision_scorer(golds, probs, preds, pos_label=1):
+def precision_scorer(golds, probs, preds, uids=None, pos_label=1):
     """Precision.
 
     :param golds: Ground truth (correct) target values.
@@ -12,6 +12,8 @@ def precision_scorer(golds, probs, preds, pos_label=1):
     :type probs: k-d np.array
     :param preds: Predicted target values.
     :type preds: 1-d np.array
+    :param uids: Unique ids.
+    :type uids: list
     :return: Precision.
     :rtype: dict
     """

@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import pearsonr
 
 
-def pearson_correlation_scorer(golds, probs, preds):
+def pearson_correlation_scorer(golds, probs, preds, uids=None):
     """Pearson correlation coefficient and the p-value.
 
     :param golds: Ground truth (correct) target values.
@@ -11,6 +11,8 @@ def pearson_correlation_scorer(golds, probs, preds):
     :type probs: 1-d np.array
     :param preds: Predicted target values. (Not used!)
     :type preds: 1-d np.array
+    :param uids: Unique ids.
+    :type uids: list
     :return: Pearson correlation coefficient and the p-value.
     :rtype: dict
     """

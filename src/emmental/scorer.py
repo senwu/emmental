@@ -24,11 +24,11 @@ class Scorer(object):
 
         self.metrics.update(customize_metric_funcs)
 
-    def score(self, gold, preds, probs):
+    def score(self, gold, preds, probs, uids=None):
         metric_dict = dict()
 
         for metric_name, metric in self.metrics.items():
-            res = metric(gold, preds, probs)
+            res = metric(gold, preds, probs, uids)
 
             if isinstance(res, dict):
                 metric_dict.update(res)

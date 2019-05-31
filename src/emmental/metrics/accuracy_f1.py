@@ -4,7 +4,7 @@ from emmental.metrics.accuracy import accuracy_scorer
 from emmental.metrics.fbeta import f1_scorer
 
 
-def accuracy_f1_scorer(golds, probs, preds):
+def accuracy_f1_scorer(golds, probs, preds, uids=None):
     """Average of accuracy and f1 score.
 
     :param golds: Ground truth (correct) target values.
@@ -13,15 +13,15 @@ def accuracy_f1_scorer(golds, probs, preds):
     :type probs: k-d np.array
     :param preds: Predicted target values.
     :type preds: 1-d np.array
-    :param normalize: Normalize the results or not, defaults to True
-    :param normalize: bool, optional
+    :param uids: Unique ids.
+    :type uids: list
     :return: Average of accuracy and f1.
     :rtype: dict
     """
 
     metrics = dict()
-    metrics.update(accuracy_scorer(golds, probs, preds))
-    metrics.update(f1_scorer(golds, probs, preds))
+    metrics.update(accuracy_scorer(golds, probs, preds, uids))
+    metrics.update(f1_scorer(golds, probs, preds, uids))
     metrics["accuracy_f1"] = np.mean([metrics["accuracy"], metrics["f1"]])
 
     return metrics
