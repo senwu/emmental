@@ -19,7 +19,7 @@ learner_config:
     test_split: test # the split for testing, accepts str or list of strs
     ignore_index: -100 # the ignore index, uses for masking samples
     optimizer_config:
-        optimizer: sgd # [sgd, adam]
+        optimizer: adam # [sgd, adam]
         lr: 0.001 # Learing rate
         l2: 0.0 # l2 regularization
         grad_clip: 1.0 # gradient clipping
