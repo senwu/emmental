@@ -157,7 +157,7 @@ class Checkpointer(object):
 
         model_params = {
             "name": model.name,
-            "module_pool": model.module_pool,
+            "module_pool": model.collect_state_dict(),
             "task_names": model.task_names,
             "task_flows": model.task_flows,
             "loss_funcs": model.loss_funcs,
@@ -186,14 +186,14 @@ class Checkpointer(object):
                 f"{self.checkpoint_path}/best_model_{metric.replace('/', '_')}.pth"
             )
             logger.info(f"Loading the best model from {best_model_path}.")
-            state_dict = torch.load(best_model_path, map_location=torch.device("cpu"))
-            model.name = state_dict["model"]["name"]
-            model.module_pool = state_dict["model"]["module_pool"]
-            model.task_names = state_dict["model"]["task_names"]
-            model.task_flows = state_dict["model"]["task_flows"]
-            model.loss_funcs = state_dict["model"]["loss_funcs"]
-            model.output_funcs = state_dict["model"]["output_funcs"]
-            model.scorers = state_dict["model"]["scorers"]
+            checkpoint = torch.load(best_model_path, map_location=torch.device("cpu"))
+            model.name = checkpoint["model"]["name"]
+            model.load_state_dict(checkpoint["model"]["module_pool"])
+            model.task_names = checkpoint["model"]["task_names"]
+            model.task_flows = checkpoint["model"]["task_flows"]
+            model.loss_funcs = checkpoint["model"]["loss_funcs"]
+            model.output_funcs = checkpoint["model"]["output_funcs"]
+            model.scorers = checkpoint["model"]["scorers"]
 
             model._move_to_device()
 

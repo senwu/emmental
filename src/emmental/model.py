@@ -390,7 +390,7 @@ class EmmentalModel(nn.Module):
         state_dict = {
             "model": {
                 "name": self.name,
-                "module_pool": self.module_pool,
+                "module_pool": self.collect_state_dict(),
                 "task_names": self.task_names,
                 "task_flows": self.task_flows,
                 "loss_funcs": self.loss_funcs,
@@ -408,7 +408,7 @@ class EmmentalModel(nn.Module):
             logger.info(f"[{self.name}] Model saved in {model_path}")
 
     def load(self, model_path):
-        """Load model from file and rebuild the model.
+        """Load model state_dict from file and reinitialize the model weights.
         :param model_path: Saved model path.
         :type model_path: str
         """
@@ -416,22 +416,39 @@ class EmmentalModel(nn.Module):
         if not os.path.exists(model_path):
             logger.error("Loading failed... Model does not exist.")
 
-        # TODO: have a better way to handle warning
-        # try:
-        checkpoint = torch.load(model_path)
-        # except BaseException:
-        #     logger.error(f"Loading failed... Cannot load model from {model_path}")
+        try:
+            checkpoint = torch.load(model_path)
+        except BaseException:
+            logger.error(f"Loading failed... Cannot load model from {model_path}")
 
-        self.name = checkpoint["model"]["name"]
-        self.module_pool = checkpoint["model"]["module_pool"]
-        self.task_names = checkpoint["model"]["task_names"]
-        self.task_flows = checkpoint["model"]["task_flows"]
-        self.loss_funcs = checkpoint["model"]["loss_funcs"]
-        self.output_funcs = checkpoint["model"]["output_funcs"]
-        self.scorers = checkpoint["model"]["scorers"]
+        self.load_state_dict(checkpoint["model"]["module_pool"])
 
         if Meta.config["meta_config"]["verbose"]:
             logger.info(f"[{self.name}] Model loaded from {model_path}")
 
         # Move model to specified device
         self._move_to_device()
+
+    def collect_state_dict(self):
+        state_dict = defaultdict(list)
+
+        for module_name, module in self.module_pool.items():
+            if Meta.config["model_config"]["dataparallel"]:
+                state_dict[module_name] = module.module.state_dict()
+            else:
+                state_dict[module_name] = module.state_dict()
+
+        return state_dict
+
+    def load_state_dict(self, state_dict):
+
+        for module_name, module_state_dict in state_dict.items():
+            if module_name in self.module_pool:
+                if Meta.config["model_config"]["dataparallel"]:
+                    self.module_pool[module_name].module.load_state_dict(
+                        module_state_dict
+                    )
+                else:
+                    self.module_pool[module_name].load_state_dict(module_state_dict)
+            else:
+                logger.info(f"Missing {module_name} in module_pool, skip it..")
