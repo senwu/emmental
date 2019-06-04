@@ -417,7 +417,7 @@ class EmmentalModel(nn.Module):
             logger.error("Loading failed... Model does not exist.")
 
         try:
-            checkpoint = torch.load(model_path)
+            checkpoint = torch.load(model_path, map_location=torch.device("cpu"))
         except BaseException:
             logger.error(f"Loading failed... Cannot load model from {model_path}")
 
