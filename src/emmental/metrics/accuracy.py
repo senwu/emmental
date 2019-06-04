@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def accuracy_scorer(golds, probs, preds, normalize=True):
+def accuracy_scorer(golds, probs, preds, uids=None, normalize=True):
     """Accuracy classification score.
 
     :param golds: Ground truth (correct) target values.
@@ -10,6 +10,8 @@ def accuracy_scorer(golds, probs, preds, normalize=True):
     :type probs: k-d np.array
     :param preds: Predicted target values.
     :type preds: 1-d np.array
+    :param uids: Unique ids.
+    :type uids: list
     :param normalize: Normalize the results or not, defaults to True
     :param normalize: bool, optional
     :return: Accuracy, if normalize == True, return the fraction of correctly

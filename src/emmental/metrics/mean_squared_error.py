@@ -1,7 +1,7 @@
 from sklearn.metrics import mean_squared_error
 
 
-def mean_squared_error_scorer(golds, probs, preds):
+def mean_squared_error_scorer(golds, probs, preds, uids=None):
     """Mean squared error regression loss.
 
     :param golds: Ground truth (correct) target values.
@@ -10,6 +10,8 @@ def mean_squared_error_scorer(golds, probs, preds):
     :type probs: k-d np.array
     :param preds: Predicted target values. (Not used!)
     :type preds: any
+    :param uids: Unique ids.
+    :type uids: list
     :return: Mean squared error regression loss.
     :rtype: dict
     """
