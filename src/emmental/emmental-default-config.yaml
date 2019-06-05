@@ -27,6 +27,7 @@ learner_config:
             momentum: 0.9
         adam_config:
             betas: !!python/tuple [0.9, 0.999]
+            amsgrad: False
     lr_scheduler_config:
         lr_scheduler: # [linear, exponential, reduce_on_plateau]
         warmup_steps: # warm up steps
