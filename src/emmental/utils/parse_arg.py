@@ -129,6 +129,13 @@ def parse_arg(parser=None):
 
     # TODO: add adam betas
 
+    optimizer_config.add_argument(
+        "--amsgrad",
+        type=str2bool,
+        default=False,
+        help="Whether to use the AMSGrad variant of adam",
+    )
+
     # Scheduler configuration
     scheduler_config = parser.add_argument_group("Scheduler configuration")
 
@@ -308,7 +315,7 @@ def parse_arg_to_config(args):
                 "l2": args.l2,
                 "grad_clip": args.grad_clip,
                 "sgd_config": {"momentum": args.sgd_momentum},
-                "adam_config": {"betas": (0.9, 0.999)},
+                "adam_config": {"betas": (0.9, 0.999), "amsgrad": args.amsgrad},
             },
             "lr_scheduler_config": {
                 "lr_scheduler": args.lr_scheduler,
