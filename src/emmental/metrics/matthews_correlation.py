@@ -1,7 +1,7 @@
 from sklearn.metrics import matthews_corrcoef
 
 
-def matthews_correlation_coefficient_scorer(golds, probs, preds):
+def matthews_correlation_coefficient_scorer(golds, probs, preds, uids=None):
     """Matthews correlation coefficient (MCC).
 
     :param golds: Ground truth (correct) target values.
@@ -10,6 +10,8 @@ def matthews_correlation_coefficient_scorer(golds, probs, preds):
     :type probs: k-d np.array
     :param preds: Predicted target values.
     :type preds: 1-d np.array
+    :param uids: Unique ids.
+    :type uids: list
     :return: Matthews correlation coefficient score.
     :rtype: dict
     """

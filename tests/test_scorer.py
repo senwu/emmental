@@ -16,7 +16,7 @@ def test_scorer(caplog):
     preds = np.array([1, 1, 1, 1, 1, 0])
     probs = np.array([0.8, 0.6, 0.9, 0.7, 0.7, 0.2])
 
-    def sum(gold, probs, preds):
+    def sum(gold, probs, preds, uids):
         return np.sum(preds)
 
     scorer = Scorer(metrics=["accuracy", "f1"], customize_metric_funcs={"sum": sum})

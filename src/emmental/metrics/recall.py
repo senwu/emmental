@@ -3,7 +3,7 @@ import numpy as np
 from emmental.utils.utils import prob_to_pred
 
 
-def recall_scorer(golds, probs, preds, pos_label=1):
+def recall_scorer(golds, probs, preds, uids=None, pos_label=1):
     """Recall.
 
     :param golds: Ground truth (correct) target values.
@@ -12,6 +12,8 @@ def recall_scorer(golds, probs, preds, pos_label=1):
     :type probs: k-d np.array
     :param preds: Predicted target values.
     :type preds: 1-d np.array
+    :param uids: Unique ids.
+    :type uids: list
     :return: Recall.
     :rtype: dict
     """
