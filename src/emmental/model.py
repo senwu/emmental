@@ -420,6 +420,7 @@ class EmmentalModel(nn.Module):
             checkpoint = torch.load(model_path, map_location=torch.device("cpu"))
         except BaseException:
             logger.error(f"Loading failed... Cannot load model from {model_path}")
+            raise
 
         self.load_state_dict(checkpoint["model"]["module_pool"])
 
