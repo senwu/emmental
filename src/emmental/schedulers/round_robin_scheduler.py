@@ -1,3 +1,5 @@
+import random
+
 from emmental.schedulers.scheduler import Scheduler
 
 
@@ -27,19 +29,13 @@ class RoundRobinScheduler(Scheduler):
         data_loaders = [iter(dataloader) for dataloader in dataloaders]
         splits = [dataloader.split for dataloader in dataloaders]
 
-        total_batch_count = sum(batch_counts)
-        index = 0
-        cnt = 0
-        n_dataloader = len(task_to_label_dicts)
-        used_batch_counts = [0] * n_dataloader
+        dataloader_indexer = []
+        for idx, count in enumerate(batch_counts):
+            dataloader_indexer.extend([idx] * count)
 
-        while cnt < total_batch_count:
-            while used_batch_counts[index] >= batch_counts[index]:
-                index = (index + 1) % n_dataloader
-            cnt += 1
-            used_batch_counts[index] += 1
+        random.shuffle(dataloader_indexer)
+
+        for index in dataloader_indexer:
             yield next(data_loaders[index]), task_to_label_dicts[index], data_names[
                 index
             ], splits[index]
-
-            index = (index + 1) % len(task_to_label_dicts)
