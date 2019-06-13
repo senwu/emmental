@@ -109,7 +109,7 @@ def parse_arg(parser=None):
         "--optimizer",
         type=str,
         default="adam",
-        choices=["adam", "sgd"],
+        choices=["adam", "adamax", "sgd"],
         help="The optimizer to use",
     )
 
@@ -316,6 +316,7 @@ def parse_arg_to_config(args):
                 "grad_clip": args.grad_clip,
                 "sgd_config": {"momentum": args.sgd_momentum},
                 "adam_config": {"betas": (0.9, 0.999), "amsgrad": args.amsgrad},
+                "adamax_config": {"betas": (0.9, 0.999)},
             },
             "lr_scheduler_config": {
                 "lr_scheduler": args.lr_scheduler,

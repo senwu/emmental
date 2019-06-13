@@ -60,6 +60,13 @@ class EmmentalLearner(object):
                 **optimizer_config["adam_config"],
                 weight_decay=optimizer_config["l2"],
             )
+        elif opt == "adamax":
+            optimizer = optim.Adamax(
+                parameters,
+                lr=optimizer_config["lr"],
+                **optimizer_config["adamax_config"],
+                weight_decay=optimizer_config["l2"],
+            )
         else:
             raise ValueError(f"Unrecognized optimizer option '{opt}'")
 
