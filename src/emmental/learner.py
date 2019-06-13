@@ -70,6 +70,8 @@ class EmmentalLearner(object):
         else:
             raise ValueError(f"Unrecognized optimizer option '{opt}'")
 
+        logger.info(f"Using optimizer {optimizer}")
+
         self.optimizer = optimizer
 
     def _set_lr_scheduler(self, model):
