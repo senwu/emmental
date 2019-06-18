@@ -256,6 +256,8 @@ class EmmentalModel(nn.Module):
         :type task_names: list of str
         """
 
+        self.eval()
+
         prob_dict = dict()
 
         immediate_ouput_dict = self.forward(X_dict, task_names)
@@ -270,6 +272,8 @@ class EmmentalModel(nn.Module):
 
     @torch.no_grad()
     def predict(self, dataloader, return_preds=False, return_uids=False):
+
+        self.eval()
 
         uid_key = dataloader.dataset.uid
 
@@ -391,11 +395,11 @@ class EmmentalModel(nn.Module):
             "model": {
                 "name": self.name,
                 "module_pool": self.collect_state_dict(),
-                "task_names": self.task_names,
-                "task_flows": self.task_flows,
-                "loss_funcs": self.loss_funcs,
-                "output_funcs": self.output_funcs,
-                "scorers": self.scorers,
+                # "task_names": self.task_names,
+                # "task_flows": self.task_flows,
+                # "loss_funcs": self.loss_funcs,
+                # "output_funcs": self.output_funcs,
+                # "scorers": self.scorers,
             }
         }
 
@@ -420,6 +424,7 @@ class EmmentalModel(nn.Module):
             checkpoint = torch.load(model_path, map_location=torch.device("cpu"))
         except BaseException:
             logger.error(f"Loading failed... Cannot load model from {model_path}")
+            raise
 
         self.load_state_dict(checkpoint["model"]["module_pool"])
 

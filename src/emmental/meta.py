@@ -159,3 +159,9 @@ class Meta(object):
                     break
                 current_dir = new_dir
                 tries += 1
+
+    def reset():
+        """ Clears shared variables of shared, global singleton. """
+
+        Meta.log_path = None
+        Meta.config = None
