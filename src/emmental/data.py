@@ -36,7 +36,9 @@ class EmmentalDataset(Dataset):
 
         for name, label in self.Y_dict.items():
             if not isinstance(label, torch.Tensor):
-                raise ValueError(f"Label {name} should be torch.Tensor.")
+                raise ValueError(
+                    f"Label {name} should be torch.Tensor, not {type(label)}."
+                )
 
     def __getitem__(self, index):
         x_dict = {name: feature[index] for name, feature in self.X_dict.items()}
@@ -44,7 +46,10 @@ class EmmentalDataset(Dataset):
         return x_dict, y_dict
 
     def __len__(self):
-        return len(next(iter(self.X_dict.values())))
+        try:
+            return len(next(iter(self.X_dict.values())))
+        except StopIteration:
+            return 0
 
     def _update_dict(self, ori_dict, new_dict):
         for key, value in new_dict.items():
