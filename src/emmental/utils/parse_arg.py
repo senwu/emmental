@@ -109,7 +109,7 @@ def parse_arg(parser=None):
         "--optimizer",
         type=str,
         default="adam",
-        choices=["adam", "sgd"],
+        choices=["adam", "adamax", "sgd"],
         help="The optimizer to use",
     )
 
@@ -134,6 +134,10 @@ def parse_arg(parser=None):
         type=str2bool,
         default=False,
         help="Whether to use the AMSGrad variant of adam",
+    )
+
+    optimizer_config.add_argument(
+        "--eps", type=float, default=1e-8, help="eps in adam or adamax"
     )
 
     # Scheduler configuration
@@ -315,7 +319,12 @@ def parse_arg_to_config(args):
                 "l2": args.l2,
                 "grad_clip": args.grad_clip,
                 "sgd_config": {"momentum": args.sgd_momentum},
-                "adam_config": {"betas": (0.9, 0.999), "amsgrad": args.amsgrad},
+                "adam_config": {
+                    "betas": (0.9, 0.999),
+                    "amsgrad": args.amsgrad,
+                    "eps": args.eps,
+                },
+                "adamax_config": {"betas": (0.9, 0.999), "eps": args.eps},
             },
             "lr_scheduler_config": {
                 "lr_scheduler": args.lr_scheduler,
