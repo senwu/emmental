@@ -11,9 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 class Checkpointer(object):
-    """Checkpointing Training logging class to log train infomation"""
+    """Checkpointing class to log train infomation"""
 
     def __init__(self):
+        """Initialize the checkpointer.
+        """
+
         # Set up checkpoint directory
         self.checkpoint_path = Meta.config["logging_config"]["checkpointer_config"][
             "checkpoint_path"
@@ -25,6 +28,7 @@ class Checkpointer(object):
         if not os.path.exists(self.checkpoint_path):
             os.makedirs(self.checkpoint_path)
 
+        # Set up checkpoint frequency
         self.checkpoint_freq = (
             Meta.config["logging_config"]["evaluation_freq"]
             * Meta.config["logging_config"]["checkpointer_config"]["checkpoint_freq"]
@@ -36,6 +40,7 @@ class Checkpointer(object):
                 f"must be greater 0."
             )
 
+        # Set up checkpoint unit
         self.checkpoint_unit = Meta.config["logging_config"]["counter_unit"]
 
         logger.info(
@@ -43,6 +48,7 @@ class Checkpointer(object):
             f"{self.checkpoint_freq} {self.checkpoint_unit}"
         )
 
+        # Set up checkpoint metric
         self.checkpoint_metric = Meta.config["logging_config"]["checkpointer_config"][
             "checkpoint_metric"
         ]
@@ -79,11 +85,26 @@ class Checkpointer(object):
             "checkpoint_clear"
         ]
 
+        # Set up checkpoint flag
         self.checkpoint_condition_met = False
 
         self.best_metric_dict = dict()
 
     def checkpoint(self, iteration, model, optimizer, lr_scheduler, metric_dict):
+        """Checkpointing the checkpoint.
+
+        :param iteration: The current iteration.
+        :type iteration: float or int.
+        :param model: The model to checkpoint
+        :type model: EmmentalModel
+        :param optimizer: The optimizer used during training process
+        :type optimizer: torch.optim
+        :param lr_scheduler: Learning rate scheduler
+        :type lr_scheduler: optim.lr_scheduler
+        :param metric_dict: the metric dict
+        :type metric_dict: dict
+        """
+
         # Check the checkpoint_runway condition is met
         if iteration < self.checkpoint_runway:
             return
@@ -120,6 +141,14 @@ class Checkpointer(object):
                 )
 
     def is_new_best(self, metric_dict):
+        """Update the best score.
+
+        :param metric_dict: The current metric dict
+        :type metric_dict: dict
+        :return: The updated best metric dict
+        :rtype: dict
+        """
+
         best_metric = set()
 
         for metric in metric_dict:
@@ -144,8 +173,11 @@ class Checkpointer(object):
         return best_metric
 
     def clear(self):
+        """Clear all intermediate checkpoints.
+        """
+
         if self.checkpoint_clear:
-            logger.info("Clear all immediate checkpoints.")
+            logger.info("Clear all intermediate checkpoints.")
             file_list = glob.glob(f"{self.checkpoint_path}/checkpoint_*.pth")
             for file in file_list:
                 os.remove(file)
@@ -153,7 +185,19 @@ class Checkpointer(object):
     def collect_state_dict(
         self, iteration, model, optimizer, lr_scheduler, metric_dict
     ):
-        """Generate the state dict of the model."""
+        """Collect the state dict of the model.
+
+        :param iteration: The current iteration.
+        :type iteration: float or int.
+        :param model: The model to checkpoint
+        :type model: EmmentalModel
+        :param optimizer: The optimizer used during training process
+        :type optimizer: torch.optim
+        :param lr_scheduler: Learning rate scheduler
+        :type lr_scheduler: optim.lr_scheduler
+        :param metric_dict: the metric dict
+        :type metric_dict: dict
+        """
 
         model_params = {
             "name": model.name,
@@ -176,7 +220,14 @@ class Checkpointer(object):
         return state_dict
 
     def load_best_model(self, model):
-        """Load the best model from the checkpoint."""
+        """Load the best model from the checkpoint.
+
+        :param model: The current model.
+        :type model: EmmentalModel.
+        :return: The best model load from the checkpoint.
+        :rtype: EmmentalModel
+        """
+
         if list(self.checkpoint_metric.keys())[0] not in self.best_metric_dict:
             logger.info(f"No best model found, use the original model.")
         else:

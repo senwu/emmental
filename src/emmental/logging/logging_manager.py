@@ -13,8 +13,6 @@ class LoggingManager(object):
 
     :param n_batches_per_epoch: total number batches per epoch
     :type n_batches_per_epoch: int
-    :param verbose: print out the log or not
-    :type verbose: bool
     """
 
     def __init__(self, n_batches_per_epoch):
@@ -86,7 +84,11 @@ class LoggingManager(object):
             raise ValueError(f"Unrecognized writer option '{writer_opt}'")
 
     def update(self, batch_size):
-        """Update the count and total number"""
+        """Update the counter
+
+        :param batch_size: number of the samples in the batch
+        :type batch_size: int
+        """
 
         # Update number of samples
         self.sample_count += batch_size
@@ -129,22 +131,45 @@ class LoggingManager(object):
         return satisfied
 
     def reset(self):
-        """Reset the counter"""
+        """Reset the counter."""
         self.sample_count = 0
         self.batch_count = 0
         self.epoch_count = 0
         self.unit_count = 0
 
     def write_log(self, metric_dict):
+        """Write the metrics to the log.
+
+        :param metric_dict: the metric dict
+        :type metric_dict: dict
+        """
         for metric_name, metric_value in metric_dict.items():
             self.writer.add_scalar(metric_name, metric_value, self.batch_total)
 
     def checkpoint_model(self, model, optimizer, lr_scheduler, metric_dict):
+        """Checkpoint the model.
+
+        :param model: The model to checkpoint
+        :type model: EmmentalModel
+        :param optimizer: The optimizer used during training process
+        :type optimizer: torch.optim
+        :param lr_scheduler: Learning rate scheduler
+        :type lr_scheduler: optim.lr_scheduler
+        :param metric_dict: the metric dict
+        :type metric_dict: dict
+        """
         self.checkpointer.checkpoint(
             self.unit_total, model, optimizer, lr_scheduler, metric_dict
         )
 
     def close(self, model):
+        """Close the checkpointer and reload the model if necessary.
+
+        :param model: The trained model
+        :type model: EmmentalModel
+        :return: The reloaded model if necessary
+        :rtype: EmmentalModel
+        """
         self.writer.close()
         if self.checkpointing:
             self.checkpointer.clear()
