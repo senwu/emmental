@@ -6,6 +6,7 @@ import torch.optim as optim
 
 from emmental import Meta
 from emmental.logging import LoggingManager
+from emmental.optimizers.bert_adam import BertAdam
 from emmental.schedulers.round_robin_scheduler import RoundRobinScheduler
 from emmental.schedulers.sequential_scheduler import SequentialScheduler
 
@@ -65,6 +66,13 @@ class EmmentalLearner(object):
                 parameters,
                 lr=optimizer_config["lr"],
                 **optimizer_config["adamax_config"],
+                weight_decay=optimizer_config["l2"],
+            )
+        elif opt == "bert_adam":
+            optimizer = BertAdam(
+                parameters,
+                lr=optimizer_config["lr"],
+                **optimizer_config["bert_adam_config"],
                 weight_decay=optimizer_config["l2"],
             )
         else:

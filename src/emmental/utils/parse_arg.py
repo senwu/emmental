@@ -109,7 +109,7 @@ def parse_arg(parser=None):
         "--optimizer",
         type=str,
         default="adam",
-        choices=["adam", "adamax", "sgd"],
+        choices=["adam", "adamax", "sgd", "bert_adam"],
         help="The optimizer to use",
     )
 
@@ -127,7 +127,7 @@ def parse_arg(parser=None):
         "--sgd_momentum", type=float, default=0.9, help="SGD momentum"
     )
 
-    # TODO: add adam betas
+    # TODO: add adam/adamax/bert_adam betas
 
     optimizer_config.add_argument(
         "--amsgrad",
@@ -137,7 +137,7 @@ def parse_arg(parser=None):
     )
 
     optimizer_config.add_argument(
-        "--eps", type=float, default=1e-8, help="eps in adam or adamax"
+        "--eps", type=float, default=1e-8, help="eps in adam, adamax, or bert_adam"
     )
 
     # Scheduler configuration
@@ -325,6 +325,7 @@ def parse_arg_to_config(args):
                     "eps": args.eps,
                 },
                 "adamax_config": {"betas": (0.9, 0.999), "eps": args.eps},
+                "bert_adam_config": {"betas": (0.9, 0.999), "eps": args.eps},
             },
             "lr_scheduler_config": {
                 "lr_scheduler": args.lr_scheduler,
