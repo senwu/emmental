@@ -158,11 +158,11 @@ class Checkpointer(object):
         model_params = {
             "name": model.name,
             "module_pool": model.collect_state_dict(),
-            "task_names": model.task_names,
-            "task_flows": model.task_flows,
-            "loss_funcs": model.loss_funcs,
-            "output_funcs": model.output_funcs,
-            "scorers": model.scorers,
+            # "task_names": model.task_names,
+            # "task_flows": model.task_flows,
+            # "loss_funcs": model.loss_funcs,
+            # "output_funcs": model.output_funcs,
+            # "scorers": model.scorers,
         }
 
         state_dict = {
@@ -189,11 +189,11 @@ class Checkpointer(object):
             checkpoint = torch.load(best_model_path, map_location=torch.device("cpu"))
             model.name = checkpoint["model"]["name"]
             model.load_state_dict(checkpoint["model"]["module_pool"])
-            model.task_names = checkpoint["model"]["task_names"]
-            model.task_flows = checkpoint["model"]["task_flows"]
-            model.loss_funcs = checkpoint["model"]["loss_funcs"]
-            model.output_funcs = checkpoint["model"]["output_funcs"]
-            model.scorers = checkpoint["model"]["scorers"]
+            # model.task_names = checkpoint["model"]["task_names"]
+            # model.task_flows = checkpoint["model"]["task_flows"]
+            # model.loss_funcs = checkpoint["model"]["loss_funcs"]
+            # model.output_funcs = checkpoint["model"]["output_funcs"]
+            # model.scorers = checkpoint["model"]["scorers"]
 
             model._move_to_device()
 
