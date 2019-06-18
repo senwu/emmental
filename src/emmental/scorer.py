@@ -28,6 +28,11 @@ class Scorer(object):
         metric_dict = dict()
 
         for metric_name, metric in self.metrics.items():
+            # handle no examples
+            if len(gold) == 0:
+                metric_dict[metric_name] = float("nan")
+                continue
+
             res = metric(gold, preds, probs, uids)
 
             if isinstance(res, dict):
