@@ -17,7 +17,7 @@ def pearson_spearman_scorer(golds, probs, preds, uids=None):
     :param uids: Unique ids.
     :type uids: list
     :return: Pearson correlation coefficient, the p-value and Spearman
-    rank-order correlation coefficient and the average.
+        rank-order correlation coefficient and the average.
     :rtype: dict
     """
 

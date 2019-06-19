@@ -19,7 +19,7 @@ docs:
 	sphinx-build -W -b html docs/ _build/html
 
 clean:
-	pip uninstall -y fonduer
+	pip uninstall -y emmental
 	rm -rf src/emmental.egg-info
 	rm -rf _build/
 

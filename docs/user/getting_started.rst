@@ -1,6 +1,16 @@
 Getting Started
 ===============
 
+Should see something here:
+
+.. automodule:: emmental.metrics
+    :members:
+    :inherited-members:
+    :show-inheritance:
+
+Before this line.
+
+
 This document will show you how to get up and running with Emmental. We'll show
 you how to get everything installed and your machine so that you can walk
 through real examples by checking out our Tutorials_.
@@ -36,10 +46,9 @@ Then, install Emmental by running::
 The Emmental Framework
 ----------------------
 
-The Emmental framework can be broken into five components.
+The Emmental framework can be broken into four components.
 
   #. Dataset
-  #. Dataloader
   #. Task
   #. Model
   #. Learning
