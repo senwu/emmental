@@ -1,11 +1,11 @@
 Task
 ====
-The second step of Emmental_'s pipeline is to build Task based on user's need.
+The second component of Emmental_'s pipeline is to build learning Task.
 
-Core Task Objects
----------------------
+Task Class
+----------
 
-These are Emmental_'s core objects used for building tasks. 
+The following describes elements of used for creating Task.
 
 .. automodule:: emmental.task
     :members:
@@ -13,11 +13,22 @@ These are Emmental_'s core objects used for building tasks.
     :show-inheritance:
 
 Task Utilities
-------------------
+--------------
 
-These utilities are used to build tasks.
+These utilities are used to build task.
 
 .. automodule:: emmental.scorer
+    :members:
+    :inherited-members:
+    :show-inheritance:
+
+Metrics
+-------
+
+This show the metrics included with Emmental_. These metrics can be used alone,
+or combined together, to define how to evaluate the task.
+
+.. automodule:: emmental.metrics
     :members:
     :inherited-members:
     :show-inheritance:

@@ -25,9 +25,6 @@ logger = logging.getLogger(__name__)
 
 class EmmentalLearner(object):
     """A class for emmental multi-task learning.
-
-    :param config: The learning config
-    :type config: dict
     """
 
     def __init__(self, name=None):

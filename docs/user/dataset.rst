@@ -1,12 +1,12 @@
 Dataset and Dataloader
 ======================
-The first step of Emmental_'s pipeline is to build Dataset and Dataloader from user
-provided data.
+The first component of Emmental_'s pipeline is to use user provided data to create
+Emmental Dataset and Dataloader.
 
 Dataset and Dataloader Classes
 ------------------------------------
 
-The following describes elements of used for Dataset creation.
+The following docs describe elements of Emmental's Dataset and Dataloader.
 
 .. automodule:: emmental.data
     :members:

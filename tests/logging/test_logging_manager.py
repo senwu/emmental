@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 import logging
 
 import emmental
@@ -17,6 +16,7 @@ def test_logging_manager_sample(caplog):
             "logging_config": {
                 "counter_unit": "sample",
                 "evaluation_freq": 10,
+                "checkpointing": True,
                 "checkpointer_config": {"checkpoint_freq": 2},
             }
         }
@@ -58,6 +58,7 @@ def test_logging_manager_batch(caplog):
             "logging_config": {
                 "counter_unit": "batch",
                 "evaluation_freq": 2,
+                "checkpointing": True,
                 "checkpointer_config": {"checkpoint_freq": 2},
             }
         }
@@ -99,6 +100,7 @@ def test_logging_manager_epoch(caplog):
             "logging_config": {
                 "counter_unit": "epoch",
                 "evaluation_freq": 1,
+                "checkpointing": True,
                 "checkpointer_config": {"checkpoint_freq": 2},
             }
         }

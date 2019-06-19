@@ -224,7 +224,7 @@ def parse_arg(parser=None):
     logging_config.add_argument(
         "--checkpointing",
         type=str2bool,
-        default=True,
+        default=False,
         help="Whether to checkpoint the model",
     )
 
