@@ -140,3 +140,21 @@ def merge(x, y):
             merged[key] = merge(x[key], y[key])
 
     return merged
+
+
+def str2bool(v):
+    if v.lower() in ("yes", "true", "t", "y", "1"):
+        return True
+    elif v.lower() in ("no", "false", "f", "n", "0"):
+        return False
+    else:
+        raise ValueError("Boolean value expected.")
+
+
+def str2dict(v):
+    dict = {}
+    for token in v.split(","):
+        key, value = token.split(":")
+        dict[key] = value
+
+    return dict

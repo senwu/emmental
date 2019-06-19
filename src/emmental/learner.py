@@ -25,9 +25,6 @@ logger = logging.getLogger(__name__)
 
 class EmmentalLearner(object):
     """A class for emmental multi-task learning.
-
-    :param config: The learning config
-    :type config: dict
     """
 
     def __init__(self, name=None):
@@ -117,12 +114,12 @@ class EmmentalLearner(object):
             lr_scheduler = optim.lr_scheduler.MultiStepLR(
                 self.optimizer, **lr_scheduler_config["multi_step_config"]
             )
-        elif opt == "reduce_on_plateau":
-            lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-                self.optimizer,
-                min_lr=lr_scheduler_config["min_lr"],
-                **lr_scheduler_config["plateau_config"],
-            )
+        # elif opt == "reduce_on_plateau":
+        #     lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+        #         self.optimizer,
+        #         min_lr=lr_scheduler_config["min_lr"],
+        #         **lr_scheduler_config["plateau_config"],
+        #     )
         else:
             raise ValueError(f"Unrecognized lr scheduler option '{opt}'")
 

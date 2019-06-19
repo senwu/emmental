@@ -15,8 +15,8 @@ def accuracy_scorer(golds, probs, preds, uids=None, normalize=True):
     :param normalize: Normalize the results or not, defaults to True
     :param normalize: bool, optional
     :return: Accuracy, if normalize == True, return the fraction of correctly
-    predicted samples (float), else returns the number of correctly predicted
-    samples (int).
+        predicted samples (float), else returns the number of correctly predicted
+        samples (int).
     :rtype: dict
     """
 

@@ -1,4 +1,4 @@
-Welcome to Emmental's documentation!
+Welcome to Emmental
 ====================================
 
 Emmental is a framework for building multi-modal multi-task deep learning systems.
@@ -14,6 +14,13 @@ submit your contributions as a pull request.
     :caption: User Documentation
 
     user/getting_started
+    user/dataset
+    user/task
+    user/model
+    user/learning
+    user/logging
+    user/config
+    user/faqs
 
 .. toctree::
     :maxdepth: 2

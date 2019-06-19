@@ -26,3 +26,18 @@ METRICS = {
     "spearman_correlation": spearman_correlation_scorer,
     "roc_auc": roc_auc_scorer,
 }
+
+__all__ = [
+    "accuracy_scorer",
+    "accuracy_f1_scorer",
+    "f1_scorer",
+    "fbeta_scorer",
+    "matthews_correlation_coefficient_scorer",
+    "mean_squared_error_scorer",
+    "pearson_correlation_scorer",
+    "pearson_spearman_scorer",
+    "precision_scorer",
+    "recall_scorer",
+    "roc_auc_scorer",
+    "spearman_correlation_scorer",
+]

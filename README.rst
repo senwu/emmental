@@ -12,7 +12,24 @@ submit your contributions as a pull request.
 Getting Started
 ---------------
 
-    make dev
+Check out our `Getting Started Guide`_ to get up and running with Emmental.
+
+Learning how to use Emmental
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `Emmental tutorials`_ cover the Emmental workflow, showing how to build
+multi-modal multi-task learning systems.
+
+Reference
+---------
+
+`Emmental: A framework for building multi-modal multi-task learning systems`::
+
+    @misc{wu2019emmental,
+      title={Emmental: A framework for building multi-modal multi-task learning systems},
+      author={Wu, Sen},
+      year={2019},
+    }
 
 
 .. |CodeClimate| image:: https://img.shields.io/codeclimate/maintainability/SenWu/emmental.svg
@@ -31,4 +48,6 @@ Getting Started
 .. |CodeStyle| image:: https://img.shields.io/badge/code%20style-black-000000.svg
    :target: https://github.com/ambv/black
 
+.. _Getting Started Guide: https://emmental.readthedocs.io/en/latest/user/getting_started.html
+.. _Emmental tutorials: https://github.com/SenWu/emmental-tutorials
 .. _Issues: https://github.com/SenWu/emmental/issues/

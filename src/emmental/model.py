@@ -153,8 +153,8 @@ class EmmentalModel(nn.Module):
 
     def forward(self, X_dict, task_names):
         """Forward based on input and task
-        Note: We assume that all shared the modules from all tasks are based on the
-        the same input.
+            Note: We assume that all shared the modules from all tasks are based on the
+            the same input.
 
         :param X_dict: The input data
         :type X_dict: dict of tensor
@@ -383,6 +383,7 @@ class EmmentalModel(nn.Module):
 
     def save(self, model_path):
         """Save the current model
+
         :param model_path: Saved model path.
         :type model_path: str
         """
@@ -413,6 +414,7 @@ class EmmentalModel(nn.Module):
 
     def load(self, model_path):
         """Load model state_dict from file and reinitialize the model weights.
+
         :param model_path: Saved model path.
         :type model_path: str
         """
