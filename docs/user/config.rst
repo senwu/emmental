@@ -75,7 +75,7 @@ The default ``.emmental-config.yaml`` configuration file is shown below::
         writer_config:
             writer: tensorboard # [json, tensorboard]
             verbose: True
-        checkpointing: True
+        checkpointing: False
         checkpointer_config:
             checkpoint_path:
             checkpoint_freq: 1

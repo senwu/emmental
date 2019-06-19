@@ -29,7 +29,7 @@ The logging parameters of Emmental are described below::
         writer_config:
             writer: tensorboard # [json, tensorboard]
             verbose: True
-        checkpointing: True
+        checkpointing: False
         checkpointer_config:
             checkpoint_path:
             checkpoint_freq: 1
