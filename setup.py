@@ -8,7 +8,7 @@ exec(open("src/emmental/_version.py").read())
 setup(
     name="emmental",
     version=__version__,
-    description="A generic deep learning framework for multi-task learning.",
+    description="A framework for building multi-modal multi-task learning systems.",
     long_description=open("README.rst").read(),
     packages=find_packages("src"),
     package_dir={"": "src"},
