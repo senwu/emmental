@@ -16,10 +16,10 @@ class EmmentalDataset(Dataset):
     :param name: the name of the dataset
     :type name: str
     :param X_dict: the feature dict where key is the feature name and value is the
-    feature
+        feature
     :type X_dict: dict
     :param Y_dict: the label dict where key is the label name and value is
-    the label
+        the label
     :type Y_dict: dict
     :param uid: the unique id key in the X_dict (default: None)
     :type uid: str
@@ -127,16 +127,16 @@ class EmmentalDataLoader(DataLoader):
     label(s) to use in dataset's Y_dict for this task), and split (which part this
     dataset belongs to) information.
 
-    :param task_to_label_dict: the task to label mapping where key is the task name and
-    value is the label(s) for that task and should be the key in Y_dict
+    :param task_to_label_dict: the task to label mapping where key is the task name
+        and value is the label(s) for that task and should be the key in Y_dict
     :type task_to_label_dict: dict
     :param dataset: the dataset to construct the dataloader
-    :type dataset: torch.utils.data.Datasetwe
+    :type dataset: EmmentalDataset
     :param split: the split information, defaults to "train"
-    :param split: str, optional
+    :type split: str, optional
     :param collate_fn: the function that merges a list of samples to form a
-    mini-batch, defaults to emmental_collate_fn
-    :param collate_fn: function, optional
+        mini-batch, defaults to emmental_collate_fn
+    :type collate_fn: function, optional
     """
 
     def __init__(

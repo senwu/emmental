@@ -154,7 +154,7 @@ class EmmentalModel(nn.Module):
     def forward(self, X_dict, task_names):
         """Forward based on input and task
         Note: We assume that all shared the modules from all tasks are based on the
-        the same input.
+            the same input.
 
         :param X_dict: The input data
         :type X_dict: dict of tensor

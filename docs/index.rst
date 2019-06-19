@@ -14,6 +14,12 @@ submit your contributions as a pull request.
     :caption: User Documentation
 
     user/getting_started
+    user/dataset
+    user/task
+    user/model
+    user/learning
+    user/config
+    user/faqs
 
 .. toctree::
     :maxdepth: 2
