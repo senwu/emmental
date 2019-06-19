@@ -23,6 +23,8 @@ multi-modal multi-task learning systems.
 Reference
 ---------
 
+`Emmental: A framework for building multi-modal multi-task learning systems`::
+
     @misc{wu2019emmental,
       title={Emmental: A framework for building multi-modal multi-task learning systems},
       author={Wu, Sen},
