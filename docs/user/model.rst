@@ -13,6 +13,3 @@ The following describes elements of used for model creation.
     :show-inheritance:
 
 .. _Emmental: https://github.com/SenWu/Emmental
-
-
-
