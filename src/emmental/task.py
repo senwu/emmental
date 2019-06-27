@@ -10,7 +10,7 @@ class EmmentalTask(object):
 
     :param name: The name of the task (Primary key).
     :type name: str
-    :param module_pool: A dict of all modules that uses in the task.
+    :param module_pool: A dict of modules that uses in the task.
     :type module_pool: nn.ModuleDict
     :param task_flow: The task flow among modules to define how the data flows.
     :type task_flow: list

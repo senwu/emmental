@@ -19,7 +19,7 @@ class EmmentalModel(nn.Module):
 
     :param name: Name of the model
     :type name: str
-    :param tasks: a list of Task that trains jointly
+    :param tasks: a list of Tasks that trains jointly
     :type tasks: list of Task project
     """
 
@@ -153,7 +153,7 @@ class EmmentalModel(nn.Module):
 
     def forward(self, X_dict, task_names):
         """Forward based on input and task
-            Note: We assume that all shared the modules from all tasks are based on the
+            Note: We assume that all shared modules from all tasks are based on the
             the same input.
 
         :param X_dict: The input data
@@ -233,7 +233,7 @@ class EmmentalModel(nn.Module):
                 )
 
             # Only calculate the loss when active example exists
-            if 1 in active:
+            if active.any():
                 count_dict[identifier] = active.sum().item()
 
                 loss_dict[identifier] = self.loss_funcs[task_name](
