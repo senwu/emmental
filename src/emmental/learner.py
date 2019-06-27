@@ -294,7 +294,7 @@ class EmmentalLearner(object):
         if not train_dataloaders:
             raise ValueError(
                 f"Cannot find the specified train_split "
-                f'{Meta.config["learner_config"]["train_split"]} in datloaders.'
+                f'{Meta.config["learner_config"]["train_split"]} in dataloaders.'
             )
 
         # Calculate the total number of batches per epoch
