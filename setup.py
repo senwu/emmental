@@ -12,6 +12,7 @@ setup(
     long_description=open("README.rst").read(),
     packages=find_packages("src"),
     package_dir={"": "src"},
+    package_data={"": ["emmental-default-config.yaml"]},
     py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
     install_requires=[
         "numpy>=1.11, <2.0",
