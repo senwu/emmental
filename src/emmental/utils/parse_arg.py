@@ -1,6 +1,6 @@
 import argparse
 
-from emmental.utils.utils import str2bool, str2dict
+from emmental.utils.utils import nullable_string, str2bool, str2dict
 
 
 def parse_arg(parser=None):
@@ -36,7 +36,10 @@ def parse_arg(parser=None):
     model_config = parser.add_argument_group("Model configuration")
 
     model_config.add_argument(
-        "--model_path", type=str, default=None, help="Path to pretrained model"
+        "--model_path",
+        type=nullable_string,
+        default=None,
+        help="Path to pretrained model",
     )
 
     model_config.add_argument(
@@ -129,7 +132,7 @@ def parse_arg(parser=None):
 
     scheduler_config.add_argument(
         "--lr_scheduler",
-        type=str,
+        type=nullable_string,
         default=None,
         choices=["linear", "exponential", "reduce_on_plateau"],
         help="Learning rate scheduler",

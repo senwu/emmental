@@ -158,3 +158,9 @@ def str2dict(v):
         dict[key] = value
 
     return dict
+
+
+def nullable_string(v):
+    if not v or v.lower() in ["none", "null"]:
+        return None
+    return v
