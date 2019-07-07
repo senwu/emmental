@@ -34,7 +34,6 @@ class slicing_function:
                 f"Total {int((inds == 1).sum())} / {len(dataset)} examples are "
                 f"in slice {f.__name__}"
             )
-            print("inds", inds)
             return inds
 
         return wrapped_f
