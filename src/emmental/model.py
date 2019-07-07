@@ -166,19 +166,19 @@ class EmmentalModel(nn.Module):
 
         X_dict = move_to_device(X_dict, Meta.config["model_config"]["device"])
 
-        immediate_ouput_dict = dict()
-        immediate_ouput_dict["_input_"] = X_dict
+        intermediate_ouput_dict = dict()
+        intermediate_ouput_dict["_input_"] = X_dict
 
         # Call forward for each task
         for task_name in task_names:
             task_flow = self.task_flows[task_name]
 
             for action in task_flow:
-                if action["name"] not in immediate_ouput_dict:
+                if action["name"] not in intermediate_ouput_dict:
                     if action["inputs"]:
                         try:
                             input = [
-                                immediate_ouput_dict[action_name][output_index]
+                                intermediate_ouput_dict[action_name][output_index]
                                 for action_name, output_index in action["inputs"]
                             ]
                         except Exception:
@@ -186,15 +186,15 @@ class EmmentalModel(nn.Module):
                         output = self.module_pool[action["module"]].forward(*input)
                     else:
                         output = self.module_pool[action["module"]].forward(
-                            immediate_ouput_dict
+                            intermediate_ouput_dict
                         )
                     if isinstance(output, tuple):
                         output = list(output)
                     if not isinstance(output, list):
                         output = [output]
-                    immediate_ouput_dict[action["name"]] = output
+                    intermediate_ouput_dict[action["name"]] = output
 
-        return immediate_ouput_dict
+        return intermediate_ouput_dict
 
     def calculate_loss(self, X_dict, Y_dict, task_to_label_dict, data_name, split):
         """Calculate the loss
@@ -216,7 +216,7 @@ class EmmentalModel(nn.Module):
         loss_dict = dict()
         count_dict = dict()
 
-        immediate_ouput_dict = self.forward(X_dict, task_to_label_dict.keys())
+        intermediate_ouput_dict = self.forward(X_dict, task_to_label_dict.keys())
 
         # Calculate loss for each task
         for task_name, label_name in task_to_label_dict.items():
@@ -237,7 +237,7 @@ class EmmentalModel(nn.Module):
                 count_dict[identifier] = active.sum().item()
 
                 loss_dict[identifier] = self.loss_funcs[task_name](
-                    immediate_ouput_dict,
+                    intermediate_ouput_dict,
                     move_to_device(
                         Y_dict[label_name], Meta.config["model_config"]["device"]
                     ),
@@ -260,12 +260,12 @@ class EmmentalModel(nn.Module):
 
         prob_dict = dict()
 
-        immediate_ouput_dict = self.forward(X_dict, task_names)
+        intermediate_ouput_dict = self.forward(X_dict, task_names)
 
         # Calculate prediction for each task
         for task_name in task_names:
             prob_dict[task_name] = (
-                self.output_funcs[task_name](immediate_ouput_dict).cpu().numpy()
+                self.output_funcs[task_name](intermediate_ouput_dict).cpu().numpy()
             )
 
         return prob_dict
