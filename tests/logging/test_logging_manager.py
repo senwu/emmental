@@ -10,6 +10,8 @@ def test_logging_manager_sample(caplog):
 
     caplog.set_level(logging.INFO)
 
+    Meta.reset()
+
     emmental.init()
     Meta.update_config(
         config={
