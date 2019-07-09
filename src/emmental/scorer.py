@@ -11,7 +11,8 @@ class Scorer(object):
     :param metrics: a list of metric names which provides in emmental (e.g., accuracy)
     :type metrics: list
     :param customize_metric_funcs: a dict of customize metric where key is the metric
-        name and value is the metric function which takes gold, preds, probs as input
+        name and value is the metric function which takes gold, preds, probs, uids as
+        input
     :type customize_metric_funcs: dict
     """
 
