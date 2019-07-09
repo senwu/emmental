@@ -217,6 +217,6 @@ def test_e2e(caplog):
     )
     assert test2_score["task2/synthetic/test/accuracy"] >= 0.5
     assert test2_score["task2/synthetic/test/roc_auc"] >= 0.6
-    assert test2_score["model/all/test/macro_average"] == 0.6
+    assert test2_score["model/all/test/macro_average"] >= 0.6
 
     shutil.rmtree(dirpath)
