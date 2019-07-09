@@ -15,8 +15,8 @@ def build_slice_tasks(task, slice_func_dict):
     """A function to build slice tasks based on slicing functions.
 
     We assume the original task flow contains feature extractor and predictor head.
-    - The name for feature extractor module should be {task.name}_feature
-    - The name for predictor head should be {task.name}_pred_head
+    - The predictor head action should be the last action
+    - The feature extractor action should be input of the predictor head action
 
     For each slicing this function will create two corresponding tasks
     - A slice indicator task to learn whether the data sample is in the slice or not.
@@ -26,38 +26,20 @@ def build_slice_tasks(task, slice_func_dict):
     will combine all slice task head to make the final predictions.
     """
 
-    # Sanity check the task
-    assert f"{task.name}_feature" in [
-        action["name"] for action in task.task_flow
-    ], f"{task.name}_feature should be in the task module_pool"
-
-    assert f"{task.name}_pred_head" in [
-        action["name"] for action in task.task_flow
-    ], f"{task.name}_feature should be in the task module_pool"
-
     # Collect task predictor module info
-    for action in task.task_flow:
-        if f"{task.name}_pred_head" == action["name"]:
-            base_task_predictor_action = action
-            base_task_predictor_name = action["module"]
-            base_task_predictor_module = task.module_pool[action["module"]]
-            if isinstance(base_task_predictor_module, nn.DataParallel):
-                base_task_predictor_module = base_task_predictor_module.module
-            break
+    base_task_predictor_action = task.task_flow[-1]
+    base_task_predictor_module = task.module_pool[base_task_predictor_action["module"]]
+    if isinstance(base_task_predictor_module, nn.DataParallel):
+        base_task_predictor_module = base_task_predictor_module.module
 
     task_feature_size = base_task_predictor_module.in_features
     task_cardinality = base_task_predictor_module.in_features
 
-    # Remove the predictor head
+    # Remove the predictor head module and action
     base_task_module_pool = task.module_pool
-    del base_task_module_pool[base_task_predictor_name]
+    del base_task_module_pool[base_task_predictor_action["module"]]
 
-    base_task_task_flow = task.task_flow
-    for idx, i in enumerate(base_task_task_flow):
-        if i["name"] == f"{task.name}_pred_head":
-            action_idx = idx
-            break
-    del base_task_task_flow[action_idx]
+    base_task_task_flow = task.task_flow[:-1]
 
     tasks = []
 
