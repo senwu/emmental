@@ -20,8 +20,8 @@ def accuracy_f1_scorer(golds, probs, preds, uids=None):
     """
 
     metrics = dict()
-    metrics.update(accuracy_scorer(golds, probs, preds, uids))
-    metrics.update(f1_scorer(golds, probs, preds, uids))
-    metrics["accuracy_f1"] = np.mean([metrics["accuracy"], metrics["f1"]])
+    accuracy = accuracy_scorer(golds, probs, preds, uids)
+    f1 = f1_scorer(golds, probs, preds, uids)
+    metrics["accuracy_f1"] = np.mean([accuracy["accuracy"], f1["f1"]])
 
     return metrics

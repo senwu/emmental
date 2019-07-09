@@ -341,11 +341,13 @@ class EmmentalModel(nn.Module):
         return res
 
     @torch.no_grad()
-    def score(self, dataloaders):
+    def score(self, dataloaders, return_average=True):
         """Score the data from dataloader with the model
 
         :param dataloaders: the dataloader that performs scoring
         :type dataloaders: dataloader
+        :param return_average: Whether return average scores
+        :type return_average: bool
         """
 
         self.eval()
@@ -354,6 +356,10 @@ class EmmentalModel(nn.Module):
             dataloaders = [dataloaders]
 
         metric_score_dict = dict()
+
+        if return_average:
+            micro_score_dict = {}
+            macro_score_dict = {}
 
         for dataloader in dataloaders:
             return_uids = True if dataloader.dataset.uid else False
@@ -370,6 +376,43 @@ class EmmentalModel(nn.Module):
                         [task_name, dataloader.data_name, dataloader.split, metric_name]
                     )
                     metric_score_dict[identifier] = metric_value
+
+                if return_average:
+                    # Collect average score
+                    average = identifier = "/".join(
+                        [task_name, dataloader.data_name, dataloader.split, "average"]
+                    )
+                    metric_score_dict[average] = np.mean(list(metric_score.values()))
+
+                    if dataloader.split not in micro_score_dict:
+                        micro_score_dict[dataloader.split] = []
+                    if dataloader.split not in macro_score_dict:
+                        macro_score_dict[dataloader.split] = []
+
+                    micro_score_dict[dataloader.split].extend(
+                        list(metric_score.values())
+                    )
+                    macro_score_dict[dataloader.split].append(
+                        metric_score_dict[average]
+                    )
+
+        if return_average:
+            # Collect split-wise micro/macro average score
+            for split in micro_score_dict.keys():
+                metric_score_dict[f"model/all/{split}/micro_average"] = np.mean(
+                    micro_score_dict[split]
+                )
+                metric_score_dict[f"model/all/{split}/macro_average"] = np.mean(
+                    macro_score_dict[split]
+                )
+
+            # Collect overall micro/macro average score
+            metric_score_dict[f"model/all/all/micro_average"] = np.mean(
+                list(micro_score_dict.values())
+            )
+            metric_score_dict[f"model/all/all/macro_average"] = np.mean(
+                list(macro_score_dict.values())
+            )
 
         # TODO: have a better to handle global evaluation metric
         if Meta.config["learner_config"]["global_evaluation_metric_dict"]:

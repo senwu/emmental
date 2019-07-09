@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import pearsonr
 
 
-def pearson_correlation_scorer(golds, probs, preds, uids=None):
+def pearson_correlation_scorer(golds, probs, preds, uids=None, return_pvalue=False):
     """Pearson correlation coefficient and the p-value.
 
     :param golds: Ground truth (correct) target values.
@@ -13,6 +13,8 @@ def pearson_correlation_scorer(golds, probs, preds, uids=None):
     :type preds: 1-d np.array
     :param uids: Unique ids.
     :type uids: list
+    :para return_pvalue: Whether return pvalue.
+    :type return_pvalue: bool
     :return: Pearson correlation coefficient and the p-value.
     :rtype: dict
     """
@@ -22,4 +24,8 @@ def pearson_correlation_scorer(golds, probs, preds, uids=None):
     if np.isnan(correlation):
         correlation = 0.0
         pvalue = 0.0
-    return {"pearson_correlation": correlation, "pearson_pvalue": pvalue}
+
+    if return_pvalue:
+        return {"pearson_correlation": correlation, "pearson_pvalue": pvalue}
+
+    return {"pearson_correlation": correlation}

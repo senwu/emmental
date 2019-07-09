@@ -161,7 +161,7 @@ def test_e2e(caplog):
         ],
         loss_func=partial(ce_loss, task_name),
         output_func=partial(output, task_name),
-        scorer=Scorer(metrics=["accuracy", "roc_auc"]),
+        scorer=Scorer(metrics=["accuracy"]),
     )
 
     task_name = "task2"
@@ -211,8 +211,12 @@ def test_e2e(caplog):
     test2_score = mtl_model.score(test_dataloader2)
 
     assert test1_score["task1/synthetic/test/accuracy"] >= 0.5
-    assert test1_score["task1/synthetic/test/roc_auc"] >= 0.6
+    assert (
+        test1_score["model/all/test/macro_average"]
+        == test1_score["task1/synthetic/test/accuracy"]
+    )
     assert test2_score["task2/synthetic/test/accuracy"] >= 0.5
     assert test2_score["task2/synthetic/test/roc_auc"] >= 0.6
+    assert test2_score["model/all/test/macro_average"] == 0.6
 
     shutil.rmtree(dirpath)
