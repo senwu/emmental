@@ -28,7 +28,7 @@ class slicing_function:
                     **{field: dataset.X_dict[field][idx] for field in self.fields}
                 )
                 in_slice = f(example)
-                inds.append(1 if in_slice else 2)
+                inds.append(1 if in_slice else 0)
             inds = torch.from_numpy(np.array(inds)).view(-1)
             logger.info(
                 f"Total {int((inds == 1).sum())} / {len(dataset)} examples are "
