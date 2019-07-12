@@ -194,6 +194,48 @@ def parse_arg(parser=None):
     )
 
     scheduler_config.add_argument(
+        "--step_lr_scheduler_step_size",
+        type=int,
+        default=1,
+        help="Period of learning rate decay",
+    )
+
+    scheduler_config.add_argument(
+        "--step_lr_scheduler_gamma",
+        type=float,
+        default=0.01,
+        help="Multiplicative factor of learning rate decay",
+    )
+
+    scheduler_config.add_argument(
+        "--step_lr_scheduler_last_epoch",
+        type=int,
+        default=-1,
+        help="The index of last epoch",
+    )
+
+    scheduler_config.add_argument(
+        "--multi_step_lr_scheduler_milestones",
+        type=list,
+        default=[10000],
+        help="List of epoch indices. Must be increasing.",
+    )
+
+    scheduler_config.add_argument(
+        "--multi_step_lr_scheduler_gamma",
+        type=float,
+        default=0.01,
+        help="Multiplicative factor of learning rate decay",
+    )
+
+    scheduler_config.add_argument(
+        "--multi_step_lr_scheduler_last_epoch",
+        type=int,
+        default=-1,
+        help="The index of last epoch",
+    )
+
+    scheduler_config.add_argument(
         "--task_scheduler",
         type=str,
         default="round_robin",
@@ -326,6 +368,16 @@ def parse_arg_to_config(args):
                     "factor": args.plateau_lr_scheduler_factor,
                     "patience": args.plateau_lr_scheduler_patience,
                     "threshold": args.plateau_lr_scheduler_threshold,
+                },
+                "step_config": {
+                    "step_size": args.step_lr_scheduler_step_size,
+                    "gamma": args.step_lr_scheduler_gamma,
+                    "last_epoch": args.step_lr_scheduler_last_epoch,
+                },
+                "multi_step_config": {
+                    "milestones": args.multi_step_lr_scheduler_milestones,
+                    "gamma": args.multi_step_lr_scheduler_gamma,
+                    "last_epoch": args.multi_step_lr_scheduler_last_epoch,
                 },
             },
             "task_scheduler": args.task_scheduler,
