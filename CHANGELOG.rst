@@ -20,7 +20,8 @@ Added
 
 Fixed
 ^^^^^
-* `@senwu`_: Add missing pytest.ini and fix test cannot remove temp dir issue.
+* `@senwu`_: Fix missing support for StepLR and MultiStepLR lr scheduler.
+* `@senwu`_: Fix missing pytest.ini and fix test cannot remove temp dir issue.
 * `@senwu`_: Fix default train loss metric from `model/train/all/loss` to
   `model/all/train/loss` to follow the format `TASK_NAME/DATA_NAME/SPLIT/METRIC`
   pattern.

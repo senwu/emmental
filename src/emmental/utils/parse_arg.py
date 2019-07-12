@@ -134,7 +134,7 @@ def parse_arg(parser=None):
         "--lr_scheduler",
         type=nullable_string,
         default=None,
-        choices=["linear", "exponential", "reduce_on_plateau"],
+        choices=["linear", "exponential", "step", "multi_step"],
         help="Learning rate scheduler",
     )
 
@@ -216,7 +216,8 @@ def parse_arg(parser=None):
 
     scheduler_config.add_argument(
         "--multi_step_lr_scheduler_milestones",
-        type=list,
+        nargs="+",
+        type=int,
         default=[10000],
         help="List of epoch indices. Must be increasing.",
     )
@@ -323,7 +324,6 @@ def parse_arg(parser=None):
 
 def parse_arg_to_config(args):
     """Parse the arguments to config dict"""
-
     config = {
         "meta_config": {
             "seed": args.seed,
