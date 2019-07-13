@@ -4,7 +4,7 @@ from collections import defaultdict
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-from emmental.utils.utils import list_to_tensor
+from emmental.utils.utils import list_to_tensor, random_string
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +27,22 @@ class EmmentalDataset(Dataset):
 
     def __init__(self, name, X_dict, Y_dict, uid=None):
         self.name = name
+        self.uid = uid
         self.X_dict = X_dict
         self.Y_dict = Y_dict
-        self.uid = uid
 
         if self.uid and self.uid not in self.X_dict:
             raise ValueError(f"Cannot find {self.uid} in X_dict.")
+
+        if self.uid is None:
+            self.uid = "_uids_"
+            while self.uid in X_dict:
+                self.uid = f"_uids_{random_string(3)}_"
+
+            uids = [f"{self.name}_{idx}" for idx in range(self.__len__())]
+            self.add_features({f"{self.uid}": uids})
+
+            logger.info(f"Auto generate uids for dataset {self.name} under {self.uid}.")
 
         for name, label in self.Y_dict.items():
             if not isinstance(label, torch.Tensor):
@@ -153,6 +163,7 @@ class EmmentalDataLoader(DataLoader):
 
         self.task_to_label_dict = task_to_label_dict
         self.data_name = dataset.name
+        self.uid = dataset.uid
         self.split = split
 
         for task_name, label_names in task_to_label_dict.items():
