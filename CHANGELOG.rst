@@ -3,6 +3,7 @@
 
 Added
 ^^^^^
+* `@senwu_`: Enforce dataset has uids attribute.
 * `@senwu`_: Add micro/macro metric options which have split-wise micro/macro average
   and global-wise micro/macro average. The name for the metrics are:
 
