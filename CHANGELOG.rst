@@ -28,6 +28,7 @@ Fixed
 
 Changed
 ^^^^^^^
+* `@senwu`_: Change the default counter unit to epoch.
 * `@senwu`_: Update the metric to return one metric value by default.
 
 ..

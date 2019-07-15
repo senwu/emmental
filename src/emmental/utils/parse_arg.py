@@ -207,7 +207,7 @@ def parse_arg(parser=None):
     logging_config.add_argument(
         "--counter_unit",
         type=str,
-        default="batch",
+        default="epoch",
         choices=["epoch", "batch"],
         help="Logging unit (epoch, batch)",
     )

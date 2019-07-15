@@ -54,7 +54,7 @@ learner_config:
 
 # Logging configuration
 logging_config:
-    counter_unit: batch # [epoch, batch]
+    counter_unit: epoch # [epoch, batch]
     evaluation_freq: 2
     writer_config:
         writer: tensorboard # [json, tensorboard]
