@@ -1,3 +1,4 @@
+import itertools
 import logging
 import os
 from collections import defaultdict
@@ -9,7 +10,7 @@ import torch.nn as nn
 
 from emmental.meta import Meta
 from emmental.task import EmmentalTask
-from emmental.utils.utils import move_to_device, prob_to_pred
+from emmental.utils.utils import construct_identifier, move_to_device, prob_to_pred
 
 logger = logging.getLogger(__name__)
 
@@ -151,10 +152,10 @@ class EmmentalModel(nn.Module):
         cls_name = type(self).__name__
         return f"{cls_name}(name={self.name})"
 
-    def forward(self, X_dict, task_names):
-        """Forward based on input and task
-            Note: We assume that all shared modules from all tasks are based on the
-            the same input.
+    def flow(self, X_dict, task_names):
+        """Forward based on input and task flow.
+        Note: We assume that all shared modules from all tasks are based on the
+        same input.
 
         :param X_dict: The input data
         :type X_dict: dict of tensor
@@ -166,62 +167,55 @@ class EmmentalModel(nn.Module):
 
         X_dict = move_to_device(X_dict, Meta.config["model_config"]["device"])
 
-        intermediate_ouput_dict = dict()
-        intermediate_ouput_dict["_input_"] = X_dict
+        output_dict = dict(_input_=X_dict)
 
         # Call forward for each task
         for task_name in task_names:
-            task_flow = self.task_flows[task_name]
-
-            for action in task_flow:
-                if action["name"] not in intermediate_ouput_dict:
+            for action in self.task_flows[task_name]:
+                if action["name"] not in output_dict:
                     if action["inputs"]:
                         try:
                             input = [
-                                intermediate_ouput_dict[action_name][output_index]
+                                output_dict[action_name][output_index]
                                 for action_name, output_index in action["inputs"]
                             ]
                         except Exception:
                             raise ValueError(f"Unrecognized action {action}.")
                         output = self.module_pool[action["module"]].forward(*input)
                     else:
-                        output = self.module_pool[action["module"]].forward(
-                            intermediate_ouput_dict
-                        )
+                        output = self.module_pool[action["module"]].forward(output_dict)
                     if isinstance(output, tuple):
                         output = list(output)
                     if not isinstance(output, list):
                         output = [output]
-                    intermediate_ouput_dict[action["name"]] = output
+                    output_dict[action["name"]] = output
 
-        return intermediate_ouput_dict
+        return output_dict
 
-    def calculate_loss(self, X_dict, Y_dict, task_to_label_dict, data_name, split):
-        """Calculate the loss
+    def forward(self, uids, X_dict, Y_dict, task_to_label_dict):
+        """Calculate the loss, prob for the batch.
 
+        :param uids: The uids of input data
+        :type uids: list
         :param X_dict: The input data
         :type X_dict: dict of tensors
         :param Y_dict: The output data
         :type Y_dict: dict of tensors
         :param task_to_label_dict: The task to label mapping
         :type task_to_label_dict: dict
-        :param data_name: The dataset name
-        :type data_name: str
-        :param split: The data split
-        :type split: str
-        :return: The loss and the number of samples in the batch of all tasks
-        :rtype: dict, dict
+        :return: The (active) uids, loss and prob in the batch of all tasks
+        :rtype: dict, dict, dict
         """
 
-        loss_dict = dict()
-        count_dict = dict()
+        uid_dict = defaultdict(list)
+        loss_dict = defaultdict(list)
+        prob_dict = defaultdict(list)
+        gold_dict = defaultdict(list)
 
-        intermediate_ouput_dict = self.forward(X_dict, task_to_label_dict.keys())
+        output_dict = self.flow(X_dict, task_to_label_dict.keys())
 
         # Calculate loss for each task
         for task_name, label_name in task_to_label_dict.items():
-            identifier = "/".join([task_name, data_name, split, "loss"])
-
             Y = Y_dict[label_name]
 
             # Select the active samples
@@ -234,109 +228,71 @@ class EmmentalModel(nn.Module):
 
             # Only calculate the loss when active example exists
             if active.any():
-                count_dict[identifier] = active.sum().item()
+                uid_dict[task_name] = [*itertools.compress(uids, active.numpy())]
 
-                loss_dict[identifier] = self.loss_funcs[task_name](
-                    intermediate_ouput_dict,
+                loss_dict[task_name] = self.loss_funcs[task_name](
+                    output_dict,
                     move_to_device(
                         Y_dict[label_name], Meta.config["model_config"]["device"]
                     ),
                     move_to_device(active, Meta.config["model_config"]["device"]),
                 )
 
-        return loss_dict, count_dict
+                prob_dict[task_name] = (
+                    self.output_funcs[task_name](output_dict)[
+                        move_to_device(active, Meta.config["model_config"]["device"])
+                    ]
+                    .cpu()
+                    .detach()
+                    .numpy()
+                )
+
+                gold_dict[task_name] = Y_dict[label_name][active].cpu().numpy()
+
+        return uid_dict, loss_dict, prob_dict, gold_dict
 
     @torch.no_grad()
-    def _calculate_probs(self, X_dict, task_names):
-        """Calculate the probs given the features
-
-        :param X_dict: The input data
-        :type X_dict: dict of tensor
-        :param task_names: The task names that needs to forward
-        :type task_names: list of str
-        """
+    def predict(self, dataloader, return_preds=False):
 
         self.eval()
-
-        prob_dict = dict()
-
-        intermediate_ouput_dict = self.forward(X_dict, task_names)
-
-        # Calculate prediction for each task
-        for task_name in task_names:
-            prob_dict[task_name] = (
-                self.output_funcs[task_name](intermediate_ouput_dict).cpu().numpy()
-            )
-
-        return prob_dict
-
-    @torch.no_grad()
-    def predict(self, dataloader, return_preds=False, return_uids=False):
-
-        self.eval()
-
-        uid_key = dataloader.dataset.uid
-
-        # Check uid exists
-        if return_uids and uid_key is None:
-            return_uids = False
-            logger.info("No uid exist, skip it...")
 
         uid_dict = defaultdict(list)
         gold_dict = defaultdict(list)
         prob_dict = defaultdict(list)
+        pred_dict = defaultdict(list)
+        loss_dict = defaultdict(float)
 
-        for batch_num, (X_batch_dict, Y_batch_dict) in enumerate(dataloader):
-            prob_batch_dict = self._calculate_probs(
-                X_batch_dict, dataloader.task_to_label_dict.keys()
+        # Collect dataloader information
+        task_to_label_dict = dataloader.task_to_label_dict
+        uid = dataloader.uid
+
+        for batch_num, (X_bdict, Y_bdict) in enumerate(dataloader):
+            uid_bdict, loss_bdict, prob_bdict, gold_bdict = self.forward(
+                X_bdict[uid], X_bdict, Y_bdict, task_to_label_dict
             )
-            for task_name in dataloader.task_to_label_dict.keys():
-                if return_uids:
-                    uid_dict[task_name].extend(X_batch_dict[uid_key])
-                prob_dict[task_name].extend(prob_batch_dict[task_name])
-                gold_dict[task_name].extend(
-                    Y_batch_dict[dataloader.task_to_label_dict[task_name]].cpu().numpy()
-                )
-        for task_name in gold_dict:
-            gold_dict[task_name] = np.array(gold_dict[task_name])
-            prob_dict[task_name] = np.array(prob_dict[task_name])
-            if len(gold_dict[task_name].shape) == 1:
-                active = (
-                    gold_dict[task_name]
-                    != Meta.config["learner_config"]["ignore_index"]
-                ).reshape(-1)
-            else:
-                active = (
-                    np.sum(
-                        gold_dict[task_name]
-                        == Meta.config["learner_config"]["ignore_index"],
-                        axis=1,
-                    )
-                    > 0
+            for task_name in uid_bdict.keys():
+                uid_dict[task_name].extend(uid_bdict[task_name])
+                prob_dict[task_name].extend(prob_bdict[task_name])
+                gold_dict[task_name].extend(gold_bdict[task_name])
+                loss_dict[task_name] += loss_bdict[task_name].item() * len(
+                    uid_bdict[task_name]
                 )
 
-            if 0 in active:
-                gold_dict[task_name] = gold_dict[task_name][active]
-                prob_dict[task_name] = prob_dict[task_name][active]
-                if return_uids:
-                    uid_dict[task_name] = [
-                        uid_dict[task_name][i]
-                        for i, value in enumerate(active)
-                        if value
-                    ]
+        # Calculate average loss
+        for task_name in uid_dict.keys():
+            loss_dict[task_name] /= len(uid_dict[task_name])
+
+        res = {
+            "uids": uid_dict,
+            "golds": gold_dict,
+            "probs": prob_dict,
+            "losses": loss_dict,
+        }
 
         if return_preds:
-            pred_dict = defaultdict(list)
             for task_name, prob in prob_dict.items():
                 pred_dict[task_name] = prob_to_pred(prob)
-
-        res = {"golds": gold_dict, "probs": prob_dict}
-
-        if return_preds:
             res["preds"] = pred_dict
-
-        if return_uids:
-            res["uids"] = uid_dict
 
         return res
 
@@ -358,61 +314,74 @@ class EmmentalModel(nn.Module):
         metric_score_dict = dict()
 
         if return_average:
-            micro_score_dict = {}
-            macro_score_dict = {}
+            micro_score_dict = defaultdict(list)
+            macro_score_dict = defaultdict(list)
+            macro_loss_dict = defaultdict(list)
 
         for dataloader in dataloaders:
-            return_uids = True if dataloader.dataset.uid else False
-            preds = self.predict(dataloader, return_preds=True, return_uids=return_uids)
-            for task_name in preds["golds"].keys():
+            predictions = self.predict(dataloader, return_preds=True)
+            for task_name in predictions["golds"].keys():
                 metric_score = self.scorers[task_name].score(
-                    preds["golds"][task_name],
-                    preds["probs"][task_name],
-                    preds["preds"][task_name],
-                    preds["uids"][task_name] if return_uids else None,
+                    predictions["golds"][task_name],
+                    predictions["probs"][task_name],
+                    predictions["preds"][task_name],
+                    predictions["uids"][task_name],
                 )
                 for metric_name, metric_value in metric_score.items():
-                    identifier = "/".join(
-                        [task_name, dataloader.data_name, dataloader.split, metric_name]
+                    identifier = construct_identifier(
+                        task_name, dataloader.data_name, dataloader.split, metric_name
                     )
                     metric_score_dict[identifier] = metric_value
 
+                # Store the loss
+                identifier = construct_identifier(
+                    task_name, dataloader.data_name, dataloader.split, "loss"
+                )
+                metric_score_dict[identifier] = predictions["losses"][task_name]
+
                 if return_average:
                     # Collect average score
-                    average = identifier = "/".join(
-                        [task_name, dataloader.data_name, dataloader.split, "average"]
+                    identifier = construct_identifier(
+                        task_name, dataloader.data_name, dataloader.split, "average"
                     )
-                    metric_score_dict[average] = np.mean(list(metric_score.values()))
-
-                    if dataloader.split not in micro_score_dict:
-                        micro_score_dict[dataloader.split] = []
-                    if dataloader.split not in macro_score_dict:
-                        macro_score_dict[dataloader.split] = []
+                    metric_score_dict[identifier] = np.mean(list(metric_score.values()))
 
                     micro_score_dict[dataloader.split].extend(
                         list(metric_score.values())
                     )
                     macro_score_dict[dataloader.split].append(
-                        metric_score_dict[average]
+                        metric_score_dict[identifier]
+                    )
+
+                    # Store the loss
+                    identifier = construct_identifier(
+                        task_name, dataloader.data_name, dataloader.split, "loss"
+                    )
+                    macro_loss_dict[dataloader.split].append(
+                        metric_score_dict[identifier]
                     )
 
         if return_average:
             # Collect split-wise micro/macro average score
             for split in micro_score_dict.keys():
-                metric_score_dict[f"model/all/{split}/micro_average"] = np.mean(
-                    micro_score_dict[split]
+                identifier = construct_identifier(
+                    "model", "all", split, "micro_average"
                 )
-                metric_score_dict[f"model/all/{split}/macro_average"] = np.mean(
-                    macro_score_dict[split]
+                metric_score_dict[identifier] = np.mean(micro_score_dict[split])
+                identifier = construct_identifier(
+                    "model", "all", split, "macro_average"
                 )
+                metric_score_dict[identifier] = np.mean(macro_score_dict[split])
+                identifier = construct_identifier("model", "all", split, "loss")
+                metric_score_dict[identifier] = np.mean(macro_loss_dict[split])
 
-            # Collect overall micro/macro average score
-            metric_score_dict[f"model/all/all/micro_average"] = np.mean(
-                list(micro_score_dict.values())
-            )
-            metric_score_dict[f"model/all/all/macro_average"] = np.mean(
-                list(macro_score_dict.values())
-            )
+            # Collect overall micro/macro average score/loss
+            identifier = construct_identifier("model", "all", "all", "micro_average")
+            metric_score_dict[identifier] = np.mean(list(micro_score_dict.values()))
+            identifier = construct_identifier("model", "all", "all", "macro_average")
+            metric_score_dict[identifier] = np.mean(list(macro_score_dict.values()))
+            identifier = construct_identifier("model", "all", "all", "loss")
+            metric_score_dict[identifier] = np.mean(list(macro_loss_dict.values()))
 
         # TODO: have a better to handle global evaluation metric
         if Meta.config["learner_config"]["global_evaluation_metric_dict"]:
