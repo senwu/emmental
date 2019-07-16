@@ -1,4 +1,5 @@
 import logging
+import math
 
 import numpy as np
 
@@ -19,11 +20,19 @@ from emmental.metrics.spearman_correlation import spearman_correlation_scorer
 
 def isequal(dict_a, dict_b, precision=1e-10):
     for key in dict_a:
-        if key not in dict_b or abs(dict_a[key] - dict_b[key]) > precision:
+        if (
+            key not in dict_b
+            or abs(dict_a[key] - dict_b[key]) > precision
+            or (math.isnan(dict_a[key]) and not math.isnan(dict_b[key]))
+        ):
             return False
 
     for key in dict_b:
-        if key not in dict_a or abs(dict_a[key] - dict_b[key]) > precision:
+        if (
+            key not in dict_a
+            or abs(dict_a[key] - dict_b[key]) > precision
+            or (math.isnan(dict_b[key]) and not math.isnan(dict_a[key]))
+        ):
             return False
 
     return True
@@ -199,6 +208,11 @@ def test_roc_auc(caplog):
     metric_dict = roc_auc_scorer(golds, probs, None)
 
     assert isequal(metric_dict, {"roc_auc": 0.9444444444444444})
+
+    golds = np.array([1, 1, 1, 1, 1, 1])
+
+    metric_dict = roc_auc_scorer(golds, probs, None)
+    assert isequal(metric_dict, {"roc_auc": float("nan")})
 
 
 def test_accuracy_f1(caplog):

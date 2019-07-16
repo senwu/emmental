@@ -21,6 +21,7 @@ Added
 
 Fixed
 ^^^^^
+* `@senwu`_: Add warning for one class in ROC AUC metric.
 * `@senwu`_: Add missing pytest.ini and fix test cannot remove temp dir issue.
 * `@senwu`_: Fix default train loss metric from `model/train/all/loss` to
   `model/all/train/loss` to follow the format `TASK_NAME/DATA_NAME/SPLIT/METRIC`
