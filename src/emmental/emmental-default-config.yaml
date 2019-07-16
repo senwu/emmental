@@ -49,6 +49,15 @@ learner_config:
             factor: 0.5
             patience: 10
             threshold: 0.0001
+        step_config:
+            step_size: 1
+            gamma: 0.1
+            last_epoch: -1
+        multi_step_config:
+            milestones:
+                - 1000
+            gamma: 0.1
+            last_epoch: -1
     task_scheduler: round_robin # [sequential, round_robin]
     global_evaluation_metric_dict: # global evaluation metric dict
 

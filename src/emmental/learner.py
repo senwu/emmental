@@ -178,7 +178,15 @@ class EmmentalLearner(object):
         if self.warmup_scheduler and step < self.warmup_steps:
             self.warmup_scheduler.step()
         elif self.lr_scheduler is not None:
-            self.lr_scheduler.step()
+            opt = Meta.config["learner_config"]["lr_scheduler_config"]["lr_scheduler"]
+            if opt in ["linear", "exponential"]:
+                self.lr_scheduler.step()
+            elif (
+                opt in ["step", "multi_step"]
+                and step > 0
+                and step % self.n_batches_per_epoch == 0
+            ):
+                self.lr_scheduler.step()
             min_lr = Meta.config["learner_config"]["lr_scheduler_config"]["min_lr"]
             if min_lr and self.optimizer.param_groups[0]["lr"] < min_lr:
                 self.optimizer.param_groups[0]["lr"] = min_lr
