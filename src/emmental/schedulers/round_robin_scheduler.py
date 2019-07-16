@@ -24,6 +24,7 @@ class RoundRobinScheduler(Scheduler):
         task_to_label_dicts = [
             dataloader.task_to_label_dict for dataloader in dataloaders
         ]
+        uid_names = [dataloader.uid for dataloader in dataloaders]
         data_names = [dataloader.data_name for dataloader in dataloaders]
         batch_counts = [len(dataloader) for dataloader in dataloaders]
         data_loaders = [iter(dataloader) for dataloader in dataloaders]
@@ -36,6 +37,8 @@ class RoundRobinScheduler(Scheduler):
         random.shuffle(dataloader_indexer)
 
         for index in dataloader_indexer:
-            yield next(data_loaders[index]), task_to_label_dicts[index], data_names[
+            uid_name = uid_names[index]
+            X_dict, Y_dict = next(data_loaders[index])
+            yield X_dict[uid_name], X_dict, Y_dict, task_to_label_dicts[
                 index
-            ], splits[index]
+            ], data_names[index], splits[index]
