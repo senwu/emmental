@@ -1,4 +1,5 @@
 import random
+import string
 
 import numpy as np
 import torch
@@ -128,6 +129,33 @@ def move_to_device(obj, device=-1):
         return obj
 
 
+def array_to_numpy(array, flatten=False):
+    """
+    Covert an array to a numpy array.
+
+    :param array: An array to convert
+    :type array: list or np.ndarray
+    :param flatten: Whether to flatten or not
+    :type flatten: bool
+    :return: Converted np.ndarray
+    :rtype: np.ndarray
+    """
+
+    if isinstance(array, np.ndarray):
+        pass
+    elif isinstance(array, list):
+        array = np.array(array)
+    elif isinstance(array, torch.Tensor):
+        array = array.cpu().numpy()
+    else:
+        raise ValueError(f"Unrecognized type {type(array)} to convert to np.ndarray")
+
+    if flatten:
+        array = array.reshpae(-1)
+
+    return array
+
+
 def merge(x, y):
     """Merge two nested dictionaries. Overwrite values in x with values in y."""
 
@@ -164,3 +192,16 @@ def nullable_string(v):
     if not v or v.lower() in ["none", "null"]:
         return None
     return v
+
+
+def construct_identifier(task_name, data_name, split_name, metric_name=None):
+    if metric_name:
+        return f"{task_name}/{data_name}/{split_name}/{metric_name}"
+    else:
+        return f"{task_name}/{data_name}/{split_name}"
+
+
+def random_string(length=5):
+    """Generate a random string of fixed length """
+    letters = string.ascii_lowercase
+    return "".join(random.choice(letters) for i in range(length))

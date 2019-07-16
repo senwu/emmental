@@ -3,6 +3,8 @@
 
 Added
 ^^^^^
+* `@senwu_`: Add more util functions, e.g., array_to_numpy, construct_identifier,
+  and random_string.
 * `@senwu_`: Enforce dataset has uids attribute.
 * `@senwu`_: Add micro/macro metric options which have split-wise micro/macro average
   and global-wise micro/macro average. The name for the metrics are:
