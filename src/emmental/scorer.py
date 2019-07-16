@@ -1,6 +1,7 @@
 import logging
 
 from emmental.metrics import METRICS
+from emmental.utils.utils import array_to_numpy
 
 logger = logging.getLogger(__name__)
 
@@ -25,16 +26,20 @@ class Scorer(object):
 
         self.metrics.update(customize_metric_funcs)
 
-    def score(self, gold, preds, probs, uids=None):
+    def score(self, golds, preds, probs, uids=None):
         metric_dict = dict()
 
         for metric_name, metric in self.metrics.items():
             # handle no examples
-            if len(gold) == 0:
+            if len(golds) == 0:
                 metric_dict[metric_name] = float("nan")
                 continue
 
-            res = metric(gold, preds, probs, uids)
+            golds = array_to_numpy(golds)
+            preds = array_to_numpy(preds)
+            probs = array_to_numpy(probs)
+
+            res = metric(golds, preds, probs, uids)
 
             if isinstance(res, dict):
                 metric_dict.update(res)
