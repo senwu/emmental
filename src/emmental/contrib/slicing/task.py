@@ -5,13 +5,15 @@ from torch import nn
 
 from emmental.contrib.slicing.modules import utils
 from emmental.contrib.slicing.modules.slice_attention_module import SliceAttentionModule
+from emmental.meta import Meta
 from emmental.scorer import Scorer
 from emmental.task import EmmentalTask
+from emmental.utils.utils import move_to_device
 
 logger = logging.getLogger(__name__)
 
 
-def build_slice_tasks(task, slice_func_dict):
+def build_slice_tasks(task, slice_func_dict, slice_distribution={}):
     """A function to build slice tasks based on slicing functions.
 
     We assume the original task flow contains feature extractor and predictor head.
@@ -86,12 +88,25 @@ def build_slice_tasks(task, slice_func_dict):
             }
         )
 
+        # Loss function
+        if ind_task_name in slice_distribution:
+            loss = partial(
+                utils.ce_loss,
+                ind_head_module_name,
+                weight=move_to_device(
+                    slice_distribution[ind_task_name],
+                    Meta.config["model_config"]["device"],
+                ),
+            )
+        else:
+            loss = partial(utils.ce_loss, ind_head_module_name)
+
         tasks.append(
             EmmentalTask(
                 name=ind_task_name,
                 module_pool=ind_module_pool,
                 task_flow=ind_task_flow,
-                loss_func=partial(utils.ce_loss, ind_head_module_name),
+                loss_func=loss,
                 output_func=partial(utils.output, ind_head_module_name),
                 scorer=Scorer(metrics=["f1"]),
             )
@@ -159,12 +174,25 @@ def build_slice_tasks(task, slice_func_dict):
             ]
         )
 
+        # Loss function
+        if pred_task_name in slice_distribution:
+            loss = partial(
+                utils.ce_loss,
+                pred_head_module_name,
+                weight=move_to_device(
+                    slice_distribution[pred_task_name],
+                    Meta.config["model_config"]["device"],
+                ),
+            )
+        else:
+            loss = partial(utils.ce_loss, pred_head_module_name)
+
         tasks.append(
             EmmentalTask(
                 name=pred_task_name,
                 module_pool=pred_module_pool,
                 task_flow=pred_task_flow,
-                loss_func=partial(utils.ce_loss, pred_head_module_name),
+                loss_func=loss,
                 output_func=partial(utils.output, pred_head_module_name),
                 scorer=task.scorer,
             )

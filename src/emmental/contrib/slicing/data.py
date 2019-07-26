@@ -1,14 +1,21 @@
 import logging
 
+import numpy as np
+import torch
+
 from emmental.contrib.slicing.slicing_function import slicing_function
 
 logger = logging.getLogger(__name__)
 
 
-def add_slice_labels(task, dataloaders, slice_func_dict):
+def add_slice_labels(task, dataloaders, slice_func_dict, split="train"):
     """A function to extend dataloader by adding slice indicator and predictor
     labels.
     """
+
+    # Calculate class balance
+    slice_distribution = {}
+
     # Add base slice if needed
     if "base" not in slice_func_dict.keys():
         slice_func_dict["base"] = base_slice
@@ -24,6 +31,29 @@ def add_slice_labels(task, dataloaders, slice_func_dict):
             ind_labels = indicators
             ind_labels[ind_labels == 0] = 2
 
+            if dataloader.split == split and slice_name != "base":
+                ind_classes, ind_counts = np.unique(
+                    ind_labels.numpy(), return_counts=True
+                )
+                if ind_classes.shape[0] == 2:
+                    slice_distribution[slice_ind_name] = torch.Tensor(
+                        1 - ind_counts / np.sum(ind_counts)
+                    )
+                pred_classes, pred_counts = np.unique(
+                    pred_labels.numpy(), return_counts=True
+                )
+                if (pred_classes[0] == 0 and pred_classes.shape[0] == 3) or (
+                    pred_classes[0] == 1 and pred_classes.shape[0] == 2
+                ):
+                    if pred_classes[0] == 0:
+                        slice_distribution[slice_pred_name] = torch.Tensor(
+                            1 - pred_counts[1:] / np.sum(pred_counts[1:])
+                        )
+                    else:
+                        slice_distribution[slice_pred_name] = torch.Tensor(
+                            1 - pred_counts / np.sum(pred_counts)
+                        )
+
             # Update slice indicator and predictor labels
             dataloader.dataset.Y_dict.update(
                 {slice_ind_name: ind_labels, slice_pred_name: pred_labels}
@@ -38,7 +68,7 @@ def add_slice_labels(task, dataloaders, slice_func_dict):
         )
         logger.info(msg)
 
-    return dataloaders
+    return slice_distribution
 
 
 @slicing_function()
