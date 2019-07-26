@@ -33,7 +33,7 @@ def build_slice_tasks(task, slice_func_dict):
         base_task_predictor_module = base_task_predictor_module.module
 
     task_feature_size = base_task_predictor_module.in_features
-    task_cardinality = base_task_predictor_module.in_features
+    task_cardinality = base_task_predictor_module.out_features
 
     # Remove the predictor head module and action
     base_task_module_pool = task.module_pool
@@ -42,6 +42,10 @@ def build_slice_tasks(task, slice_func_dict):
     base_task_task_flow = task.task_flow[:-1]
 
     tasks = []
+    slice_module_pool = nn.ModuleDict()
+    for module_name, module in task.module_pool.items():
+        slice_module_pool[module_name] = module
+    slice_actions = [action for action in base_task_task_flow]
 
     # Create slice indicator tasks.
     # (Note: indicator only has two classes, e.g, in the slice or out)
@@ -54,19 +58,32 @@ def build_slice_tasks(task, slice_func_dict):
         ind_head_module = nn.Linear(task_feature_size, 2)
 
         # Create module_pool
-        ind_module_pool = base_task_module_pool
+        ind_module_pool = nn.ModuleDict(
+            {
+                module_name: module
+                for module_name, module in base_task_module_pool.items()
+            }
+        )
         ind_module_pool[ind_head_module_name] = ind_head_module
 
         # Create task_flow
-        ind_task_flow = base_task_task_flow
-        ind_task_flow.extend(
-            [
-                {
-                    "name": ind_head_module_name,
-                    "module": ind_head_module_name,
-                    "inputs": base_task_predictor_action["inputs"],
-                }
-            ]
+        ind_task_flow = [action for action in base_task_task_flow]
+        ind_task_flow.append(
+            {
+                "name": ind_head_module_name,
+                "module": ind_head_module_name,
+                "inputs": base_task_predictor_action["inputs"],
+            }
+        )
+
+        # Add slice specific module to slice_module_pool
+        slice_module_pool[ind_head_module_name] = ind_head_module
+        slice_actions.append(
+            {
+                "name": ind_head_module_name,
+                "module": ind_head_module_name,
+                "inputs": base_task_predictor_action["inputs"],
+            }
         )
 
         tasks.append(
@@ -86,6 +103,9 @@ def build_slice_tasks(task, slice_func_dict):
     shared_pred_head_module_name = f"{task.name}_slice:shared_pred"
     shared_pred_head_module = nn.Linear(task_feature_size, task_cardinality)
 
+    # Add slice specific module to slice_module_pool
+    slice_module_pool[shared_pred_head_module_name] = shared_pred_head_module
+
     for slice_name in slice_func_dict.keys():
         # Create task name
         pred_task_name = f"{task.name}_slice:pred_{slice_name}"
@@ -95,13 +115,36 @@ def build_slice_tasks(task, slice_func_dict):
         pred_transform_module_name = f"{task.name}_slice:transform_{slice_name}"
         pred_transform_module = nn.Linear(task_feature_size, task_feature_size)
 
-        pred_module_pool = base_task_module_pool
+        # Create module_pool
+        pred_module_pool = nn.ModuleDict(
+            {
+                module_name: module
+                for module_name, module in base_task_module_pool.items()
+            }
+        )
         pred_module_pool[pred_transform_module_name] = pred_transform_module
         pred_module_pool[shared_pred_head_module_name] = shared_pred_head_module
 
         # Create task_flow
-        pred_task_flow = base_task_task_flow
+        pred_task_flow = [action for action in base_task_task_flow]
         pred_task_flow.extend(
+            [
+                {
+                    "name": pred_transform_module_name,
+                    "module": pred_transform_module_name,
+                    "inputs": base_task_predictor_action["inputs"],
+                },
+                {
+                    "name": pred_head_module_name,
+                    "module": shared_pred_head_module_name,
+                    "inputs": [(pred_transform_module_name, 0)],
+                },
+            ]
+        )
+
+        # Add slice specific module to slice_module_pool
+        slice_module_pool[pred_transform_module_name] = pred_transform_module
+        slice_actions.extend(
             [
                 {
                     "name": pred_transform_module_name,
@@ -144,30 +187,23 @@ def build_slice_tasks(task, slice_func_dict):
     master_head_module_name = f"{master_task_name}_head"
     master_head_module = base_task_predictor_module
 
-    master_module_pool = nn.ModuleDict(
-        {
-            master_attention_module_name: master_attention_module,
-            master_head_module_name: master_head_module,
-        }
-    )
+    master_module_pool = slice_module_pool
+    master_module_pool[master_attention_module_name] = master_attention_module
+    master_module_pool[master_head_module_name] = master_head_module
 
     # Create task_flow
-    master_task_flow = (
-        ind_task_flow
-        + pred_task_flow
-        + [
-            {
-                "name": master_attention_module_name,
-                "module": master_attention_module_name,
-                "inputs": [],
-            },
-            {
-                "name": master_head_module_name,
-                "module": master_head_module_name,
-                "inputs": [(master_attention_module_name, 0)],
-            },
-        ]
-    )
+    master_task_flow = slice_actions + [
+        {
+            "name": master_attention_module_name,
+            "module": master_attention_module_name,
+            "inputs": [],
+        },
+        {
+            "name": master_head_module_name,
+            "module": master_head_module_name,
+            "inputs": [(master_attention_module_name, 0)],
+        },
+    ]
 
     tasks.append(
         EmmentalTask(

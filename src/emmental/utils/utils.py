@@ -188,6 +188,10 @@ def str2dict(v):
     return dict
 
 
+def str2list(v, delim=","):
+    return [t.strip() for t in v.split(delim)]
+
+
 def nullable_string(v):
     if not v or v.lower() in ["none", "null"]:
         return None
