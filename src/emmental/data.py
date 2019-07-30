@@ -4,6 +4,7 @@ from collections import defaultdict
 import torch
 from torch.utils.data import DataLoader, Dataset
 
+from emmental.meta import Meta
 from emmental.utils.utils import list_to_tensor, random_string
 
 logger = logging.getLogger(__name__)
@@ -124,10 +125,18 @@ def emmental_collate_fn(batch):
     for field_name, values in X_batch.items():
         # Only merge list of tensors
         if isinstance(values[0], torch.Tensor):
-            X_batch[field_name] = list_to_tensor(values)
+            X_batch[field_name] = list_to_tensor(
+                values,
+                min_len=Meta.config["data_config"]["min_data_len"],
+                max_len=Meta.config["data_config"]["max_data_len"],
+            )
 
     for label_name, values in Y_batch.items():
-        Y_batch[label_name] = list_to_tensor(values)
+        Y_batch[label_name] = list_to_tensor(
+            values,
+            min_len=Meta.config["data_config"]["min_data_len"],
+            max_len=Meta.config["data_config"]["max_data_len"],
+        )
 
     return dict(X_batch), dict(Y_batch)
 

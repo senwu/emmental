@@ -3,6 +3,8 @@
 
 Added
 ^^^^^
+* `@senwu_`: Add `min_len` and `max_len` in `Meta.config` to support setting sequence
+  length.
 * `@senwu_`: Add overall and task specific loss during evaluating as default.
 * `@senwu_`: Calculate overall and task specific metrics and loss during training.
 * `@senwu_`: Add more util functions, e.g., array_to_numpy, construct_identifier,

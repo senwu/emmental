@@ -4,6 +4,11 @@ meta_config:
     verbose: True # whether to print the log information
     log_path: # log directory
 
+# Data configuration
+data_config:
+    min_data_len: 0 # min data length
+    max_data_len: 0 # max data length (e.g., 0 for no max_len)
+
 # Model configuration
 model_config:
     model_path: # path to pretrained model

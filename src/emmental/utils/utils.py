@@ -22,7 +22,7 @@ def set_random_seed(seed):
         torch.cuda.manual_seed_all(seed)
 
 
-def list_to_tensor(item_list):
+def list_to_tensor(item_list, min_len=0, max_len=0):
     """Convert the list of torch.Tensor into a torch.Tensor."""
 
     # Convert single value tensor
@@ -36,12 +36,14 @@ def list_to_tensor(item_list):
         item_tensor = torch.stack(item_list, dim=0)
     # Convert reshape to 1-D tensor and then convert
     else:
-        item_tensor, _ = pad_batch([item.view(-1) for item in item_list])
+        item_tensor, _ = pad_batch(
+            [item.view(-1) for item in item_list], min_len, max_len
+        )
 
     return item_tensor
 
 
-def pad_batch(batch, max_len=0, pad_value=0, left_padded=False):
+def pad_batch(batch, min_len=0, max_len=0, pad_value=0, left_padded=False):
     """Convert the batch into a padded tensor and mask tensor.
 
     :param batch: The data for padding.
@@ -55,12 +57,13 @@ def pad_batch(batch, max_len=0, pad_value=0, left_padded=False):
     :return: The padded matrix and correspoing mask matrix.
     :rtype: pair of torch.Tensors with shape (batch_size, max_seq_len)
     """
-
     batch_size = len(batch)
     max_seq_len = int(np.max([len(item) for item in batch]))
 
     if max_len > 0 and max_len < max_seq_len:
         max_seq_len = max_len
+
+    max_seq_len = max(max_seq_len, min_len)
 
     padded_batch = batch[0].new_full((batch_size, max_seq_len), pad_value)
 

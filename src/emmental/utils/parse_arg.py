@@ -32,6 +32,20 @@ def parse_arg(parser=None):
         "--log_path", type=str, default="logs", help="Directory to save running log"
     )
 
+    # Load data configuration
+    data_config = parser.add_argument_group("Data configuration")
+
+    data_config.add_argument(
+        "--min_data_len", type=int, default=0, help="Minimal data length"
+    )
+
+    data_config.add_argument(
+        "--max_data_len",
+        type=int,
+        default=0,
+        help="Maximal data length (0 for no max_len)",
+    )
+
     # Load model configuration
     model_config = parser.add_argument_group("Model configuration")
 
@@ -329,6 +343,10 @@ def parse_arg_to_config(args):
             "seed": args.seed,
             "verbose": args.verbose,
             "log_path": args.log_path,
+        },
+        "data_config": {
+            "min_data_len": args.min_data_len,
+            "max_data_len": args.max_data_len,
         },
         "model_config": {
             "model_path": args.model_path,
