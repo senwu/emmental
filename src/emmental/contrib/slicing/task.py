@@ -13,7 +13,7 @@ from emmental.utils.utils import move_to_device
 logger = logging.getLogger(__name__)
 
 
-def build_slice_tasks(task, slice_func_dict, slice_distribution={}):
+def build_slice_tasks(task, slice_func_dict, slice_distribution={}, dropout=0.0):
     """A function to build slice tasks based on slicing functions.
 
     We assume the original task flow contains feature extractor and predictor head.
@@ -59,6 +59,9 @@ def build_slice_tasks(task, slice_func_dict, slice_distribution={}):
         ind_head_module_name = f"{ind_task_name}_head"
         ind_head_module = nn.Linear(task_feature_size, 2)
 
+        ind_head_dropout_module_name = f"{task.name}_slice:dropout_{slice_name}"
+        ind_head_dropout_module = nn.Dropout(p=dropout)
+
         # Create module_pool
         ind_module_pool = nn.ModuleDict(
             {
@@ -66,26 +69,41 @@ def build_slice_tasks(task, slice_func_dict, slice_distribution={}):
                 for module_name, module in base_task_module_pool.items()
             }
         )
+        ind_module_pool[ind_head_dropout_module_name] = ind_head_dropout_module
         ind_module_pool[ind_head_module_name] = ind_head_module
 
         # Create task_flow
         ind_task_flow = [action for action in base_task_task_flow]
-        ind_task_flow.append(
-            {
-                "name": ind_head_module_name,
-                "module": ind_head_module_name,
-                "inputs": base_task_predictor_action["inputs"],
-            }
+        ind_task_flow.extend(
+            [
+                {
+                    "name": ind_head_dropout_module_name,
+                    "module": ind_head_dropout_module_name,
+                    "inputs": base_task_predictor_action["inputs"],
+                },
+                {
+                    "name": ind_head_module_name,
+                    "module": ind_head_module_name,
+                    "inputs": [(ind_head_dropout_module_name, 0)],
+                },
+            ]
         )
 
         # Add slice specific module to slice_module_pool
         slice_module_pool[ind_head_module_name] = ind_head_module
-        slice_actions.append(
-            {
-                "name": ind_head_module_name,
-                "module": ind_head_module_name,
-                "inputs": base_task_predictor_action["inputs"],
-            }
+        slice_actions.extend(
+            [
+                {
+                    "name": ind_head_dropout_module_name,
+                    "module": ind_head_dropout_module_name,
+                    "inputs": base_task_predictor_action["inputs"],
+                },
+                {
+                    "name": ind_head_module_name,
+                    "module": ind_head_module_name,
+                    "inputs": [(ind_head_dropout_module_name, 0)],
+                },
+            ]
         )
 
         # Loss function

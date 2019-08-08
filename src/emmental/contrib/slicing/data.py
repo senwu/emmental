@@ -37,7 +37,7 @@ def add_slice_labels(task, dataloaders, slice_func_dict, split="train"):
                 )
                 if ind_classes.shape[0] == 2:
                     slice_distribution[slice_ind_name] = torch.Tensor(
-                        1 - ind_counts / np.sum(ind_counts)
+                        np.sum(ind_counts) / ind_counts / ind_classes.shape[0]
                     )
                 pred_classes, pred_counts = np.unique(
                     pred_labels.numpy(), return_counts=True
