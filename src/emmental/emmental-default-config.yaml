@@ -81,5 +81,7 @@ logging_config:
             # model/train/all/loss: min
         checkpoint_task_metrics: # task_metric_name: mode
         checkpoint_runway: 0 # checkpointing runway (no checkpointing before k unit)
-        checkpoint_clear: True # whether to clear immedidate checkpointing
+        clear_intermediate_checkpoints: True # whether to clear intermediate checkpoints
+        clear_all_checkpoints: False # whether to clear all checkpoints
+
 

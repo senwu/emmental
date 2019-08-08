@@ -327,10 +327,17 @@ def parse_arg(parser=None):
     )
 
     logging_config.add_argument(
-        "--checkpoint_clear",
+        "--clear_intermediate_checkpoints",
         type=str2bool,
         default=True,
-        help="Whether to clear immedidate checkpointing",
+        help="Whether to clear intermediate checkpoints",
+    )
+
+    logging_config.add_argument(
+        "--clear_all_checkpoints",
+        type=str2bool,
+        default=False,
+        help="Whether to clear all checkpoints",
     )
 
     return parser
@@ -411,7 +418,8 @@ def parse_arg_to_config(args):
                 "checkpoint_metric": args.checkpoint_metric,
                 "checkpoint_task_metrics": args.checkpoint_task_metrics,
                 "checkpoint_runway": args.checkpoint_runway,
-                "checkpoint_clear": args.checkpoint_clear,
+                "clear_intermediate_checkpoints": args.clear_intermediate_checkpoints,
+                "clear_all_checkpoints": args.clear_all_checkpoints,
             },
         },
     }

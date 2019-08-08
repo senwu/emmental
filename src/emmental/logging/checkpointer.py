@@ -81,9 +81,12 @@ class Checkpointer(object):
         )
 
         # Set up checkpoint clear
-        self.checkpoint_clear = Meta.config["logging_config"]["checkpointer_config"][
-            "checkpoint_clear"
-        ]
+        self.clear_intermediate_checkpoints = Meta.config["logging_config"][
+            "checkpointer_config"
+        ]["clear_intermediate_checkpoints"]
+        self.clear_all_checkpoints = Meta.config["logging_config"][
+            "checkpointer_config"
+        ]["clear_all_checkpoints"]
 
         # Set up checkpoint flag
         self.checkpoint_condition_met = False
@@ -173,10 +176,15 @@ class Checkpointer(object):
         return best_metric
 
     def clear(self):
-        """Clear all intermediate checkpoints.
+        """Clear checkpoints.
         """
 
-        if self.checkpoint_clear:
+        if self.clear_all_checkpoints:
+            logger.info("Clear all checkpoints.")
+            file_list = glob.glob(f"{self.checkpoint_path}/*.pth")
+            for file in file_list:
+                os.remove(file)
+        elif self.clear_intermediate_checkpoints:
             logger.info("Clear all intermediate checkpoints.")
             file_list = glob.glob(f"{self.checkpoint_path}/checkpoint_*.pth")
             for file in file_list:

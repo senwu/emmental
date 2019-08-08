@@ -3,13 +3,15 @@
 
 Added
 ^^^^^
-* `@senwu_`: Add `min_len` and `max_len` in `Meta.config` to support setting sequence
+* `@senwu`_: Add `clear_intermediate_checkpoints` and `clear_all_checkpoints` arguments
+  to support user needs for clear checkpoins.
+* `@senwu`_: Add `min_len` and `max_len` in `Meta.config` to support setting sequence
   length.
-* `@senwu_`: Add overall and task specific loss during evaluating as default.
-* `@senwu_`: Calculate overall and task specific metrics and loss during training.
-* `@senwu_`: Add more util functions, e.g., array_to_numpy, construct_identifier,
+* `@senwu`_: Add overall and task specific loss during evaluating as default.
+* `@senwu`_: Calculate overall and task specific metrics and loss during training.
+* `@senwu`_: Add more util functions, e.g., array_to_numpy, construct_identifier,
   and random_string.
-* `@senwu_`: Enforce dataset has uids attribute.
+* `@senwu`_: Enforce dataset has uids attribute.
 * `@senwu`_: Add micro/macro metric options which have split-wise micro/macro average
   and global-wise micro/macro average. The name for the metrics are:
 
@@ -38,6 +40,10 @@ Changed
 ^^^^^^^
 * `@senwu`_: Change the default counter unit to epoch.
 * `@senwu`_: Update the metric to return one metric value by default.
+
+Removed
+^^^^^^^
+* `@senwu`_: Remove `checkpoint_clear` argument.
 
 ..
   For convenience, all username links for contributors can be listed here
