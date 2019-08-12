@@ -172,6 +172,6 @@ class LoggingManager(object):
         """
         self.writer.close()
         if self.checkpointing:
-            self.checkpointer.clear()
             model = self.checkpointer.load_best_model(model)
+            self.checkpointer.clear()
         return model
