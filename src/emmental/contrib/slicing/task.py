@@ -20,6 +20,7 @@ def build_slice_tasks(
     slice_distribution={},
     dropout=0.0,
     slice_ind_head_module=None,
+    sep_slice_ind_feature=False,
 ):
     """A function to build slice tasks based on slicing functions.
 
@@ -84,6 +85,11 @@ def build_slice_tasks(
         ind_module_pool[ind_head_dropout_module_name] = ind_head_dropout_module
         ind_module_pool[ind_head_module_name] = ind_head_module
 
+        assert len(base_task_predictor_action["inputs"]) == 1
+
+        ind_head_dropout_module_input_name = base_task_predictor_action["inputs"][0][0]
+        ind_head_dropout_module_input_idx = 1 if sep_slice_ind_feature else 0
+
         # Create task_flow
         ind_task_flow = [action for action in base_task_task_flow]
         ind_task_flow.extend(
@@ -91,7 +97,12 @@ def build_slice_tasks(
                 {
                     "name": ind_head_dropout_module_name,
                     "module": ind_head_dropout_module_name,
-                    "inputs": base_task_predictor_action["inputs"],
+                    "inputs": [
+                        (
+                            ind_head_dropout_module_input_name,
+                            ind_head_dropout_module_input_idx,
+                        )
+                    ],
                 },
                 {
                     "name": ind_head_module_name,
