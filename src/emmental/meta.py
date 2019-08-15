@@ -1,6 +1,7 @@
 import logging
 import os
 import tempfile
+import uuid
 from builtins import object
 from datetime import datetime
 
@@ -77,9 +78,12 @@ def init_logging(
         # Generate a new directory using the log_dir, if it doesn't exist
         date = datetime.now().strftime("%Y_%m_%d")
         time = datetime.now().strftime("%H_%M_%S")
-        log_path = os.path.join(log_dir, date, time)
-        if not os.path.exists(log_path):
-            os.makedirs(log_path)
+        uid = str(uuid.uuid4())[:8]
+        log_path = os.path.join(log_dir, date, time, uid)
+        while os.path.exists(log_path):
+            uid = str(uuid.uuid4())[:8]
+            log_path = os.path.join(log_dir, date, time, uid)
+        os.makedirs(log_path)
 
         # Configure the logger using the provided path
         logging.basicConfig(

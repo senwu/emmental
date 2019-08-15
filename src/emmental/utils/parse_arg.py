@@ -32,6 +32,20 @@ def parse_arg(parser=None):
         "--log_path", type=str, default="logs", help="Directory to save running log"
     )
 
+    # Load data configuration
+    data_config = parser.add_argument_group("Data configuration")
+
+    data_config.add_argument(
+        "--min_data_len", type=int, default=0, help="Minimal data length"
+    )
+
+    data_config.add_argument(
+        "--max_data_len",
+        type=int,
+        default=0,
+        help="Maximal data length (0 for no max_len)",
+    )
+
     # Load model configuration
     model_config = parser.add_argument_group("Model configuration")
 
@@ -134,7 +148,7 @@ def parse_arg(parser=None):
         "--lr_scheduler",
         type=nullable_string,
         default=None,
-        choices=["linear", "exponential", "reduce_on_plateau"],
+        choices=["linear", "exponential", "step", "multi_step"],
         help="Learning rate scheduler",
     )
 
@@ -194,6 +208,49 @@ def parse_arg(parser=None):
     )
 
     scheduler_config.add_argument(
+        "--step_lr_scheduler_step_size",
+        type=int,
+        default=1,
+        help="Period of learning rate decay",
+    )
+
+    scheduler_config.add_argument(
+        "--step_lr_scheduler_gamma",
+        type=float,
+        default=0.01,
+        help="Multiplicative factor of learning rate decay",
+    )
+
+    scheduler_config.add_argument(
+        "--step_lr_scheduler_last_epoch",
+        type=int,
+        default=-1,
+        help="The index of last epoch",
+    )
+
+    scheduler_config.add_argument(
+        "--multi_step_lr_scheduler_milestones",
+        nargs="+",
+        type=int,
+        default=[10000],
+        help="List of epoch indices. Must be increasing.",
+    )
+
+    scheduler_config.add_argument(
+        "--multi_step_lr_scheduler_gamma",
+        type=float,
+        default=0.01,
+        help="Multiplicative factor of learning rate decay",
+    )
+
+    scheduler_config.add_argument(
+        "--multi_step_lr_scheduler_last_epoch",
+        type=int,
+        default=-1,
+        help="The index of last epoch",
+    )
+
+    scheduler_config.add_argument(
         "--task_scheduler",
         type=str,
         default="round_robin",
@@ -207,7 +264,7 @@ def parse_arg(parser=None):
     logging_config.add_argument(
         "--counter_unit",
         type=str,
-        default="batch",
+        default="epoch",
         choices=["epoch", "batch"],
         help="Logging unit (epoch, batch)",
     )
@@ -270,10 +327,17 @@ def parse_arg(parser=None):
     )
 
     logging_config.add_argument(
-        "--checkpoint_clear",
+        "--clear_intermediate_checkpoints",
         type=str2bool,
         default=True,
-        help="Whether to clear immedidate checkpointing",
+        help="Whether to clear intermediate checkpoints",
+    )
+
+    logging_config.add_argument(
+        "--clear_all_checkpoints",
+        type=str2bool,
+        default=False,
+        help="Whether to clear all checkpoints",
     )
 
     return parser
@@ -281,12 +345,15 @@ def parse_arg(parser=None):
 
 def parse_arg_to_config(args):
     """Parse the arguments to config dict"""
-
     config = {
         "meta_config": {
             "seed": args.seed,
             "verbose": args.verbose,
             "log_path": args.log_path,
+        },
+        "data_config": {
+            "min_data_len": args.min_data_len,
+            "max_data_len": args.max_data_len,
         },
         "model_config": {
             "model_path": args.model_path,
@@ -327,6 +394,16 @@ def parse_arg_to_config(args):
                     "patience": args.plateau_lr_scheduler_patience,
                     "threshold": args.plateau_lr_scheduler_threshold,
                 },
+                "step_config": {
+                    "step_size": args.step_lr_scheduler_step_size,
+                    "gamma": args.step_lr_scheduler_gamma,
+                    "last_epoch": args.step_lr_scheduler_last_epoch,
+                },
+                "multi_step_config": {
+                    "milestones": args.multi_step_lr_scheduler_milestones,
+                    "gamma": args.multi_step_lr_scheduler_gamma,
+                    "last_epoch": args.multi_step_lr_scheduler_last_epoch,
+                },
             },
             "task_scheduler": args.task_scheduler,
         },
@@ -341,7 +418,8 @@ def parse_arg_to_config(args):
                 "checkpoint_metric": args.checkpoint_metric,
                 "checkpoint_task_metrics": args.checkpoint_task_metrics,
                 "checkpoint_runway": args.checkpoint_runway,
-                "checkpoint_clear": args.checkpoint_clear,
+                "clear_intermediate_checkpoints": args.clear_intermediate_checkpoints,
+                "clear_all_checkpoints": args.clear_all_checkpoints,
             },
         },
     }

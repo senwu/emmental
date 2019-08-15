@@ -1,4 +1,5 @@
 import logging
+import math
 
 import numpy as np
 
@@ -19,11 +20,19 @@ from emmental.metrics.spearman_correlation import spearman_correlation_scorer
 
 def isequal(dict_a, dict_b, precision=1e-10):
     for key in dict_a:
-        if key not in dict_b or abs(dict_a[key] - dict_b[key]) > precision:
+        if (
+            key not in dict_b
+            or abs(dict_a[key] - dict_b[key]) > precision
+            or (math.isnan(dict_a[key]) and not math.isnan(dict_b[key]))
+        ):
             return False
 
     for key in dict_b:
-        if key not in dict_a or abs(dict_a[key] - dict_b[key]) > precision:
+        if (
+            key not in dict_a
+            or abs(dict_a[key] - dict_b[key]) > precision
+            or (math.isnan(dict_b[key]) and not math.isnan(dict_a[key]))
+        ):
             return False
 
     return True
@@ -141,11 +150,14 @@ def test_pearson_correlation(caplog):
     probs = np.array([0.8, 0.6, 0.9, 0.7, 0.7, 0.2])
 
     metric_dict = pearson_correlation_scorer(golds, probs, None)
+    assert isequal(metric_dict, {"pearson_correlation": 0.6764814252025461})
+
+    metric_dict = pearson_correlation_scorer(golds, probs, None, return_pvalue=True)
     assert isequal(
         metric_dict,
         {
             "pearson_correlation": 0.6764814252025461,
-            "pearson_pvalue": 0.14006598491201774,
+            "pearson_pvalue": 0.14006598491201777,
         },
     )
 
@@ -159,6 +171,9 @@ def test_spearman_correlation(caplog):
     probs = np.array([0.8, 0.6, 0.9, 0.7, 0.7, 0.2])
 
     metric_dict = spearman_correlation_scorer(golds, probs, None)
+    assert isequal(metric_dict, {"spearman_correlation": 0.7921180343813395})
+
+    metric_dict = spearman_correlation_scorer(golds, probs, None, return_pvalue=True)
     assert isequal(
         metric_dict,
         {
@@ -177,17 +192,7 @@ def test_pearson_spearman(caplog):
     probs = np.array([0.8, 0.6, 0.9, 0.7, 0.7, 0.2])
 
     metric_dict = pearson_spearman_scorer(golds, probs, None)
-
-    assert isequal(
-        metric_dict,
-        {
-            "pearson_correlation": 0.6764814252025461,
-            "pearson_pvalue": 0.14006598491201774,
-            "spearman_correlation": 0.7921180343813395,
-            "spearman_pvalue": 0.06033056705743058,
-            "pearson_spearman": 0.7342997297919428,
-        },
-    )
+    assert isequal(metric_dict, {"pearson_spearman": 0.7342997297919428})
 
 
 def test_roc_auc(caplog):
@@ -204,6 +209,11 @@ def test_roc_auc(caplog):
 
     assert isequal(metric_dict, {"roc_auc": 0.9444444444444444})
 
+    golds = np.array([1, 1, 1, 1, 1, 1])
+
+    metric_dict = roc_auc_scorer(golds, probs, None)
+    assert isequal(metric_dict, {"roc_auc": float("nan")})
+
 
 def test_accuracy_f1(caplog):
     """Unit test of accuracy_f1_scorer"""
@@ -215,7 +225,4 @@ def test_accuracy_f1(caplog):
 
     metric_dict = accuracy_f1_scorer(golds, None, preds)
 
-    assert isequal(
-        metric_dict,
-        {"accuracy": 0.6666666666666666, "f1": 0.5, "accuracy_f1": 0.5833333333333333},
-    )
+    assert isequal(metric_dict, {"accuracy_f1": 0.5833333333333333})

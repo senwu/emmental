@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 
+import numpy as np
 import torch
 import torch.optim as optim
 
@@ -9,6 +10,7 @@ from emmental.logging import LoggingManager
 from emmental.optimizers.bert_adam import BertAdam
 from emmental.schedulers.round_robin_scheduler import RoundRobinScheduler
 from emmental.schedulers.sequential_scheduler import SequentialScheduler
+from emmental.utils.utils import construct_identifier, prob_to_pred
 
 try:
     from IPython import get_ipython
@@ -176,7 +178,15 @@ class EmmentalLearner(object):
         if self.warmup_scheduler and step < self.warmup_steps:
             self.warmup_scheduler.step()
         elif self.lr_scheduler is not None:
-            self.lr_scheduler.step()
+            opt = Meta.config["learner_config"]["lr_scheduler_config"]["lr_scheduler"]
+            if opt in ["linear", "exponential"]:
+                self.lr_scheduler.step()
+            elif (
+                opt in ["step", "multi_step"]
+                and step > 0
+                and step % self.n_batches_per_epoch == 0
+            ):
+                self.lr_scheduler.step()
             min_lr = Meta.config["learner_config"]["lr_scheduler_config"]["min_lr"]
             if min_lr and self.optimizer.param_groups[0]["lr"] < min_lr:
                 self.optimizer.param_groups[0]["lr"] = min_lr
@@ -215,7 +225,7 @@ class EmmentalLearner(object):
         self.logging_manager.update(batch_size)
 
         # Log the loss and lr
-        metric_dict.update(self._aggregate_losses())
+        metric_dict.update(self._aggregate_running_metrics(model))
 
         # Evaluate the model and log the metric
         if self.logging_manager.trigger_evaluation():
@@ -246,32 +256,68 @@ class EmmentalLearner(object):
 
         return metric_dict
 
-    def _aggregate_losses(self):
-        """Calculate the task specific loss, average micro loss and learning rate."""
+    def _aggregate_running_metrics(self, model):
+        """Calculate the running overall and task specific metrics."""
 
         metric_dict = dict()
 
+        total_count = 0
         # Log task specific loss
-        for identifier in self.running_losses.keys():
-            if self.running_counts[identifier] > 0:
-                metric_dict[identifier] = (
-                    self.running_losses[identifier] / self.running_counts[identifier]
+        for identifier in self.running_uids.keys():
+            count = len(self.running_uids[identifier])
+            if count > 0:
+                metric_dict[identifier + "/loss"] = (
+                    self.running_losses[identifier] / count
                 )
+            total_count += count
 
         # Calculate average micro loss
-        total_loss = sum(self.running_losses.values())
-        total_count = sum(self.running_counts.values())
         if total_count > 0:
-            metric_dict["model/train/all/loss"] = total_loss / total_count
+            total_loss = sum(self.running_losses.values())
+            metric_dict["model/all/train/loss"] = total_loss / total_count
+
+        micro_score_dict = defaultdict(list)
+        macro_score_dict = defaultdict(list)
+
+        # Calculate training metric
+        for identifier in self.running_uids.keys():
+            task_name, data_name, split = identifier.split("/")
+
+            metric_score = model.scorers[task_name].score(
+                self.running_golds[identifier],
+                self.running_probs[identifier],
+                prob_to_pred(self.running_probs[identifier]),
+                self.running_uids[identifier],
+            )
+            for metric_name, metric_value in metric_score.items():
+                identifier = f"{identifier}/{metric_name}"
+                metric_dict[identifier] = metric_value
+
+            # Collect average score
+            identifier = construct_identifier(task_name, data_name, split, "average")
+
+            metric_dict[identifier] = np.mean(list(metric_score.values()))
+
+            micro_score_dict[split].extend(list(metric_score.values()))
+            macro_score_dict[split].append(metric_dict[identifier])
+
+        # Collect split-wise micro/macro average score
+        for split in micro_score_dict.keys():
+            identifier = construct_identifier("model", "all", split, "micro_average")
+            metric_dict[identifier] = np.mean(micro_score_dict[split])
+            identifier = construct_identifier("model", "all", split, "macro_average")
+            metric_dict[identifier] = np.mean(macro_score_dict[split])
 
         # Log the learning rate
-        metric_dict["model/train/all/lr"] = self.optimizer.param_groups[0]["lr"]
+        metric_dict["model/all/train/lr"] = self.optimizer.param_groups[0]["lr"]
 
         return metric_dict
 
     def _reset_losses(self):
+        self.running_uids = defaultdict(list)
         self.running_losses = defaultdict(float)
-        self.running_counts = defaultdict(int)
+        self.running_probs = defaultdict(list)
+        self.running_golds = defaultdict(list)
 
     def learn(self, model, dataloaders):
         """The learning procedure of emmental MTL
@@ -326,9 +372,10 @@ class EmmentalLearner(object):
                 disable=(not Meta.config["meta_config"]["verbose"]),
                 desc=f"Epoch {epoch_num}:",
             )
-            for batch_num, (batch, task_to_label_dict, data_name, split) in batches:
-                X_dict, Y_dict = batch
-
+            for (
+                batch_num,
+                (uids, X_dict, Y_dict, task_to_label_dict, data_name, split),
+            ) in batches:
                 total_batch_num = epoch_num * self.n_batches_per_epoch + batch_num
                 batch_size = len(next(iter(Y_dict.values())))
 
@@ -339,16 +386,19 @@ class EmmentalLearner(object):
                 self.optimizer.zero_grad()
 
                 # Perform forward pass and calcualte the loss and count
-                loss_dict, count_dict = model.calculate_loss(
-                    X_dict, Y_dict, task_to_label_dict, data_name, split
+                uid_dict, loss_dict, prob_dict, gold_dict = model(
+                    uids, X_dict, Y_dict, task_to_label_dict
                 )
 
                 # Update running loss and count
-                for identifier in loss_dict.keys():
-                    self.running_losses[identifier] += (
-                        loss_dict[identifier].item() * count_dict[identifier]
-                    )
-                    self.running_counts[identifier] += count_dict[identifier]
+                for task_name in uid_dict.keys():
+                    identifier = f"{task_name}/{data_name}/{split}"
+                    self.running_uids[identifier].extend(uid_dict[task_name])
+                    self.running_losses[identifier] += loss_dict[
+                        task_name
+                    ].item() * len(uid_dict[task_name])
+                    self.running_probs[identifier].extend(prob_dict[task_name])
+                    self.running_golds[identifier].extend(gold_dict[task_name])
 
                 # Skip the backward pass if no loss is calcuated
                 if not loss_dict:

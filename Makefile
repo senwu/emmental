@@ -15,6 +15,12 @@ check:
 	flake8 src/
 	flake8 tests/
 
+format:
+	isort -rc src/
+	isort -rc tests/
+	black src/
+	black tests/
+
 docs:
 	sphinx-build -W -b html docs/ _build/html
 

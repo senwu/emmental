@@ -5,8 +5,8 @@ from emmental.metrics.spearman_correlation import spearman_correlation_scorer
 
 
 def pearson_spearman_scorer(golds, probs, preds, uids=None):
-    """Average of Pearson correlation coefficient and the p-value and Spearman
-    rank-order correlation coefficient.
+    """Average of Pearson correlation coefficient and Spearman rank-order
+    correlation coefficient.
 
     :param golds: Ground truth (correct) target values.
     :type golds: 1-d np.array
@@ -22,9 +22,12 @@ def pearson_spearman_scorer(golds, probs, preds, uids=None):
     """
 
     metrics = dict()
-    metrics.update(pearson_correlation_scorer(golds, probs, preds, uids))
-    metrics.update(spearman_correlation_scorer(golds, probs, preds, uids))
+    pearson_correlation = pearson_correlation_scorer(golds, probs, preds, uids)
+    spearman_correlation = spearman_correlation_scorer(golds, probs, preds, uids)
     metrics["pearson_spearman"] = np.mean(
-        [metrics["pearson_correlation"], metrics["spearman_correlation"]]
+        [
+            pearson_correlation["pearson_correlation"],
+            spearman_correlation["spearman_correlation"],
+        ]
     )
     return metrics

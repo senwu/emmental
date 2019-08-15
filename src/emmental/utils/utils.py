@@ -1,4 +1,5 @@
 import random
+import string
 
 import numpy as np
 import torch
@@ -21,7 +22,7 @@ def set_random_seed(seed):
         torch.cuda.manual_seed_all(seed)
 
 
-def list_to_tensor(item_list):
+def list_to_tensor(item_list, min_len=0, max_len=0):
     """Convert the list of torch.Tensor into a torch.Tensor."""
 
     # Convert single value tensor
@@ -35,12 +36,14 @@ def list_to_tensor(item_list):
         item_tensor = torch.stack(item_list, dim=0)
     # Convert reshape to 1-D tensor and then convert
     else:
-        item_tensor, _ = pad_batch([item.view(-1) for item in item_list])
+        item_tensor, _ = pad_batch(
+            [item.view(-1) for item in item_list], min_len, max_len
+        )
 
     return item_tensor
 
 
-def pad_batch(batch, max_len=0, pad_value=0, left_padded=False):
+def pad_batch(batch, min_len=0, max_len=0, pad_value=0, left_padded=False):
     """Convert the batch into a padded tensor and mask tensor.
 
     :param batch: The data for padding.
@@ -54,12 +57,13 @@ def pad_batch(batch, max_len=0, pad_value=0, left_padded=False):
     :return: The padded matrix and correspoing mask matrix.
     :rtype: pair of torch.Tensors with shape (batch_size, max_seq_len)
     """
-
     batch_size = len(batch)
     max_seq_len = int(np.max([len(item) for item in batch]))
 
     if max_len > 0 and max_len < max_seq_len:
         max_seq_len = max_len
+
+    max_seq_len = max(max_seq_len, min_len)
 
     padded_batch = batch[0].new_full((batch_size, max_seq_len), pad_value)
 
@@ -128,6 +132,33 @@ def move_to_device(obj, device=-1):
         return obj
 
 
+def array_to_numpy(array, flatten=False):
+    """
+    Covert an array to a numpy array.
+
+    :param array: An array to convert
+    :type array: list or np.ndarray
+    :param flatten: Whether to flatten or not
+    :type flatten: bool
+    :return: Converted np.ndarray
+    :rtype: np.ndarray
+    """
+
+    if isinstance(array, np.ndarray):
+        pass
+    elif isinstance(array, list):
+        array = np.array(array)
+    elif isinstance(array, torch.Tensor):
+        array = array.cpu().numpy()
+    else:
+        raise ValueError(f"Unrecognized type {type(array)} to convert to np.ndarray")
+
+    if flatten:
+        array = array.reshpae(-1)
+
+    return array
+
+
 def merge(x, y):
     """Merge two nested dictionaries. Overwrite values in x with values in y."""
 
@@ -160,7 +191,24 @@ def str2dict(v):
     return dict
 
 
+def str2list(v, delim=","):
+    return [t.strip() for t in v.split(delim)]
+
+
 def nullable_string(v):
     if not v or v.lower() in ["none", "null"]:
         return None
     return v
+
+
+def construct_identifier(task_name, data_name, split_name, metric_name=None):
+    if metric_name:
+        return f"{task_name}/{data_name}/{split_name}/{metric_name}"
+    else:
+        return f"{task_name}/{data_name}/{split_name}"
+
+
+def random_string(length=5):
+    """Generate a random string of fixed length """
+    letters = string.ascii_lowercase
+    return "".join(random.choice(letters) for i in range(length))
