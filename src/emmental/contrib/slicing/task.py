@@ -119,7 +119,12 @@ def build_slice_tasks(
                 {
                     "name": ind_head_dropout_module_name,
                     "module": ind_head_dropout_module_name,
-                    "inputs": base_task_predictor_action["inputs"],
+                    "inputs": [
+                        (
+                            ind_head_dropout_module_input_name,
+                            ind_head_dropout_module_input_idx,
+                        )
+                    ],
                 },
                 {
                     "name": ind_head_module_name,
