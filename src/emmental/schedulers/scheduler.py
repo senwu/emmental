@@ -10,6 +10,17 @@ class Scheduler(ABC):
 
         pass
 
+    def get_num_batches(dataloaders):
+        """Get total number of batches per epoch.
+
+        :param dataloaders: a list of dataloaders
+        :type dataloaders: list
+        :return: Total number of batches per epoch
+        :rtype: int
+        """
+
+        raise NotImplementedError()
+
     @abstractmethod
     def get_batches(self, dataloaders):
         """Generate batch generator from all dataloaders in designed order for
@@ -17,6 +28,8 @@ class Scheduler(ABC):
 
         :param dataloaders: a list of dataloaders
         :type dataloaders: list
+        :return: A generator of all batches
+        :rtype: genertor
         """
 
         pass

@@ -8,8 +8,7 @@ import torch.optim as optim
 from emmental import Meta
 from emmental.logging import LoggingManager
 from emmental.optimizers.bert_adam import BertAdam
-from emmental.schedulers.round_robin_scheduler import RoundRobinScheduler
-from emmental.schedulers.sequential_scheduler import SequentialScheduler
+from emmental.schedulers import SCHEDULERS
 from emmental.utils.utils import construct_identifier, prob_to_pred
 
 try:
@@ -191,15 +190,17 @@ class EmmentalLearner(object):
             if min_lr and self.optimizer.param_groups[0]["lr"] < min_lr:
                 self.optimizer.param_groups[0]["lr"] = min_lr
 
-    def _set_task_scheduler(self, model, dataloaders):
+    def _set_task_scheduler(self):
         """Set task scheduler for learning process"""
-        # TODO: add more task scheduler support
-        opt = Meta.config["learner_config"]["task_scheduler"]
 
-        if opt == "sequential":
-            self.task_scheduler = SequentialScheduler()
-        elif opt == "round_robin":
-            self.task_scheduler = RoundRobinScheduler()
+        opt = Meta.config["learner_config"]["task_scheduler_config"]["task_scheduler"]
+
+        if opt in ["sequential", "round_robin", "mixed"]:
+            self.task_scheduler = SCHEDULERS[opt](
+                **Meta.config["learner_config"]["task_scheduler_config"][
+                    f"{opt}_scheduler_config"
+                ]
+            )
         else:
             raise ValueError(f"Unrecognized task scheduler option '{opt}'")
 
@@ -343,9 +344,12 @@ class EmmentalLearner(object):
                 f'{Meta.config["learner_config"]["train_split"]} in dataloaders.'
             )
 
+        # Set up task_scheduler
+        self._set_task_scheduler()
+
         # Calculate the total number of batches per epoch
-        self.n_batches_per_epoch = sum(
-            [len(dataloader) for dataloader in train_dataloaders]
+        self.n_batches_per_epoch = self.task_scheduler.get_num_batches(
+            train_dataloaders
         )
 
         # Set up logging manager
@@ -354,8 +358,6 @@ class EmmentalLearner(object):
         self._set_optimizer(model)
         # Set up lr_scheduler
         self._set_lr_scheduler(model)
-        # Set up task_scheduler
-        self._set_task_scheduler(model, dataloaders)
 
         # Set to training mode
         model.train()
@@ -372,43 +374,45 @@ class EmmentalLearner(object):
                 disable=(not Meta.config["meta_config"]["verbose"]),
                 desc=f"Epoch {epoch_num}:",
             )
-            for (
-                batch_num,
-                (uids, X_dict, Y_dict, task_to_label_dict, data_name, split),
-            ) in batches:
-                total_batch_num = epoch_num * self.n_batches_per_epoch + batch_num
-                batch_size = len(next(iter(Y_dict.values())))
+            for batch_num, batch in batches:
 
-                # Update lr using lr scheduler
-                self._update_lr_scheduler(model, total_batch_num)
+                # Covert single batch into a batch list
+                if not isinstance(batch, list):
+                    batch = [batch]
+
+                total_batch_num = epoch_num * self.n_batches_per_epoch + batch_num
+                batch_size = 0
 
                 # Set gradients of all model parameters to zero
                 self.optimizer.zero_grad()
+                print("start batch...")
+                for uids, X_dict, Y_dict, task_to_label_dict, data_name, split in batch:
+                    batch_size += len(next(iter(Y_dict.values())))
+                    print(X_dict, Y_dict)
+                    # Perform forward pass and calcualte the loss and count
+                    uid_dict, loss_dict, prob_dict, gold_dict = model(
+                        uids, X_dict, Y_dict, task_to_label_dict
+                    )
 
-                # Perform forward pass and calcualte the loss and count
-                uid_dict, loss_dict, prob_dict, gold_dict = model(
-                    uids, X_dict, Y_dict, task_to_label_dict
-                )
+                    # Update running loss and count
+                    for task_name in uid_dict.keys():
+                        identifier = f"{task_name}/{data_name}/{split}"
+                        self.running_uids[identifier].extend(uid_dict[task_name])
+                        self.running_losses[identifier] += loss_dict[
+                            task_name
+                        ].item() * len(uid_dict[task_name])
+                        self.running_probs[identifier].extend(prob_dict[task_name])
+                        self.running_golds[identifier].extend(gold_dict[task_name])
 
-                # Update running loss and count
-                for task_name in uid_dict.keys():
-                    identifier = f"{task_name}/{data_name}/{split}"
-                    self.running_uids[identifier].extend(uid_dict[task_name])
-                    self.running_losses[identifier] += loss_dict[
-                        task_name
-                    ].item() * len(uid_dict[task_name])
-                    self.running_probs[identifier].extend(prob_dict[task_name])
-                    self.running_golds[identifier].extend(gold_dict[task_name])
+                    # Skip the backward pass if no loss is calcuated
+                    if not loss_dict:
+                        continue
 
-                # Skip the backward pass if no loss is calcuated
-                if not loss_dict:
-                    continue
+                    # Calculate the average loss
+                    loss = sum(loss_dict.values())
 
-                # Calculate the average loss
-                loss = sum(loss_dict.values())
-
-                # Perform backward pass to calculate gradients
-                loss.backward()
+                    # Perform backward pass to calculate gradients
+                    loss.backward()
 
                 # Clip gradient norm
                 if Meta.config["learner_config"]["optimizer_config"]["grad_clip"]:
@@ -419,6 +423,9 @@ class EmmentalLearner(object):
 
                 # Update the parameters
                 self.optimizer.step()
+
+                # Update lr using lr scheduler
+                self._update_lr_scheduler(model, total_batch_num)
 
                 self.metrics.update(self._logging(model, dataloaders, batch_size))
 

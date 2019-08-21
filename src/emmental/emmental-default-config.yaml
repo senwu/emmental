@@ -63,7 +63,14 @@ learner_config:
                 - 1000
             gamma: 0.1
             last_epoch: -1
-    task_scheduler: round_robin # [sequential, round_robin]
+    task_scheduler_config:
+        task_scheduler: round_robin # [sequential, round_robin, mixed]
+        sequential_scheduler_config:
+            fillup: False
+        round_robin_scheduler_config:
+            fillup: False
+        mixed_scheduler_config:
+            fillup: False
     global_evaluation_metric_dict: # global evaluation metric dict
 
 # Logging configuration

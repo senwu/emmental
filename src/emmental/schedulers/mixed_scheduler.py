@@ -1,9 +1,8 @@
 from emmental.schedulers.scheduler import Scheduler
 
 
-class SequentialScheduler(Scheduler):
-    """Generate batch generator from all dataloaders in sequential order for MTL
-    training.
+class MixedScheduler(Scheduler):
+    """Generate batch generator from all dataloaders in mixture for MTL training.
     """
 
     def __init__(self, fillup=False):
@@ -21,15 +20,12 @@ class SequentialScheduler(Scheduler):
         """
 
         batch_counts = [len(dataloader) for dataloader in dataloaders]
-        num_batch = (
-            max(batch_counts) * len(dataloaders) if self.fillup else sum(batch_counts)
-        )
+        num_batch = max(batch_counts) if self.fillup else min(batch_counts)
 
         return num_batch
 
     def get_batches(self, dataloaders):
-        """Generate batch generator from all dataloaders in sequential order for
-        one epoch.
+        """Generate batch generator from all dataloaders in mixture for one epoch.
 
         :param dataloaders: a list of dataloaders
         :type dataloaders: list
@@ -46,24 +42,34 @@ class SequentialScheduler(Scheduler):
         splits = [dataloader.split for dataloader in dataloaders]
         data_loaders = [[batch for batch in dataloader] for dataloader in dataloaders]
 
-        for (
-            task_to_label_dict,
-            data_name,
-            batch_count,
-            data_loader,
-            split,
-            uid_name,
-        ) in zip(
-            task_to_label_dicts,
-            data_names,
-            batch_counts,
-            data_loaders,
-            splits,
-            uid_names,
-        ):
-            num_batch = max(batch_counts) if self.fillup else batch_count
-            for batch_idx in range(num_batch):
+        num_batch = max(batch_counts) if self.fillup else min(batch_counts)
+
+        for batch_idx in range(num_batch):
+            mixed_batch = []
+            for (
+                task_to_label_dict,
+                data_name,
+                batch_count,
+                data_loader,
+                split,
+                uid_name,
+            ) in zip(
+                task_to_label_dicts,
+                data_names,
+                batch_counts,
+                data_loaders,
+                splits,
+                uid_names,
+            ):
                 X_dict, Y_dict = data_loader[batch_idx % batch_count]
-                yield X_dict[
-                    uid_name
-                ], X_dict, Y_dict, task_to_label_dict, data_name, split
+                mixed_batch.append(
+                    (
+                        X_dict[uid_name],
+                        X_dict,
+                        Y_dict,
+                        task_to_label_dict,
+                        data_name,
+                        split,
+                    )
+                )
+            yield mixed_batch
