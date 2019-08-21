@@ -254,7 +254,7 @@ def parse_arg(parser=None):
         "--task_scheduler",
         type=str,
         default="round_robin",
-        choices=["sequential", "round_robin"],
+        choices=["sequential", "round_robin", "mixed"],
         help="task scheduler",
     )
 

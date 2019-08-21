@@ -385,10 +385,10 @@ class EmmentalLearner(object):
 
                 # Set gradients of all model parameters to zero
                 self.optimizer.zero_grad()
-                print("start batch...")
+
                 for uids, X_dict, Y_dict, task_to_label_dict, data_name, split in batch:
                     batch_size += len(next(iter(Y_dict.values())))
-                    print(X_dict, Y_dict)
+
                     # Perform forward pass and calcualte the loss and count
                     uid_dict, loss_dict, prob_dict, gold_dict = model(
                         uids, X_dict, Y_dict, task_to_label_dict
