@@ -41,12 +41,7 @@ before_install:
 - pip --version
 - |
   if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-    if [ "${PYTHON}" = "3.6" ]; then
-      pip install https://download.pytorch.org/whl/cpu/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
-    fi
-    if [ "${PYTHON}" = "3.7" ]; then
-      pip install https://download.pytorch.org/whl/cpu/torch-1.1.0-cp37-cp37m-linux_x86_64.whl
-    fi
+    pip install torch==1.2.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
   fi
 
 install:
