@@ -290,8 +290,7 @@ class EmmentalLearner(object):
                 self.running_uids[identifier],
             )
             for metric_name, metric_value in metric_score.items():
-                identifier = f"{identifier}/{metric_name}"
-                metric_dict[identifier] = metric_value
+                metric_dict[f"{identifier}/{metric_name}"] = metric_value
 
             # Collect average score
             identifier = construct_identifier(task_name, data_name, split, "average")
