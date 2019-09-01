@@ -44,26 +44,24 @@ class SequentialScheduler(Scheduler):
         data_names = [dataloader.data_name for dataloader in dataloaders]
         batch_counts = [len(dataloader) for dataloader in dataloaders]
         splits = [dataloader.split for dataloader in dataloaders]
-        data_loaders = [[batch for batch in dataloader] for dataloader in dataloaders]
+        data_loaders = [iter(dataloader) for dataloader in dataloaders]
+
+        if self.fillup:
+            batch_counts = [max(batch_counts)] * len(dataloaders)
 
         for (
-            task_to_label_dict,
-            data_name,
-            batch_count,
-            data_loader,
-            split,
-            uid_name,
-        ) in zip(
-            task_to_label_dicts,
-            data_names,
-            batch_counts,
-            data_loaders,
-            splits,
-            uid_names,
+            data_loader_idx,
+            (task_to_label_dict, data_name, batch_count, split, uid_name),
+        ) in enumerate(
+            zip(task_to_label_dicts, data_names, batch_counts, splits, uid_names)
         ):
-            num_batch = max(batch_counts) if self.fillup else batch_count
-            for batch_idx in range(num_batch):
-                X_dict, Y_dict = data_loader[batch_idx % batch_count]
+            for batch_idx in range(batch_count):
+                try:
+                    X_dict, Y_dict = next(data_loaders[data_loader_idx])
+                except StopIteration:
+                    data_loaders[data_loader_idx] = iter(dataloaders[data_loader_idx])
+                    X_dict, Y_dict = next(data_loaders[data_loader_idx])
+
                 yield X_dict[
                     uid_name
                 ], X_dict, Y_dict, task_to_label_dict, data_name, split
