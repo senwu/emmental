@@ -23,11 +23,14 @@ class RoundRobinScheduler(Scheduler):
         """
 
         batch_counts = [len(dataloader) for dataloader in dataloaders]
-        num_batch = (
-            max(batch_counts) * len(dataloaders) if self.fillup else sum(batch_counts)
-        )
+        if self.fillup:
+            batch_counts = [max(batch_counts)] * len(dataloaders)
 
-        return num_batch
+        for idx in range(len(dataloaders)):
+            if dataloaders[idx].n_batches:
+                batch_counts[idx] = dataloaders[idx].n_batches
+
+        return sum(batch_counts)
 
     def get_batches(self, dataloaders):
         """Generate batch generator from all dataloaders in round robin order for
@@ -44,16 +47,21 @@ class RoundRobinScheduler(Scheduler):
         ]
         uid_names = [dataloader.uid for dataloader in dataloaders]
         data_names = [dataloader.data_name for dataloader in dataloaders]
-        batch_counts = [len(dataloader) for dataloader in dataloaders]
         splits = [dataloader.split for dataloader in dataloaders]
         data_loaders = [iter(dataloader) for dataloader in dataloaders]
 
+        # Calc the batch size for each dataloader
+        batch_counts = [len(dataloader) for dataloader in dataloaders]
+        if self.fillup:
+            batch_counts = [max(batch_counts)] * len(dataloaders)
+
+        for idx in range(len(dataloaders)):
+            if dataloaders[idx].n_batches:
+                batch_counts[idx] = dataloaders[idx].n_batches
+
         dataloader_indexer = []
         for idx, count in enumerate(batch_counts):
-            if self.fillup:
-                dataloader_indexer.extend([idx] * max(batch_counts))
-            else:
-                dataloader_indexer.extend([idx] * count)
+            dataloader_indexer.extend([idx] * count)
 
         random.shuffle(dataloader_indexer)
 

@@ -373,6 +373,7 @@ class EmmentalLearner(object):
                 disable=(not Meta.config["meta_config"]["verbose"]),
                 desc=f"Epoch {epoch_num}:",
             )
+
             for batch_num, batch in batches:
 
                 # Covert single batch into a batch list
