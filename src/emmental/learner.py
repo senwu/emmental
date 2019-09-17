@@ -409,7 +409,12 @@ class EmmentalLearner(object):
                         continue
 
                     # Calculate the average loss
-                    loss = sum(loss_dict.values())
+                    loss = sum(
+                        [
+                            model.weights[task_name] * task_loss
+                            for task_name, task_loss in loss_dict.items()
+                        ]
+                    )
 
                     # Perform backward pass to calculate gradients
                     loss.backward()

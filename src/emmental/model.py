@@ -35,6 +35,7 @@ class EmmentalModel(nn.Module):
         self.loss_funcs = dict()
         self.output_funcs = dict()
         self.scorers = dict()
+        self.weights = dict()
 
         # Build network with given tasks
         if tasks is not None:
@@ -94,16 +95,18 @@ class EmmentalModel(nn.Module):
                     self.module_pool[key] = nn.DataParallel(task.module_pool[key])
                 else:
                     self.module_pool[key] = task.module_pool[key]
-        # Collect task names
+        # Collect task name
         self.task_names.add(task.name)
-        # Collect task flows
+        # Collect task flow
         self.task_flows[task.name] = task.task_flow
-        # Collect loss functions
+        # Collect loss function
         self.loss_funcs[task.name] = task.loss_func
-        # Collect output functions
+        # Collect output function
         self.output_funcs[task.name] = task.output_func
-        # Collect scorers
+        # Collect scorer
         self.scorers[task.name] = task.scorer
+        # Collect weight
+        self.weights[task.name] = task.weight
 
         # Move model to specified device
         self._move_to_device()
@@ -118,14 +121,16 @@ class EmmentalModel(nn.Module):
                 self.module_pool[key] = nn.DataParallel(task.module_pool[key])
             else:
                 self.module_pool[key] = task.module_pool[key]
-        # Update task flows
+        # Update task flow
         self.task_flows[task.name] = task.task_flow
-        # Update loss functions
+        # Update loss function
         self.loss_funcs[task.name] = task.loss_func
-        # Update output functions
+        # Update output function
         self.output_funcs[task.name] = task.output_func
-        # Collect scorers
+        # Collect scorer
         self.scorers[task.name] = task.scorer
+        # Collect weight
+        self.weights[task.name] = task.weight
 
         # Move model to specified device
         self._move_to_device()
@@ -146,6 +151,7 @@ class EmmentalModel(nn.Module):
         del self.loss_funcs[task_name]
         del self.output_funcs[task_name]
         del self.scorers[task_name]
+        del self.weights[task_name]
         # TODO: remove the modules only associate with that task
 
     def __repr__(self):
