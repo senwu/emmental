@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 def build_slice_tasks(
     task,
     slice_func_dict,
+    slice_scorer=None,
     slice_distribution={},
     dropout=0.0,
     slice_ind_head_module=None,
@@ -61,6 +62,9 @@ def build_slice_tasks(
         slice_ind_head_module = nn.Linear(task_feature_size, 2)
 
     assert isinstance(slice_ind_head_module, nn.Module)
+
+    if slice_scorer is None or not isinstance(slice_scorer, Scorer):
+        slice_scorer = Scorer(metrics=["f1"])
 
     # Create slice indicator tasks.
     # (Note: indicator only has two classes, e.g, in the slice or out)
@@ -154,7 +158,7 @@ def build_slice_tasks(
                 task_flow=ind_task_flow,
                 loss_func=loss,
                 output_func=partial(utils.output, ind_head_module_name),
-                scorer=Scorer(metrics=["f1"]),
+                scorer=slice_scorer,
             )
         )
 
