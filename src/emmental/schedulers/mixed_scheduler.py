@@ -1,9 +1,8 @@
 from emmental.schedulers.scheduler import Scheduler
 
 
-class SequentialScheduler(Scheduler):
-    """Generate batch generator from all dataloaders in sequential order for MTL
-    training.
+class MixedScheduler(Scheduler):
+    """Generate batch generator from all dataloaders in mixture for MTL training.
     """
 
     def __init__(self, fillup=False):
@@ -21,18 +20,12 @@ class SequentialScheduler(Scheduler):
         """
 
         batch_counts = [len(dataloader) for dataloader in dataloaders]
-        if self.fillup:
-            batch_counts = [max(batch_counts)] * len(dataloaders)
+        num_batch = max(batch_counts) if self.fillup else min(batch_counts)
 
-        for idx in range(len(dataloaders)):
-            if dataloaders[idx].n_batches:
-                batch_counts[idx] = dataloaders[idx].n_batches
-
-        return sum(batch_counts)
+        return num_batch
 
     def get_batches(self, dataloaders):
-        """Generate batch generator from all dataloaders in sequential order for
-        one epoch.
+        """Generate batch generator from all dataloaders in mixture for one epoch.
 
         :param dataloaders: a list of dataloaders
         :type dataloaders: list
@@ -45,31 +38,35 @@ class SequentialScheduler(Scheduler):
         ]
         uid_names = [dataloader.uid for dataloader in dataloaders]
         data_names = [dataloader.data_name for dataloader in dataloaders]
+        batch_counts = [len(dataloader) for dataloader in dataloaders]
         splits = [dataloader.split for dataloader in dataloaders]
         data_loaders = [iter(dataloader) for dataloader in dataloaders]
 
-        # Calc the batch size for each dataloader
-        batch_counts = [len(dataloader) for dataloader in dataloaders]
-        if self.fillup:
-            batch_counts = [max(batch_counts)] * len(dataloaders)
+        num_batch = max(batch_counts) if self.fillup else min(batch_counts)
 
-        for idx in range(len(dataloaders)):
-            if dataloaders[idx].n_batches:
-                batch_counts[idx] = dataloaders[idx].n_batches
-
-        for (
-            data_loader_idx,
-            (task_to_label_dict, data_name, batch_count, split, uid_name),
-        ) in enumerate(
-            zip(task_to_label_dicts, data_names, batch_counts, splits, uid_names)
-        ):
-            for batch_idx in range(batch_count):
+        for batch_idx in range(num_batch):
+            mixed_batch = []
+            for (
+                data_loader_idx,
+                (task_to_label_dict, data_name, batch_count, split, uid_name),
+            ) in enumerate(
+                zip(task_to_label_dicts, data_names, batch_counts, splits, uid_names)
+            ):
                 try:
                     X_dict, Y_dict = next(data_loaders[data_loader_idx])
                 except StopIteration:
                     data_loaders[data_loader_idx] = iter(dataloaders[data_loader_idx])
                     X_dict, Y_dict = next(data_loaders[data_loader_idx])
 
-                yield X_dict[
-                    uid_name
-                ], X_dict, Y_dict, task_to_label_dict, data_name, split
+                mixed_batch.append(
+                    (
+                        X_dict[uid_name],
+                        X_dict,
+                        Y_dict,
+                        task_to_label_dict,
+                        data_name,
+                        split,
+                    )
+                )
+
+            yield mixed_batch

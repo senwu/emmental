@@ -30,22 +30,14 @@ before_install:
 - bash miniconda.sh -b -p $HOME/miniconda
 - export PATH="$HOME/miniconda/bin:$PATH"
 - conda config --set always_yes yes --set changeps1 no
-- conda update -q conda
-- conda install -q conda-build
-- if [ -n "$PYTHON" ]; then conda create -q -n test-environment python=${PYTHON};
-  fi
+- conda create -q -n test-environment python=${PYTHON}
 - source activate test-environment
 - conda install -q pip
 - python --version
 - pip --version
 - |
   if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-    if [ "${PYTHON}" = "3.6" ]; then
-      pip install https://download.pytorch.org/whl/cpu/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
-    fi
-    if [ "${PYTHON}" = "3.7" ]; then
-      pip install https://download.pytorch.org/whl/cpu/torch-1.1.0-cp37-cp37m-linux_x86_64.whl
-    fi
+    pip install torch==1.2.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
   fi
 
 install:

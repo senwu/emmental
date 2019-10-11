@@ -20,9 +20,14 @@ class EmmentalTask(object):
     :type output_func: function
     :param scorer: The class of metrics to evaluate the task.
     :type scorer: Scorer class
+    :param weight: The weight of the task.
+    :type scorer: float
+
     """
 
-    def __init__(self, name, module_pool, task_flow, loss_func, output_func, scorer):
+    def __init__(
+        self, name, module_pool, task_flow, loss_func, output_func, scorer, weight=1.0
+    ):
         self.name = name
         assert isinstance(module_pool, nn.ModuleDict) is True
         self.module_pool = module_pool
@@ -30,6 +35,7 @@ class EmmentalTask(object):
         self.loss_func = loss_func
         self.output_func = output_func
         self.scorer = scorer
+        self.weight = weight
 
         logger.info(f"Created task: {self.name}")
 

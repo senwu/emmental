@@ -254,8 +254,29 @@ def parse_arg(parser=None):
         "--task_scheduler",
         type=str,
         default="round_robin",
-        choices=["sequential", "round_robin"],
+        choices=["sequential", "round_robin", "mixed"],
         help="task scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--sequential_scheduler_fillup",
+        type=str2bool,
+        default=False,
+        help="whether fillup in sequential scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--round_robin_scheduler_fillup",
+        type=str2bool,
+        default=False,
+        help="whether fillup in round robin scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--mixed_scheduler_fillup",
+        type=str2bool,
+        default=False,
+        help="whether fillup in mixed scheduler scheduler",
     )
 
     # Logging configuration
@@ -405,7 +426,16 @@ def parse_arg_to_config(args):
                     "last_epoch": args.multi_step_lr_scheduler_last_epoch,
                 },
             },
-            "task_scheduler": args.task_scheduler,
+            "task_scheduler_config": {
+                "task_scheduler": args.task_scheduler,
+                "sequential_scheduler_config": {
+                    "fillup": args.sequential_scheduler_fillup
+                },
+                "round_robin_scheduler_config": {
+                    "fillup": args.round_robin_scheduler_fillup
+                },
+                "mixed_scheduler_config": {"fillup": args.mixed_scheduler_fillup},
+            },
         },
         "logging_config": {
             "counter_unit": args.counter_unit,

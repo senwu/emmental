@@ -164,6 +164,7 @@ class EmmentalDataLoader(DataLoader):
         dataset,
         split="train",
         collate_fn=emmental_collate_fn,
+        n_batches=None,
         **kwargs,
     ):
 
@@ -174,6 +175,7 @@ class EmmentalDataLoader(DataLoader):
         self.data_name = dataset.name
         self.uid = dataset.uid
         self.split = split
+        self.n_batches = n_batches
 
         for task_name, label_names in task_to_label_dict.items():
             if not isinstance(label_names, list):

@@ -21,7 +21,7 @@ setup(
         "scikit-learn>=0.20.3, <0.21.0",
         "scipy>=1.1.0, <2.0.0",
         "tensorboardX>=1.6, <2.0",
-        "torch>=1.1, <2.0",
+        "torch>=1.2, <2.0",
         "tqdm>=4.26.0, <5.0.0",
     ],
     keywords=["emmental", "multi task learning", "deep learing"],
