@@ -25,6 +25,8 @@ def set_random_seed(seed):
 def list_to_tensor(item_list, min_len=0, max_len=0):
     """Convert the list of torch.Tensor into a torch.Tensor."""
 
+    item_mask_tensor = None
+
     # Convert single value tensor
     if all(item_list[i].dim() == 0 for i in range(len(item_list))):
         item_tensor = torch.stack(item_list, dim=0)
@@ -36,11 +38,11 @@ def list_to_tensor(item_list, min_len=0, max_len=0):
         item_tensor = torch.stack(item_list, dim=0)
     # Convert reshape to 1-D tensor and then convert
     else:
-        item_tensor, _ = pad_batch(
+        item_tensor, item_mask_tensor = pad_batch(
             [item.view(-1) for item in item_list], min_len, max_len
         )
 
-    return item_tensor
+    return item_tensor, item_mask_tensor
 
 
 def pad_batch(batch, min_len=0, max_len=0, pad_value=0, left_padded=False):
@@ -74,8 +76,8 @@ def pad_batch(batch, min_len=0, max_len=0, pad_value=0, left_padded=False):
         else:
             padded_batch[i, :length] = item[:length]
 
-    mask_batch = torch.eq(padded_batch.clone().detach(), pad_value).type_as(
-        padded_batch
+    mask_batch = torch.eq(padded_batch.clone().detach(), pad_value).type(
+        torch.BoolTensor
     )
 
     return padded_batch, mask_batch

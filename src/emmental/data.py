@@ -1,3 +1,4 @@
+import copy
 import logging
 from collections import defaultdict
 
@@ -122,21 +123,27 @@ def emmental_collate_fn(batch):
         for label_name, value in y_dict.items():
             Y_batch[label_name].append(value)
 
-    for field_name, values in X_batch.items():
+    field_names = copy.deepcopy(list(X_batch.keys()))
+
+    for field_name in field_names:
+        values = X_batch[field_name]
         # Only merge list of tensors
         if isinstance(values[0], torch.Tensor):
-            X_batch[field_name] = list_to_tensor(
+            item_tensor, item_mask_tensor = list_to_tensor(
                 values,
                 min_len=Meta.config["data_config"]["min_data_len"],
                 max_len=Meta.config["data_config"]["max_data_len"],
             )
+            X_batch[field_name] = item_tensor
+            if item_mask_tensor is not None:
+                X_batch[f"{field_name}_mask"] = item_mask_tensor
 
     for label_name, values in Y_batch.items():
         Y_batch[label_name] = list_to_tensor(
             values,
             min_len=Meta.config["data_config"]["min_data_len"],
             max_len=Meta.config["data_config"]["max_data_len"],
-        )
+        )[0]
 
     return dict(X_batch), dict(Y_batch)
 
