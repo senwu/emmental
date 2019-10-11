@@ -35,13 +35,9 @@ before_install:
 - conda install -q pip
 - python --version
 - pip --version
-- |
-  if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-    pip install torch==1.2.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
-  fi
 
 install:
-- make -s dev
+- make -s dev > /dev/null
 - make check
 - make docs
 - pip install -q coveralls
