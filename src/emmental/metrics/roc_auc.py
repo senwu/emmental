@@ -1,5 +1,7 @@
 import logging
+from typing import Dict, List, Optional
 
+from numpy import ndarray
 from sklearn.metrics import roc_auc_score
 
 from emmental.utils.utils import pred_to_prob
@@ -7,7 +9,12 @@ from emmental.utils.utils import pred_to_prob
 logger = logging.getLogger(__name__)
 
 
-def roc_auc_scorer(golds, probs, preds, uids=None, pos_label=1):
+def roc_auc_scorer(
+    golds: ndarray,
+    probs: ndarray,
+    preds: Optional[ndarray],
+    uids: Optional[List[str]] = None,
+) -> Dict[str, float]:
     """ROC AUC.
 
     :param golds: Ground truth (correct) target values.
@@ -15,9 +22,9 @@ def roc_auc_scorer(golds, probs, preds, uids=None, pos_label=1):
     :param probs: Predicted target probabilities.
     :type probs: k-d np.array
     :param preds: Predicted target values. (Not used!)
-    :type preds: 1-d np.array
+    :type preds: 1-d np.array or None
     :param uids: Unique ids.
-    :type uids: list
+    :type uids: list, optional
     :return: Recall.
     :rtype: dict
     """
