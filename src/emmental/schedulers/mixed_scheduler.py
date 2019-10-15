@@ -1,16 +1,24 @@
+from typing import Dict, Iterator, List, Tuple, Union
+
+from torch import Tensor
+
+from emmental.data import EmmentalDataLoader
 from emmental.schedulers.scheduler import Scheduler
 
 
 class MixedScheduler(Scheduler):
     """Generate batch generator from all dataloaders in mixture for MTL training.
+
+    :param fillup: Whether fillup to make all dataloader the same size
+    :type fillup: bool
     """
 
-    def __init__(self, fillup=False):
+    def __init__(self, fillup: bool = False) -> None:
         super().__init__()
 
         self.fillup = fillup
 
-    def get_num_batches(self, dataloaders):
+    def get_num_batches(self, dataloaders: List[EmmentalDataLoader]) -> int:
         """Get total number of batches per epoch.
 
         :param dataloaders: a list of dataloaders
@@ -24,7 +32,20 @@ class MixedScheduler(Scheduler):
 
         return num_batch
 
-    def get_batches(self, dataloaders):
+    def get_batches(
+        self, dataloaders: List[EmmentalDataLoader]
+    ) -> Iterator[
+        List[
+            Tuple[
+                List[str],
+                Dict[str, Union[Tensor, List[str]]],
+                Dict[str, Tensor],
+                Dict[str, str],
+                str,
+                str,
+            ]
+        ]
+    ]:
         """Generate batch generator from all dataloaders in mixture for one epoch.
 
         :param dataloaders: a list of dataloaders

@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+from typing import Any, Iterator, List
+
+from emmental.data import EmmentalDataLoader
 
 
 class Scheduler(ABC):
@@ -6,11 +9,11 @@ class Scheduler(ABC):
     training.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         pass
 
-    def get_num_batches(dataloaders):
+    def get_num_batches(self, dataloaders: List[EmmentalDataLoader]) -> int:
         """Get total number of batches per epoch.
 
         :param dataloaders: a list of dataloaders
@@ -22,7 +25,7 @@ class Scheduler(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_batches(self, dataloaders):
+    def get_batches(self, dataloaders: List[EmmentalDataLoader]) -> Iterator[Any]:
         """Generate batch generator from all dataloaders in designed order for
         one epoch.
 
@@ -32,4 +35,4 @@ class Scheduler(ABC):
         :rtype: genertor
         """
 
-        pass
+        raise NotImplementedError()
