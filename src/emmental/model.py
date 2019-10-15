@@ -3,12 +3,17 @@ import logging
 import os
 from collections import defaultdict
 from collections.abc import Iterable
+from typing import Any, Callable, Dict, List, Optional, Set, Union
 
 import numpy as np
 import torch
 import torch.nn as nn
+from numpy import ndarray
+from torch.nn import ModuleDict
 
+from emmental.data import EmmentalDataLoader
 from emmental.meta import Meta
+from emmental.scorer import Scorer
 from emmental.task import EmmentalTask
 from emmental.utils.utils import construct_identifier, move_to_device, prob_to_pred
 
@@ -24,18 +29,22 @@ class EmmentalModel(nn.Module):
     :type tasks: list of Task project
     """
 
-    def __init__(self, name=None, tasks=None):
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        tasks: Optional[Union[EmmentalTask, List[EmmentalTask]]] = None,
+    ) -> None:
         super().__init__()
         self.name = name if name is not None else type(self).__name__
 
         # Initiate the model attributes
-        self.module_pool = nn.ModuleDict()
-        self.task_names = set()
-        self.task_flows = dict()
-        self.loss_funcs = dict()
-        self.output_funcs = dict()
-        self.scorers = dict()
-        self.weights = dict()
+        self.module_pool: ModuleDict = ModuleDict()
+        self.task_names: Set[str] = set()
+        self.task_flows: Dict[str, Any] = dict()  # TODO: make it concrete
+        self.loss_funcs: Dict[str, Callable] = dict()
+        self.output_funcs: Dict[str, Callable] = dict()
+        self.scorers: Dict[str, Scorer] = dict()
+        self.weights: Dict[str, float] = dict()
 
         # Build network with given tasks
         if tasks is not None:
@@ -50,7 +59,7 @@ class EmmentalModel(nn.Module):
         # Move model to specified device
         self._move_to_device()
 
-    def _move_to_device(self):
+    def _move_to_device(self) -> None:
         """Move model to specified device."""
 
         if Meta.config["model_config"]["device"] >= 0:
@@ -65,7 +74,7 @@ class EmmentalModel(nn.Module):
                 if Meta.config["meta_config"]["verbose"]:
                     logger.info("No cuda device available. Switch to cpu instead.")
 
-    def _build_network(self, tasks):
+    def _build_network(self, tasks: Union[EmmentalTask, List[EmmentalTask]]) -> None:
         """Build the MTL network using all tasks"""
 
         if not isinstance(tasks, Iterable):
@@ -80,7 +89,7 @@ class EmmentalModel(nn.Module):
                 raise ValueError(f"Unrecognized task type {task}.")
             self.add_task(task)
 
-    def add_task(self, task):
+    def add_task(self, task: EmmentalTask) -> None:
         """Add a single task into MTL network"""
 
         # Combine module_pool from all tasks
@@ -111,7 +120,7 @@ class EmmentalModel(nn.Module):
         # Move model to specified device
         self._move_to_device()
 
-    def update_task(self, task):
+    def update_task(self, task: EmmentalTask) -> None:
         """Update a existing task in MTL network"""
 
         # Update module_pool with task
@@ -135,7 +144,7 @@ class EmmentalModel(nn.Module):
         # Move model to specified device
         self._move_to_device()
 
-    def remove_task(self, task_name):
+    def remove_task(self, task_name: str) -> None:
         """Remove a existing task from MTL network"""
         if task_name not in self.task_flows:
             if Meta.config["meta_config"]["verbose"]:
@@ -154,7 +163,7 @@ class EmmentalModel(nn.Module):
         del self.weights[task_name]
         # TODO: remove the modules only associate with that task
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         cls_name = type(self).__name__
         return f"{cls_name}(name={self.name})"
 
@@ -258,15 +267,17 @@ class EmmentalModel(nn.Module):
         return uid_dict, loss_dict, prob_dict, gold_dict
 
     @torch.no_grad()
-    def predict(self, dataloader, return_preds=False):
+    def predict(
+        self, dataloader: EmmentalDataLoader, return_preds: bool = False
+    ) -> Dict[str, Any]:
 
         self.eval()
 
-        uid_dict = defaultdict(list)
-        gold_dict = defaultdict(list)
-        prob_dict = defaultdict(list)
-        pred_dict = defaultdict(list)
-        loss_dict = defaultdict(float)
+        uid_dict: Dict[str, List[str]] = defaultdict(list)
+        gold_dict: Dict[str, List[Union[ndarray, int, float]]] = defaultdict(list)
+        prob_dict: Dict[str, List[Union[ndarray, int, float]]] = defaultdict(list)
+        pred_dict: Dict[str, List[ndarray]] = defaultdict(list)
+        loss_dict: Dict[str, Union[ndarray, float]] = defaultdict(float)
 
         # Collect dataloader information
         task_to_label_dict = dataloader.task_to_label_dict
@@ -303,7 +314,11 @@ class EmmentalModel(nn.Module):
         return res
 
     @torch.no_grad()
-    def score(self, dataloaders, return_average=True):
+    def score(
+        self,
+        dataloaders: Union[EmmentalDataLoader, List[EmmentalDataLoader]],
+        return_average: bool = True,
+    ) -> Dict[str, float]:
         """Score the data from dataloader with the model
 
         :param dataloaders: the dataloader that performs scoring
@@ -320,9 +335,9 @@ class EmmentalModel(nn.Module):
         metric_score_dict = dict()
 
         if return_average:
-            micro_score_dict = defaultdict(list)
-            macro_score_dict = defaultdict(list)
-            macro_loss_dict = defaultdict(list)
+            micro_score_dict: defaultdict = defaultdict(list)
+            macro_score_dict: defaultdict = defaultdict(list)
+            macro_loss_dict: defaultdict = defaultdict(list)
 
         for dataloader in dataloaders:
             predictions = self.predict(dataloader, return_preds=True)
@@ -399,7 +414,7 @@ class EmmentalModel(nn.Module):
 
         return metric_score_dict
 
-    def save(self, model_path):
+    def save(self, model_path: str) -> None:
         """Save the current model
 
         :param model_path: Saved model path.
@@ -430,7 +445,7 @@ class EmmentalModel(nn.Module):
         if Meta.config["meta_config"]["verbose"]:
             logger.info(f"[{self.name}] Model saved in {model_path}")
 
-    def load(self, model_path):
+    def load(self, model_path: str) -> None:
         """Load model state_dict from file and reinitialize the model weights.
 
         :param model_path: Saved model path.
