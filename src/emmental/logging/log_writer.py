@@ -1,6 +1,7 @@
 import json
 import os
 from collections import defaultdict
+from typing import Any, Dict
 
 import yaml
 
@@ -11,13 +12,13 @@ class LogWriter(object):
     """A class for logging during training process.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the log writer.
         """
 
-        self.run_log = defaultdict(list)
+        self.run_log: defaultdict = defaultdict(list)
 
-    def add_config(self, config):
+    def add_config(self, config: Dict[str, Any]) -> None:
         """Log config.
 
         :param config: The config
@@ -26,7 +27,7 @@ class LogWriter(object):
 
         self.config = config
 
-    def add_scalar(self, name, value, step):
+    def add_scalar(self, name: str, value: float, step: int) -> None:
         """Log a scalar variable.
 
         :param name: The name of the scalar
@@ -39,7 +40,7 @@ class LogWriter(object):
 
         self.run_log[name].append((step, value))
 
-    def write_config(self, config_filename="config.yaml"):
+    def write_config(self, config_filename: str = "config.yaml") -> None:
         """Dump the config to file
 
         :param config_filename: The config filename, defaults to "config.yaml"
@@ -50,7 +51,7 @@ class LogWriter(object):
         with open(config_path, "w") as yml:
             yaml.dump(self.config, yml, default_flow_style=False, allow_unicode=True)
 
-    def write_log(self, log_filename="log.json"):
+    def write_log(self, log_filename: str = "log.json") -> None:
         """Dump the log to file.
 
         :param log_filename: The log filename, defaults to "log.json"
@@ -62,7 +63,7 @@ class LogWriter(object):
         with open(log_path, "w") as f:
             json.dump(self.run_log, f)
 
-    def close(self):
+    def close(self) -> None:
         """Close the log writer.
         """
         pass

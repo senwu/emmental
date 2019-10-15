@@ -2,10 +2,14 @@ import glob
 import logging
 import os
 from shutil import copyfile
+from typing import Any, Dict, Set
 
 import torch
+from torch.optim.lr_scheduler import _LRScheduler
+from torch.optim.optimizer import Optimizer
 
 from emmental.meta import Meta
+from emmental.model import EmmentalModel
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +17,7 @@ logger = logging.getLogger(__name__)
 class Checkpointer(object):
     """Checkpointing class to log train infomation"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the checkpointer.
         """
 
@@ -91,9 +95,16 @@ class Checkpointer(object):
         # Set up checkpoint flag
         self.checkpoint_condition_met = False
 
-        self.best_metric_dict = dict()
+        self.best_metric_dict: Dict[str, float] = dict()
 
-    def checkpoint(self, iteration, model, optimizer, lr_scheduler, metric_dict):
+    def checkpoint(
+        self,
+        iteration: float,
+        model: EmmentalModel,
+        optimizer: Optimizer,
+        lr_scheduler: _LRScheduler,
+        metric_dict: Dict[str, float],
+    ) -> None:
         """Checkpointing the checkpoint.
 
         :param iteration: The current iteration.
@@ -143,7 +154,7 @@ class Checkpointer(object):
                     f"/best_model_{metric.replace('/', '_')}.pth"
                 )
 
-    def is_new_best(self, metric_dict):
+    def is_new_best(self, metric_dict: Dict[str, float]) -> Set[str]:
         """Update the best score.
 
         :param metric_dict: The current metric dict
@@ -175,7 +186,7 @@ class Checkpointer(object):
 
         return best_metric
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear checkpoints.
         """
 
@@ -191,8 +202,13 @@ class Checkpointer(object):
                 os.remove(file)
 
     def collect_state_dict(
-        self, iteration, model, optimizer, lr_scheduler, metric_dict
-    ):
+        self,
+        iteration: float,
+        model: EmmentalModel,
+        optimizer: Optimizer,
+        lr_scheduler: _LRScheduler,
+        metric_dict: Dict[str, float],
+    ) -> Dict[str, Any]:
         """Collect the state dict of the model.
 
         :param iteration: The current iteration.
@@ -227,7 +243,7 @@ class Checkpointer(object):
 
         return state_dict
 
-    def load_best_model(self, model):
+    def load_best_model(self, model: EmmentalModel) -> EmmentalModel:
         """Load the best model from the checkpoint.
 
         :param model: The current model.

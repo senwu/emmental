@@ -27,6 +27,25 @@ def test_e2e(caplog):
     Meta.reset()
     emmental.init(dirpath)
 
+    config = {
+        "logging_config": {
+            "counter_unit": "epoch",
+            "evaluation_freq": 1,
+            "writer_config": {"writer": "tensorboard", "verbose": True},
+            "checkpointing": True,
+            "checkpointer_config": {
+                "checkpoint_path": None,
+                "checkpoint_freq": 1,
+                "checkpoint_metric": {"model/all/train/loss": "min"},
+                "checkpoint_task_metrics": None,
+                "checkpoint_runway": 0,
+                "clear_intermediate_checkpoints": True,
+                "clear_all_checkpoints": False,
+            },
+        }
+    }
+    emmental.Meta.update_config(config)
+
     # Generate synthetic data
     N = 50
     X = np.random.random((N, 2)) * 2 - 1

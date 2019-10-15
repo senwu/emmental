@@ -9,13 +9,13 @@ from emmental.meta import Meta
 class TensorBoardWriter(LogWriter):
     """A class for logging to Tensorboard during training process."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # Set up tensorboard summary writer
         self.writer = SummaryWriter(Meta.log_path)
 
-    def add_scalar(self, name, value, step):
+    def add_scalar(self, name: str, value: float, step: int) -> None:
         """Log a scalar variable.
 
         :param name: The name of the scalar
@@ -28,7 +28,7 @@ class TensorBoardWriter(LogWriter):
 
         self.writer.add_scalar(name, value, step)
 
-    def write_config(self, config_filename="config.yaml"):
+    def write_config(self, config_filename: str = "config.yaml") -> None:
         """Dump the config to file.
 
         :param config_filename: The config filename, defaults to "config.yaml"
@@ -40,7 +40,7 @@ class TensorBoardWriter(LogWriter):
 
         super().write_config(config_filename)
 
-    def close(self):
+    def close(self) -> None:
         """Close the tensorboard writer.
         """
 
