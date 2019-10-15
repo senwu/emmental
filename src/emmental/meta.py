@@ -4,6 +4,7 @@ import tempfile
 import uuid
 from builtins import object
 from datetime import datetime
+from typing import Any, Dict, Optional, Type
 
 import yaml
 
@@ -15,14 +16,14 @@ logger = logging.getLogger(__name__)
 
 
 def init(
-    log_dir=tempfile.gettempdir(),
-    log_name="emmental.log",
-    format="[%(asctime)s][%(levelname)s] %(name)s:%(lineno)s - %(message)s",
-    level=logging.INFO,
-    config={},
-    config_dir=None,
-    config_name="emmental-config.yaml",
-):
+    log_dir: str = tempfile.gettempdir(),
+    log_name: str = "emmental.log",
+    format: str = "[%(asctime)s][%(levelname)s] %(name)s:%(lineno)s - %(message)s",
+    level: int = logging.INFO,
+    config: Optional[Dict[Any, Any]] = {},
+    config_dir: Optional[str] = None,
+    config_name: Optional[str] = "emmental-config.yaml",
+) -> None:
     """Initialize the logging and configuration.
     :param log_dir: The directory to store logs in.
     :type log_dir: str
@@ -45,7 +46,7 @@ def init(
     set_random_seed(Meta.config["meta_config"]["seed"])
 
 
-def init_config():
+def init_config() -> None:
     """Load the default configuration."""
 
     # Load the default setting
@@ -60,11 +61,11 @@ def init_config():
 
 
 def init_logging(
-    log_dir=tempfile.gettempdir(),
-    log_name="emmental.log",
-    format="[%(asctime)s][%(levelname)s] %(name)s:%(lineno)s - %(message)s",
-    level=logging.INFO,
-):
+    log_dir: str = tempfile.gettempdir(),
+    log_name: str = "emmental.log",
+    format: str = "[%(asctime)s][%(levelname)s] %(name)s:%(lineno)s - %(message)s",
+    level: int = logging.INFO,
+) -> None:
     """Configures logging to output to the provided log_dir.
     Will use a nested directory whose name is the current timestamp.
     :param log_dir: The directory to store logs in.
@@ -112,11 +113,11 @@ class Meta(object):
     https://stackoverflow.com/questions/1318406/why-is-the-borg-pattern-better-than-the-singleton-pattern-in-python
     """
 
-    log_path = None
-    config = None
+    log_path: Optional[str] = None
+    config: Optional[Dict[Any, Any]] = None
 
     @classmethod
-    def init(cls):
+    def init(cls) -> Type["Meta"]:
         """Return the unique Meta class."""
         if not Meta.log_path:
             init_logging()
@@ -126,7 +127,12 @@ class Meta(object):
 
         return cls
 
-    def update_config(config={}, path=None, filename="emmental-config.yaml"):
+    @staticmethod
+    def update_config(
+        config: Optional[Dict[Any, Any]] = {},
+        path: Optional[str] = None,
+        filename: Optional[str] = "emmental-config.yaml",
+    ) -> None:
         """Update the configuration with the configs in root of project and
         its parents.
 
@@ -164,7 +170,8 @@ class Meta(object):
                 current_dir = new_dir
                 tries += 1
 
-    def reset():
+    @staticmethod
+    def reset() -> None:
         """ Clears shared variables of shared, global singleton. """
 
         Meta.log_path = None
