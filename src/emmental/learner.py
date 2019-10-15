@@ -1,12 +1,15 @@
 import logging
 from collections import defaultdict
+from typing import Dict, List, Optional
 
 import numpy as np
 import torch
 import torch.optim as optim
 
 from emmental import Meta
+from emmental.data import EmmentalDataLoader
 from emmental.logging import LoggingManager
+from emmental.model import EmmentalModel
 from emmental.optimizers.bert_adam import BertAdam
 from emmental.schedulers import SCHEDULERS
 from emmental.utils.utils import construct_identifier, prob_to_pred
@@ -28,15 +31,15 @@ class EmmentalLearner(object):
     """A class for emmental multi-task learning.
     """
 
-    def __init__(self, name=None):
+    def __init__(self, name: Optional[str] = None) -> None:
         self.name = name if name is not None else type(self).__name__
 
-    def _set_logging_manager(self):
+    def _set_logging_manager(self) -> None:
         """Set logging manager."""
 
         self.logging_manager = LoggingManager(self.n_batches_per_epoch)
 
-    def _set_optimizer(self, model):
+    def _set_optimizer(self, model: EmmentalModel) -> None:
         """Set optimizer for learning process."""
 
         # TODO: add more optimizer support and fp16
@@ -49,29 +52,29 @@ class EmmentalLearner(object):
             optimizer = optim.SGD(
                 parameters,
                 lr=optimizer_config["lr"],
-                **optimizer_config["sgd_config"],
                 weight_decay=optimizer_config["l2"],
+                **optimizer_config["sgd_config"],
             )
         elif opt == "adam":
             optimizer = optim.Adam(
                 parameters,
                 lr=optimizer_config["lr"],
-                **optimizer_config["adam_config"],
                 weight_decay=optimizer_config["l2"],
+                **optimizer_config["adam_config"],
             )
         elif opt == "adamax":
             optimizer = optim.Adamax(
                 parameters,
                 lr=optimizer_config["lr"],
-                **optimizer_config["adamax_config"],
                 weight_decay=optimizer_config["l2"],
+                **optimizer_config["adamax_config"],
             )
         elif opt == "bert_adam":
             optimizer = BertAdam(
                 parameters,
                 lr=optimizer_config["lr"],
-                **optimizer_config["bert_adam_config"],
                 weight_decay=optimizer_config["l2"],
+                **optimizer_config["bert_adam_config"],
             )
         else:
             raise ValueError(f"Unrecognized optimizer option '{opt}'")
@@ -80,7 +83,7 @@ class EmmentalLearner(object):
 
         self.optimizer = optimizer
 
-    def _set_lr_scheduler(self, model):
+    def _set_lr_scheduler(self, model: EmmentalModel) -> None:
         """Set learning rate scheduler for learning process."""
 
         # Set warmup scheduler
@@ -126,7 +129,7 @@ class EmmentalLearner(object):
 
         self.lr_scheduler = lr_scheduler
 
-    def _set_warmup_scheduler(self, model):
+    def _set_warmup_scheduler(self, model: EmmentalModel) -> None:
         """Set warmup learning rate scheduler for learning process."""
 
         if Meta.config["learner_config"]["lr_scheduler_config"]["warmup_steps"]:
@@ -171,7 +174,7 @@ class EmmentalLearner(object):
 
         self.warmup_scheduler = warmup_scheduler
 
-    def _update_lr_scheduler(self, model, step):
+    def _update_lr_scheduler(self, model: EmmentalModel, step: int) -> None:
         """Update the lr using lr_scheduler with each batch."""
 
         if self.warmup_scheduler and step < self.warmup_steps:
@@ -190,7 +193,7 @@ class EmmentalLearner(object):
             if min_lr and self.optimizer.param_groups[0]["lr"] < min_lr:
                 self.optimizer.param_groups[0]["lr"] = min_lr
 
-    def _set_task_scheduler(self):
+    def _set_task_scheduler(self) -> None:
         """Set task scheduler for learning process"""
 
         opt = Meta.config["learner_config"]["task_scheduler_config"]["task_scheduler"]
@@ -204,7 +207,9 @@ class EmmentalLearner(object):
         else:
             raise ValueError(f"Unrecognized task scheduler option '{opt}'")
 
-    def _evaluate(self, model, dataloaders, split):
+    def _evaluate(
+        self, model: EmmentalModel, dataloaders: List[EmmentalDataLoader], split: str
+    ) -> Dict[str, float]:
         if not isinstance(split, list):
             valid_split = [split]
         else:
@@ -215,7 +220,12 @@ class EmmentalLearner(object):
         ]
         return model.score(valid_dataloaders)
 
-    def _logging(self, model, dataloaders, batch_size):
+    def _logging(
+        self,
+        model: EmmentalModel,
+        dataloaders: List[EmmentalDataLoader],
+        batch_size: int,
+    ) -> Dict[str, float]:
         """Checking if it's time to evaluting or checkpointing"""
 
         # Switch to eval mode for evaluation
@@ -257,7 +267,7 @@ class EmmentalLearner(object):
 
         return metric_dict
 
-    def _aggregate_running_metrics(self, model):
+    def _aggregate_running_metrics(self, model: EmmentalModel) -> Dict[str, float]:
         """Calculate the running overall and task specific metrics."""
 
         metric_dict = dict()
@@ -313,13 +323,15 @@ class EmmentalLearner(object):
 
         return metric_dict
 
-    def _reset_losses(self):
+    def _reset_losses(self) -> None:
         self.running_uids = defaultdict(list)
         self.running_losses = defaultdict(float)
         self.running_probs = defaultdict(list)
         self.running_golds = defaultdict(list)
 
-    def learn(self, model, dataloaders):
+    def learn(
+        self, model: EmmentalModel, dataloaders: List[EmmentalDataLoader]
+    ) -> None:
         """The learning procedure of emmental MTL
 
         :param model: The emmental model that needs to learn
