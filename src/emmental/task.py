@@ -1,6 +1,10 @@
 import logging
+from typing import Callable, Dict, List, Tuple, Union
 
 from torch import nn
+from torch.nn.modules.container import ModuleDict
+
+from emmental.scorer import Scorer
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +30,17 @@ class EmmentalTask(object):
     """
 
     def __init__(
-        self, name, module_pool, task_flow, loss_func, output_func, scorer, weight=1.0
-    ):
+        self,
+        name: str,
+        module_pool: ModuleDict,
+        task_flow: List[
+            Dict[str, Union[str, List[Tuple[str, str]], List[Tuple[str, int]]]]
+        ],
+        loss_func: Callable,
+        output_func: Callable,
+        scorer: Scorer,
+        weight: float = 1.0,
+    ) -> None:
         self.name = name
         assert isinstance(module_pool, nn.ModuleDict) is True
         self.module_pool = module_pool
@@ -39,6 +52,6 @@ class EmmentalTask(object):
 
         logger.info(f"Created task: {self.name}")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         cls_name = type(self).__name__
         return f"{cls_name}(name={self.name})"
