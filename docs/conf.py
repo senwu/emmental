@@ -17,7 +17,15 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../src/"))
 
-autodoc_mock_imports = ["numpy", "scipy", "sklearn", "torch", "tqdm", "yaml"]
+autodoc_mock_imports = [
+    "numpy",
+    "scipy",
+    "sklearn",
+    "tensorboardX",
+    "torch",
+    "tqdm",
+    "yaml",
+]
 
 # -- Project information -----------------------------------------------------
 
