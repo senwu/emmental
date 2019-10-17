@@ -18,7 +18,7 @@
 import logging
 
 import torch
-from torch.optim import Optimizer
+from torch.optim.optimizer import Optimizer
 
 logger = logging.getLogger(__name__)
 
