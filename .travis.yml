@@ -22,10 +22,7 @@ notifications:
   email: senwu@cs.stanford.edu
 
 before_install:
-- if [ "$TRAVIS_OS_NAME" = "linux" ]; then OS=Linux-x86_64; else OS=MacOSX-x86_64;
-  fi
-- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update;fi
-- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install libomp; fi
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then OS=Linux-x86_64; else OS=MacOSX-x86_64; fi
 - wget -O miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-$OS.sh
 - bash miniconda.sh -b -p $HOME/miniconda
 - export PATH="$HOME/miniconda/bin:$PATH"
@@ -33,11 +30,9 @@ before_install:
 - conda create -q -n test-environment python=${PYTHON}
 - source activate test-environment
 - conda install -q pip
-- python --version
-- pip --version
 - |
   if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-    pip install torch==1.3.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+    pip install -q torch==1.3.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
   fi
 
 install:
