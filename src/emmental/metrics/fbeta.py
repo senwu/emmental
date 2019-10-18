@@ -16,20 +16,17 @@ def fbeta_scorer(
 ) -> Dict[str, float]:
     """F-beta score is the weighted harmonic mean of precision and recall.
 
-    :param golds: Ground truth (correct) target values.
-    :type golds: 1-d np.array
-    :param probs: Predicted target probabilities. (Not used!)
-    :type probs: k-d np.array or None
-    :param preds: Predicted target values.
-    :type preds: 1-d np.array
-    :param uids: Unique ids.
-    :type uids: list, optional
-    :param pos_label: The positive class label, defaults to 1
-    :type pos_label: int, optional
-    :param beta: Weight of precision in harmonic mean, defaults to 1
-    :type beta: float, optional
-    :return: F-beta score.
-    :rtype: dict
+    Args:
+      golds(np.array): Ground truth values.
+      probs(np.array or None): Predicted probabilities.
+      preds(np.array): Predicted values.
+      uids(list, optional): Unique ids, defaults to None.
+      pos_label(int, optional): The positive class label, defaults to 1.
+      beta(float, optional): Weight of precision in harmonic mean, defaults to 1.
+
+    Returns:
+      dict: F-beta score.
+
     """
 
     precision = precision_scorer(golds, probs, preds, uids, pos_label)["precision"]
@@ -53,18 +50,16 @@ def f1_scorer(
 ) -> Dict[str, float]:
     """F-1 score.
 
-    :param golds: Ground truth (correct) target values.
-    :type golds: 1-d np.array
-    :param probs: Predicted target probabilities. (Not used!)
-    :type probs: k-d np.array or None
-    :param preds: Predicted target values.
-    :type preds: 1-d np.array
-    :param uids: Unique ids.
-    :type uids: list, optional
-    :param pos_label: The positive class label, defaults to 1
-    :type pos_label: int, optional
-    :return: F-1 score.
-    :rtype: dict
+    Args:
+      golds(np.array): Ground truth values.
+      probs(np.array or None): Predicted probabilities. (Not used!)
+      preds(np.array): Predicted values.
+      uids(list, optional): Unique ids.
+      pos_label(int, optional): The positive class label, defaults to 1.
+
+    Returns:
+      dict: F-1 score.
+
     """
 
     return {"f1": fbeta_scorer(golds, probs, preds, uids, pos_label, beta=1)["f1"]}

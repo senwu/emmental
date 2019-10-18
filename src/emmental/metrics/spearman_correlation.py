@@ -14,18 +14,17 @@ def spearman_correlation_scorer(
 ) -> Dict[str, float]:
     """Spearman rank-order correlation coefficient and the p-value.
 
-    :param golds: Ground truth (correct) target values.
-    :type golds: 1-d np.array
-    :param probs: Predicted target probabilities.
-    :type probs: 1-d np.array
-    :param preds: Predicted target values. (Not used!)
-    :type preds: 1-d np.array or None
-    :param uids: Unique ids.
-    :type uids: list, optional
-    :para return_pvalue: Whether return pvalue, defaults to False
-    :type return_pvalue: bool, optional
-    :return: Spearman rank-order correlation coefficient and the p-value
-    :rtype: dict
+    Args:
+      golds(np.array): Ground truth values.
+      probs(np.array): Predicted probabilities.
+      preds(np.array or None): Predicted values.
+      uids(list, optional): Unique ids, defaults to None.
+      return_pvalue(bool, optional): Whether return pvalue or not, defaults to False.
+
+    Returns:
+      dict: Spearman rank-order correlation coefficient (with pvalue if return_pvalue
+        is True).
+
     """
 
     probs = np.vstack(probs).squeeze()

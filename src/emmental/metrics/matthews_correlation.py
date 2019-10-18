@@ -12,16 +12,15 @@ def matthews_correlation_coefficient_scorer(
 ) -> Dict[str, float]:
     """Matthews correlation coefficient (MCC).
 
-    :param golds: Ground truth (correct) target values.
-    :type golds: 1-d np.array
-    :param probs: Predicted target probabilities. (Not used!)
-    :type probs: k-d np.array or None
-    :param preds: Predicted target values.
-    :type preds: 1-d np.array
-    :param uids: Unique ids.
-    :type uids: list, optional
-    :return: Matthews correlation coefficient score.
-    :rtype: dict
+    Args:
+      golds(np.array): Ground truth values.
+      probs(np.array or None): Predicted probabilities.
+      preds(np.array): Predicted values.
+      uids(list, optional): Unique ids, defaults to None.
+
+    Returns:
+      dict: Matthews correlation coefficient score.
+
     """
 
     return {"matthews_corrcoef": matthews_corrcoef(golds, preds)}

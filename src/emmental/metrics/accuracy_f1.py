@@ -13,18 +13,17 @@ def accuracy_f1_scorer(
     preds: ndarray,
     uids: Optional[List[str]] = None,
 ) -> Dict[str, float]:
-    """Average of accuracy and f1 score.
+    r"""Average of accuracy and f1 score.
 
-    :param golds: Ground truth (correct) target values.
-    :type golds: 1-d np.array
-    :param probs: Predicted target probabilities. (Not used!)
-    :type probs: k-d np.array or None
-    :param preds: Predicted target values.
-    :type preds: 1-d np.array
-    :param uids: Unique ids.
-    :type uids: list, optional
-    :return: Average of accuracy and f1.
-    :rtype: dict
+    Args:
+      golds(np.array): Ground truth values.
+      probs(np.array or None): Predicted probabilities.
+      preds(np.array): Predicted values.
+      uids(list, optional): Unique ids, defaults to None.
+
+    Returns:
+      dict: Average of accuracy and f1.
+
     """
 
     metrics = dict()

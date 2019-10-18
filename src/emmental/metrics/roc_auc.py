@@ -17,16 +17,16 @@ def roc_auc_scorer(
 ) -> Dict[str, float]:
     """ROC AUC.
 
-    :param golds: Ground truth (correct) target values.
-    :type golds: 1-d np.array
-    :param probs: Predicted target probabilities.
-    :type probs: k-d np.array
-    :param preds: Predicted target values. (Not used!)
-    :type preds: 1-d np.array or None
-    :param uids: Unique ids.
-    :type uids: list, optional
-    :return: Recall.
-    :rtype: dict
+    Args:
+      golds(np.array): Ground truth values.
+      probs(np.array): Predicted probabilities.
+      preds(np.array or None): Predicted values.
+      uids(list, optional): Unique ids, defaults to None.
+      pos_label(int, optional): The positive class label, defaults to 1.
+
+    Returns:
+      dict: ROC AUC score.
+
     """
 
     gold_probs = pred_to_prob(golds, n_classes=probs.shape[1])

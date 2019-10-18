@@ -15,18 +15,16 @@ def precision_scorer(
 ) -> Dict[str, float]:
     """Precision.
 
-    :param golds: Ground truth (correct) target values.
-    :type golds: 1-d np.array
-    :param probs: Predicted target probabilities. (Not used!)
-    :type probs: k-d np.array or None
-    :param preds: Predicted target values.
-    :type preds: 1-d np.array
-    :param uids: Unique ids.
-    :type uids: list, optional
-    :param pos_label: The positive class label, defaults to 1
-    :type pos_label: int, optional
-    :return: Precision.
-    :rtype: dict
+    Args:
+      golds(np.array): Ground truth values.
+      probs(np.array or None): Predicted probabilities.
+      preds(np.array): Predicted values.
+      uids(list, optional): Unique ids, defaults to None.
+      pos_label(int, optional): The positive class label, defaults to 1.
+
+    Returns:
+      dict: Precision.
+
     """
     if len(golds.shape) > 1:
         golds = prob_to_pred(golds)
