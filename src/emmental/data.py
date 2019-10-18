@@ -1,8 +1,9 @@
 import copy
 import logging
 from collections import defaultdict
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
-import torch
+from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
 
 from emmental.meta import Meta
@@ -12,22 +13,26 @@ logger = logging.getLogger(__name__)
 
 
 class EmmentalDataset(Dataset):
-    """An advanced dataset class to handle that the input data contains mulitple
-    fields and the output data contains multiple label sets
+    r"""An advanced dataset class to handle that the input data contains mulitple
+      fields and the output data contains multiple label sets.
 
-    :param name: the name of the dataset
-    :type name: str
-    :param X_dict: the feature dict where key is the feature name and value is the
-        feature
-    :type X_dict: dict
-    :param Y_dict: the label dict where key is the label name and value is
-        the label
-    :type Y_dict: dict
-    :param uid: the unique id key in the X_dict (default: None)
-    :type uid: str
+    Args:
+      name(str): The name of the dataset.
+      X_dict(dict): The feature dict where key is the feature name and value is the
+        feature.
+      Y_dict(dict): The label dict where key is the label name and value is
+        the label.
+      uid(str): The unique id key in the X_dict, defaults to None.
+
     """
 
-    def __init__(self, name, X_dict, Y_dict, uid=None):
+    def __init__(
+        self,
+        name: str,
+        X_dict: Dict[str, Any],
+        Y_dict: Dict[str, Tensor],
+        uid: Optional[str] = None,
+    ) -> None:
         self.name = name
         self.uid = uid
         self.X_dict = X_dict
@@ -47,75 +52,118 @@ class EmmentalDataset(Dataset):
             logger.info(f"Auto generate uids for dataset {self.name} under {self.uid}.")
 
         for name, label in self.Y_dict.items():
-            if not isinstance(label, torch.Tensor):
+            if not isinstance(label, Tensor):
                 raise ValueError(
                     f"Label {name} should be torch.Tensor, not {type(label)}."
                 )
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> Tuple[Dict[str, Any], Dict[str, Tensor]]:
+        r"""Get item by index.
+
+        Args:
+          index(index): The index of the item.
+
+        Returns:
+          Tuple[Dict[str, Any], Dict[str, Tensor]]: Tuple of x_dict and y_dict
+
+        """
+
         x_dict = {name: feature[index] for name, feature in self.X_dict.items()}
         y_dict = {name: label[index] for name, label in self.Y_dict.items()}
         return x_dict, y_dict
 
-    def __len__(self):
+    def __len__(self) -> int:
+        r"""Total number of items in the dataset."""
+
         try:
             return len(next(iter(self.X_dict.values())))
         except StopIteration:
             return 0
 
-    def _update_dict(self, ori_dict, new_dict):
+    def _update_dict(self, ori_dict: Dict[str, Any], new_dict: Dict[str, Any]) -> None:
+        r"""Update original dict with new dict.
+
+        Args:
+          ori_dict(dict): The original dict.
+          new_dict(dict): The new dict.
+
+        """
+
         for key, value in new_dict.items():
             ori_dict[key] = value
 
-    def _remove_key(self, ori_dict, key):
+    def _remove_key(self, ori_dict: Dict[str, Any], key: str) -> None:
+        r"""
+
+        Args:
+          ori_dict(dict): The original dict.
+          key(str): The key to remove from the original dict.
+
+        """
+
         if key in ori_dict:
             del ori_dict[key]
 
-    def add_features(self, X_dict):
-        """Add new features into X_dict
+    def add_features(self, X_dict: Dict[str, Any]) -> None:
+        r"""Add new features into X_dict.
 
-        :param X_dict: the new feature dict to add into the existing feature dict
-        :type X_dict: dict
+        Args:
+          X_dict(dict): The new feature dict to add into the existing feature dict.
+
         """
 
         self._update_dict(self.X_dict, X_dict)
 
-    def add_labels(self, Y_dict):
-        """Add new labels into Y_dict
+    def add_labels(self, Y_dict: Dict[str, Tensor]) -> None:
+        r"""Add new labels into Y_dict.
 
-        :param Y_dict: the new label dict to add into the existing label dict
-        :type Y_dict: dict
+        Args:
+          Y_dict(dict): the new label dict to add into the existing label dict
+
         """
 
         for name, label in Y_dict.items():
-            if not isinstance(label, torch.Tensor):
+            if not isinstance(label, Tensor):
                 raise ValueError(f"Label {name} should be torch.Tensor.")
 
         self._update_dict(self.Y_dict, Y_dict)
 
-    def remove_feature(self, feature_name):
-        """Remove one feature from feature dict
+    def remove_feature(self, feature_name: str) -> None:
+        r"""Remove one feature from feature dict
 
-        :param feature_name: the feature that removes from feature dict
-        :type feature_name: str
+        Args:
+          feature_name(str): The feature that removes from feature dict.
+
         """
 
         self._remove_key(self.X_dict, feature_name)
 
-    def remove_label(self, label_name):
-        """Remove one label from label dict
+    def remove_label(self, label_name: str) -> None:
+        r"""Remove one label from label dict.
 
-        :param label_name: the label that removes from label dict
-        :type label_name: str
+        Args:
+          label_name(str): The label that removes from label dict.
+
         """
 
         self._remove_key(self.Y_dict, label_name)
 
 
-def emmental_collate_fn(batch):
+def emmental_collate_fn(
+    batch: List[Tuple[Dict[str, Any], Dict[str, Tensor]]]
+) -> Tuple[Dict[str, Any], Dict[str, Tensor]]:
+    """
 
-    X_batch = defaultdict(list)
-    Y_batch = defaultdict(list)
+    Args:
+      batch(Tuple[Dict[str, Any], Dict[str, Tensor]]): The batch to collate.
+
+    Returns:
+      Tuple[Dict[str, Any], Dict[str, Tensor]]: The collated batch.
+
+    """
+
+    X_batch: defaultdict = defaultdict(list)
+    Y_batch: defaultdict = defaultdict(list)
 
     for x_dict, y_dict in batch:
         for field_name, value in x_dict.items():
@@ -128,7 +176,7 @@ def emmental_collate_fn(batch):
     for field_name in field_names:
         values = X_batch[field_name]
         # Only merge list of tensors
-        if isinstance(values[0], torch.Tensor):
+        if isinstance(values[0], Tensor):
             item_tensor, item_mask_tensor = list_to_tensor(
                 values,
                 min_len=Meta.config["data_config"]["min_data_len"],
@@ -150,30 +198,30 @@ def emmental_collate_fn(batch):
 
 class EmmentalDataLoader(DataLoader):
     """An advanced dataloader class which contains mapping from task to label (which
-    label(s) to use in dataset's Y_dict for this task), and split (which part this
-    dataset belongs to) information.
+      label(s) to use in dataset's Y_dict for this task), and split (which part this
+      dataset belongs to) information.
 
-    :param task_to_label_dict: the task to label mapping where key is the task name
-        and value is the label(s) for that task and should be the key in Y_dict
-    :type task_to_label_dict: dict
-    :param dataset: the dataset to construct the dataloader
-    :type dataset: EmmentalDataset
-    :param split: the split information, defaults to "train"
-    :type split: str, optional
-    :param collate_fn: the function that merges a list of samples to form a
-        mini-batch, defaults to emmental_collate_fn
-    :type collate_fn: function, optional
+    Args:
+      task_to_label_dict(dict): the task to label mapping where key is the task name
+        and value is the label(s) for that task and should be the key in Y_dict.
+      dataset(EmmentalDataset): the dataset to construct the dataloader
+        split(str, optional): the split information, defaults to "train".
+      collate_fn(callable, optional): the function that merges a list of samples to
+        form a mini-batch, defaults to emmental_collate_fn.
+
+    Returns:
+
     """
 
     def __init__(
         self,
-        task_to_label_dict,
-        dataset,
-        split="train",
-        collate_fn=emmental_collate_fn,
-        n_batches=None,
-        **kwargs,
-    ):
+        task_to_label_dict: Dict[str, str],
+        dataset: EmmentalDataset,
+        split: str = "train",
+        collate_fn: Callable = emmental_collate_fn,
+        n_batches: Optional[int] = None,
+        **kwargs: Any,
+    ) -> None:
 
         assert isinstance(dataset, EmmentalDataset)
         super().__init__(dataset, collate_fn=collate_fn, **kwargs)
