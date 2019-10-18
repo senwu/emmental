@@ -5,8 +5,9 @@ from emmental.data import EmmentalDataLoader
 
 
 class Scheduler(ABC):
-    """Generate batch generator from all dataloaders in designed order for MTL
-    training.
+    r"""Generate batch generator from all dataloaders in designed order for MTL
+      training.
+
     """
 
     def __init__(self) -> None:
@@ -14,25 +15,29 @@ class Scheduler(ABC):
         pass
 
     def get_num_batches(self, dataloaders: List[EmmentalDataLoader]) -> int:
-        """Get total number of batches per epoch.
+        r"""Get total number of batches per epoch.
 
-        :param dataloaders: a list of dataloaders
-        :type dataloaders: list
-        :return: Total number of batches per epoch
-        :rtype: int
+        Args:
+          dataloaders(list): List of dataloaders.
+
+        Returns:
+          int: Total number of batches per epoch.
+
         """
 
         raise NotImplementedError()
 
     @abstractmethod
     def get_batches(self, dataloaders: List[EmmentalDataLoader]) -> Iterator[Any]:
-        """Generate batch generator from all dataloaders in designed order for
+        r"""Generate batch generator from all dataloaders in designed order for
         one epoch.
 
-        :param dataloaders: a list of dataloaders
-        :type dataloaders: list
-        :return: A generator of all batches
-        :rtype: genertor
+        Args:
+          dataloaders(list): List of dataloaders.
+
+        Returns:
+          genertor: A generator of all batches.
+
         """
 
         raise NotImplementedError()
