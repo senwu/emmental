@@ -10,22 +10,16 @@ logger = logging.getLogger(__name__)
 
 
 class EmmentalTask(object):
-    """Task class to define task in Emmental model.
+    r"""Task class to define task in Emmental model.
 
-    :param name: The name of the task (Primary key).
-    :type name: str
-    :param module_pool: A dict of modules that uses in the task.
-    :type module_pool: nn.ModuleDict
-    :param task_flow: The task flow among modules to define how the data flows.
-    :type task_flow: list
-    :param loss_func: The function to calculate the loss.
-    :type loss_func: function
-    :param output_func: The function to generate the output.
-    :type output_func: function
-    :param scorer: The class of metrics to evaluate the task.
-    :type scorer: Scorer class
-    :param weight: The weight of the task.
-    :type scorer: float
+    Args:
+      name(str): The name of the task (Primary key).
+      module_pool(ModuleDict): A dict of modules that uses in the task.
+      task_flow(list): The task flow among modules to define how the data flows.
+      loss_func(callable): The function to calculate the loss.
+      output_func(callable): The function to generate the output.
+      scorer(Scorer): The class of metrics to evaluate the task.
+      weight(float or int): The weight of the task.
 
     """
 
@@ -39,8 +33,9 @@ class EmmentalTask(object):
         loss_func: Callable,
         output_func: Callable,
         scorer: Scorer,
-        weight: float = 1.0,
+        weight: Union[float, int] = 1.0,
     ) -> None:
+
         self.name = name
         assert isinstance(module_pool, nn.ModuleDict) is True
         self.module_pool = module_pool
