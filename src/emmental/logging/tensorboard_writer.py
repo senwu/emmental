@@ -1,4 +1,5 @@
 import json
+from typing import Union
 
 from tensorboardX import SummaryWriter
 
@@ -7,7 +8,7 @@ from emmental.meta import Meta
 
 
 class TensorBoardWriter(LogWriter):
-    """A class for logging to Tensorboard during training process."""
+    r"""A class for logging to Tensorboard during training process."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -15,24 +16,27 @@ class TensorBoardWriter(LogWriter):
         # Set up tensorboard summary writer
         self.writer = SummaryWriter(Meta.log_path)
 
-    def add_scalar(self, name: str, value: float, step: int) -> None:
-        """Log a scalar variable.
+    def add_scalar(
+        self, name: str, value: Union[float, int], step: Union[float, int]
+    ) -> None:
+        r"""Log a scalar variable.
 
-        :param name: The name of the scalar
-        :type name: str
-        :param value: The value of the scalar
-        :type value: float or int
-        :param step: The current step
-        :type step: float or int
+        Args:
+          name(str): The name of the scalar.
+          value(float or int): The value of the scalar.
+          step(float or int): The current step.
+
         """
 
         self.writer.add_scalar(name, value, step)
 
     def write_config(self, config_filename: str = "config.yaml") -> None:
-        """Dump the config to file.
+        r"""Dump the config to file.
 
-        :param config_filename: The config filename, defaults to "config.yaml"
-        :type config_filename: str, optional
+        Args:
+          config_filename(str, optional): The config filename,
+            defaults to "config.yaml".
+
         """
 
         config = json.dumps(Meta.config)
@@ -41,7 +45,6 @@ class TensorBoardWriter(LogWriter):
         super().write_config(config_filename)
 
     def close(self) -> None:
-        """Close the tensorboard writer.
-        """
+        r"""Close the tensorboard writer."""
 
         self.writer.close()
