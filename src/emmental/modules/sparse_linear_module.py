@@ -17,7 +17,11 @@ class SparseLinear(nn.Module):
     """
 
     def __init__(
-        self, num_features: int, num_classes: int, bias=False, padding_idx: int = 0
+        self,
+        num_features: int,
+        num_classes: int,
+        bias: bool = False,
+        padding_idx: int = 0,
     ) -> None:
 
         super().__init__()

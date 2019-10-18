@@ -102,7 +102,7 @@ class EmbeddingModule(nn.Module):
 
     def _load_embedding(
         self, embedding_file: str
-    ) -> Tuple(str, Dict[str, int], List[ndarray]):
+    ) -> Tuple[int, Dict[str, int], List[ndarray]]:
         r"""Load the pre-trained embeddings from file.
 
         Args:
@@ -114,7 +114,7 @@ class EmbeddingModule(nn.Module):
         """
 
         emb_dim = 0
-        emb_w2i = {}
+        emb_w2i: Dict[str, int] = {}
         emb_wv = []
 
         with open(embedding_file, encoding="utf8") as f:
