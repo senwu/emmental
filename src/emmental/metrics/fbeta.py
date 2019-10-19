@@ -17,9 +17,9 @@ def fbeta_scorer(
     """F-beta score is the weighted harmonic mean of precision and recall.
 
     Args:
-      golds(np.array): Ground truth values.
-      probs(np.array or None): Predicted probabilities.
-      preds(np.array): Predicted values.
+      golds(ndarray): Ground truth values.
+      probs(ndarray or None): Predicted probabilities.
+      preds(ndarray): Predicted values.
       uids(list, optional): Unique ids, defaults to None.
       pos_label(int, optional): The positive class label, defaults to 1.
       beta(float, optional): Weight of precision in harmonic mean, defaults to 1.
@@ -51,9 +51,9 @@ def f1_scorer(
     """F-1 score.
 
     Args:
-      golds(np.array): Ground truth values.
-      probs(np.array or None): Predicted probabilities. (Not used!)
-      preds(np.array): Predicted values.
+      golds(ndarray): Ground truth values.
+      probs(ndarray or None): Predicted probabilities.
+      preds(ndarray): Predicted values.
       uids(list, optional): Unique ids.
       pos_label(int, optional): The positive class label, defaults to 1.
 
