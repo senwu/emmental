@@ -1,16 +1,35 @@
 import logging
+from typing import Any, Callable, Dict, List
 
 import numpy as np
 import torch
+from torch import Tensor
 
 from emmental.contrib.slicing.slicing_function import slicing_function
+from emmental.data import EmmentalDataLoader
+from emmental.task import EmmentalTask
 
 logger = logging.getLogger(__name__)
 
 
-def add_slice_labels(task, dataloaders, slice_func_dict, split="train"):
-    """A function to extend dataloader by adding slice indicator and predictor
+def add_slice_labels(
+    task: EmmentalTask,
+    dataloaders: List[EmmentalDataLoader],
+    slice_func_dict: Dict[str, Callable],
+    split: str = "train",
+) -> Dict[str, Tensor]:
+    r"""A function to extend dataloader by adding slice indicator and predictor
     labels.
+
+    Args:
+      task(EmmentalTask): Task to add slices.
+      dataloaders(List[EmmentalDataLoader]): List of dataloaders to train on the task.
+      slice_func_dict(dict): Slicing functions.
+      split(str): Split to use, defaults to "train".
+
+    Returns:
+      dict: slice data class distribution.
+
     """
 
     # Calculate class balance
@@ -72,5 +91,14 @@ def add_slice_labels(task, dataloaders, slice_func_dict, split="train"):
 
 
 @slicing_function()
-def base_slice(example):
+def base_slice(example: Any) -> bool:
+    r"""Base slice which always to return True.
+
+    Args:
+      example(Any): Sample to check if it's in the slice or not.
+
+    Returns:
+      bool: True
+
+    """
     return True
