@@ -9,7 +9,6 @@ The following describes elements of used for model creation.
 
 .. automodule:: emmental.model
     :members:
-    :inherited-members:
     :show-inheritance:
 
 Configuration Settings
