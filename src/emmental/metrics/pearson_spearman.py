@@ -13,18 +13,18 @@ def pearson_spearman_scorer(
     preds: Optional[ndarray],
     uids: Optional[List[str]] = None,
 ) -> Dict[str, float]:
-    """Average of Pearson correlation coefficient and Spearman rank-order
+    r"""Average of Pearson correlation coefficient and Spearman rank-order
     correlation coefficient.
 
     Args:
-      golds(np.array): Ground truth values.
-      probs(np.array): Predicted probabilities.
-      preds(np.array or None): Predicted values.
+      golds(ndarray): Ground truth values.
+      probs(ndarray): Predicted probabilities.
+      preds(ndarray or None): Predicted values.
       uids(list, optional): Unique ids, defaults to None.
 
     Returns:
       dict: The average of Pearson correlation coefficient and Spearman rank-order
-        correlation coefficient.
+      correlation coefficient.
 
     """
 

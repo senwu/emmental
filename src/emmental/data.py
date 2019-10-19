@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class EmmentalDataset(Dataset):
     r"""An advanced dataset class to handle that the input data contains mulitple
-      fields and the output data contains multiple label sets.
+    fields and the output data contains multiple label sets.
 
     Args:
       name(str): The name of the dataset.
@@ -22,7 +22,7 @@ class EmmentalDataset(Dataset):
         feature.
       Y_dict(dict): The label dict where key is the label name and value is
         the label.
-      uid(str): The unique id key in the X_dict, defaults to None.
+      uid(str, optional): The unique id key in the X_dict, defaults to None.
 
     """
 
@@ -152,7 +152,7 @@ class EmmentalDataset(Dataset):
 def emmental_collate_fn(
     batch: List[Tuple[Dict[str, Any], Dict[str, Tensor]]]
 ) -> Tuple[Dict[str, Any], Dict[str, Tensor]]:
-    """
+    r"""Collate function.
 
     Args:
       batch(Tuple[Dict[str, Any], Dict[str, Tensor]]): The batch to collate.
@@ -198,18 +198,18 @@ def emmental_collate_fn(
 
 class EmmentalDataLoader(DataLoader):
     """An advanced dataloader class which contains mapping from task to label (which
-      label(s) to use in dataset's Y_dict for this task), and split (which part this
-      dataset belongs to) information.
+    label(s) to use in dataset's Y_dict for this task), and split (which part this
+    dataset belongs to) information.
 
     Args:
-      task_to_label_dict(dict): the task to label mapping where key is the task name
+      task_to_label_dict(dict): The task to label mapping where key is the task name
         and value is the label(s) for that task and should be the key in Y_dict.
-      dataset(EmmentalDataset): the dataset to construct the dataloader
-        split(str, optional): the split information, defaults to "train".
-      collate_fn(callable, optional): the function that merges a list of samples to
+      dataset(EmmentalDataset): The dataset to construct the dataloader
+      split(str, optional): The split information, defaults to "train".
+      collate_fn(callable, optional): The function that merges a list of samples to
         form a mini-batch, defaults to emmental_collate_fn.
-
-    Returns:
+      n_batches(int, optional): Total number of batches.
+      **Kwargs: Other arguments of dataloader.
 
     """
 

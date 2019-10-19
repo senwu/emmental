@@ -16,9 +16,9 @@ def recall_scorer(
     """Recall.
 
     Args:
-      golds(np.array): Ground truth values.
-      probs(np.array or None): Predicted probabilities.
-      preds(np.array): Predicted values.
+      golds(ndarray): Ground truth values.
+      probs(ndarray or None): Predicted probabilities.
+      preds(ndarray): Predicted values.
       uids(list, optional): Unique ids, defaults to None.
       pos_label(int, optional): The positive class label, defaults to 1.
 

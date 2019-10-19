@@ -90,5 +90,3 @@ logging_config:
         checkpoint_runway: 0 # checkpointing runway (no checkpointing before k unit)
         clear_intermediate_checkpoints: True # whether to clear intermediate checkpoints
         clear_all_checkpoints: False # whether to clear all checkpoints
-
-

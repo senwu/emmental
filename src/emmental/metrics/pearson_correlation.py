@@ -15,9 +15,9 @@ def pearson_correlation_scorer(
     """Pearson correlation coefficient and the p-value.
 
     Args:
-      golds(np.array): Ground truth values.
-      probs(np.array): Predicted probabilities.
-      preds(np.array or None): Predicted values.
+      golds(ndarray): Ground truth values.
+      probs(ndarray): Predicted probabilities.
+      preds(ndarray or None): Predicted values.
       uids(list, optional): Unique ids, defaults to None.
       return_pvalue(bool, optional): Whether return pvalue or not, defaults to False.
 

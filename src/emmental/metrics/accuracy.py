@@ -14,16 +14,16 @@ def accuracy_scorer(
     r"""Accuracy classification score.
 
     Args:
-      golds(np.array): Ground truth values.
-      probs(np.array or None): Predicted probabilities.
-      preds(np.array): Predicted values.
+      golds(ndarray): Ground truth values.
+      probs(ndarray or None): Predicted probabilities.
+      preds(ndarray): Predicted values.
       uids(list, optional): Unique ids, defaults to None.
       normalize(bool, optional): Normalize the results or not, defaults to True.
 
     Returns:
       dict: Accuracy, if normalize is True, return the fraction of correctly
-        predicted samples (float), else returns the number of correctly predicted
-        samples (int).
+      predicted samples (float), else returns the number of correctly predicted
+      samples (int).
 
     """
 

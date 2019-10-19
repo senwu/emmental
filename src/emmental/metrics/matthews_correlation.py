@@ -13,9 +13,9 @@ def matthews_correlation_coefficient_scorer(
     """Matthews correlation coefficient (MCC).
 
     Args:
-      golds(np.array): Ground truth values.
-      probs(np.array or None): Predicted probabilities.
-      preds(np.array): Predicted values.
+      golds(ndarray): Ground truth values.
+      probs(ndarray or None): Predicted probabilities.
+      preds(ndarray): Predicted values.
       uids(list, optional): Unique ids, defaults to None.
 
     Returns:
