@@ -25,5 +25,6 @@ The model parameters are described below::
         device: 0 # -1 for cpu or gpu id (e.g., 0 for cuda:0)
         dataparallel: True # whether to use dataparallel or not
 
+
 .. _Configuring Emmental: config.html
 .. _Emmental: https://github.com/SenWu/Emmental

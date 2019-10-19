@@ -24,7 +24,7 @@ The logging parameters of Emmental are described below::
 
     # Logging configuration
     logging_config:
-        counter_unit: batch # [epoch, batch]
+        counter_unit: epoch # [epoch, batch]
         evaluation_freq: 2
         writer_config:
             writer: tensorboard # [json, tensorboard]
@@ -37,7 +37,8 @@ The logging parameters of Emmental are described below::
                 # model/train/all/loss: min
             checkpoint_task_metrics: # task_metric_name: mode
             checkpoint_runway: 0 # checkpointing runway (no checkpointing before k unit)
-            checkpoint_clear: True # whether to clear immedidate checkpointing
+            clear_intermediate_checkpoints: True # whether to clear intermediate checkpoints
+            clear_all_checkpoints: False # whether to clear all checkpoints
 
 .. _Configuring Emmental: config.html
 .. _Emmental: https://github.com/SenWu/Emmental

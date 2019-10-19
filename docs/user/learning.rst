@@ -60,7 +60,23 @@ The learning parameters of the model are described below::
                 factor: 0.5
                 patience: 10
                 threshold: 0.0001
-        task_scheduler: round_robin # [sequential, round_robin]
+            step_config:
+                step_size: 1
+                gamma: 0.1
+                last_epoch: -1
+            multi_step_config:
+                milestones:
+                    - 1000
+                gamma: 0.1
+                last_epoch: -1
+        task_scheduler_config:
+            task_scheduler: round_robin # [sequential, round_robin, mixed]
+            sequential_scheduler_config:
+                fillup: False
+            round_robin_scheduler_config:
+                fillup: False
+            mixed_scheduler_config:
+                fillup: False
         global_evaluation_metric_dict: # global evaluation metric dict
 
 .. _Configuring Emmental: config.html

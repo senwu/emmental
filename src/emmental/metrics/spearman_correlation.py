@@ -12,7 +12,7 @@ def spearman_correlation_scorer(
     uids: Optional[List[str]] = None,
     return_pvalue: bool = False,
 ) -> Dict[str, float]:
-    """Spearman rank-order correlation coefficient and the p-value.
+    r"""Spearman rank-order correlation coefficient and the p-value.
 
     Args:
       golds(ndarray): Ground truth values.
@@ -23,7 +23,7 @@ def spearman_correlation_scorer(
 
     Returns:
       dict: Spearman rank-order correlation coefficient (with pvalue if return_pvalue
-        is True).
+      is True).
 
     """
 

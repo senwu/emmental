@@ -190,7 +190,9 @@ class EmmentalModel(nn.Module):
 
     def flow(self, X_dict: Dict[str, Any], task_names: List[str]) -> Dict[str, Any]:
         r"""Forward based on input and task flow.
-          Note: We assume that all shared modules from all tasks are based on the
+
+        Note:
+          We assume that all shared modules from all tasks are based on the
           same input.
 
         Args:

@@ -22,8 +22,8 @@ def accuracy_scorer(
 
     Returns:
       dict: Accuracy, if normalize is True, return the fraction of correctly
-        predicted samples (float), else returns the number of correctly predicted
-        samples (int).
+      predicted samples (float), else returns the number of correctly predicted
+      samples (int).
 
     """
 

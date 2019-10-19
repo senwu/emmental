@@ -20,6 +20,11 @@ The default ``.emmental-config.yaml`` configuration file is shown below::
         verbose: True # whether to print the log information
         log_path: # log directory
 
+    # Data configuration
+    data_config:
+        min_data_len: 0 # min data length
+        max_data_len: 0 # max data length (e.g., 0 for no max_len)
+
     # Model configuration
     model_config:
         model_path: # path to pretrained model
@@ -65,12 +70,28 @@ The default ``.emmental-config.yaml`` configuration file is shown below::
                 factor: 0.5
                 patience: 10
                 threshold: 0.0001
-        task_scheduler: round_robin # [sequential, round_robin]
+            step_config:
+                step_size: 1
+                gamma: 0.1
+                last_epoch: -1
+            multi_step_config:
+                milestones:
+                    - 1000
+                gamma: 0.1
+                last_epoch: -1
+        task_scheduler_config:
+            task_scheduler: round_robin # [sequential, round_robin, mixed]
+            sequential_scheduler_config:
+                fillup: False
+            round_robin_scheduler_config:
+                fillup: False
+            mixed_scheduler_config:
+                fillup: False
         global_evaluation_metric_dict: # global evaluation metric dict
 
     # Logging configuration
     logging_config:
-        counter_unit: batch # [epoch, batch]
+        counter_unit: epoch # [epoch, batch]
         evaluation_freq: 2
         writer_config:
             writer: tensorboard # [json, tensorboard]
@@ -83,7 +104,8 @@ The default ``.emmental-config.yaml`` configuration file is shown below::
                 # model/train/all/loss: min
             checkpoint_task_metrics: # task_metric_name: mode
             checkpoint_runway: 0 # checkpointing runway (no checkpointing before k unit)
-            checkpoint_clear: True # whether to clear immedidate checkpointing
+            clear_intermediate_checkpoints: True # whether to clear intermediate checkpoints
+            clear_all_checkpoints: False # whether to clear all checkpoints
 
 User can also use the Emmental_ utility function ``parse_arg`` and
 ``parse_arg_to_config`` from ``emmental.utils`` to generate the config object.
