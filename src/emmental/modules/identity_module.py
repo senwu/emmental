@@ -1,18 +1,22 @@
 import torch.nn as nn
+from torch import Tensor
 
 
 class IdentityModule(nn.Module):
-    """An identity module that outputs the input."""
+    r"""An identity module that outputs the input."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
-    def forward(self, x):
-        """Forward function.
-        :param x: Input tensor.
-        :type x: torch.Tensor
-        :return: Output of identity module which is the same with input.
-        :rtype: torch.Tensor
+    def forward(self, input: Tensor) -> Tensor:
+        r"""Forward function.
+
+        Args:
+          x(Tensor): Input tensor.
+
+        Returns:
+          Tensor: Output of identity module which is the same with input.
+
         """
 
-        return x
+        return input

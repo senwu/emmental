@@ -1,8 +1,9 @@
 import copy
 import logging
 from functools import partial
+from typing import Callable, Dict, List, Optional
 
-from torch import nn
+from torch import Tensor, nn
 
 from emmental.contrib.slicing.modules import utils
 from emmental.contrib.slicing.modules.slice_attention_module import SliceAttentionModule
@@ -15,26 +16,41 @@ logger = logging.getLogger(__name__)
 
 
 def build_slice_tasks(
-    task,
-    slice_func_dict,
-    slice_scorer=None,
-    slice_distribution={},
-    dropout=0.0,
-    slice_ind_head_module=None,
-    sep_slice_ind_feature=False,
-):
-    """A function to build slice tasks based on slicing functions.
+    task: EmmentalTask,
+    slice_func_dict: Dict[str, Callable],
+    slice_scorer: Optional[Scorer] = None,
+    slice_distribution: Dict[str, Tensor] = {},
+    dropout: float = 0.0,
+    slice_ind_head_module: Optional[nn.Module] = None,
+    sep_slice_ind_feature: bool = False,
+) -> List[EmmentalTask]:
+    r"""A function to build slice tasks based on slicing functions.
 
-    We assume the original task flow contains feature extractor and predictor head.
-    - The predictor head action should be the last action
-    - The feature extractor action should be input of the predictor head action
+      We assume the original task flow contains feature extractor and predictor head.
+      - The predictor head action should be the last action
+      - The feature extractor action should be input of the predictor head action
 
-    For each slicing this function will create two corresponding tasks
-    - A slice indicator task to learn whether the data sample is in the slice or not.
-    - A slice predictor task that is only learned on the data samples in that slice
+      For each slicing this function will create two corresponding tasks
+      - A slice indicator task to learn whether the data sample is in the slice or not.
+      - A slice predictor task that is only learned on the data samples in that slice
 
-    All slice tasks are based on feature extractor module and a slice attention module
-    will combine all slice task head to make the final predictions.
+      All slice tasks are based on feature extractor module and a slice attention
+      module will combine all slice task head to make the final predictions.
+
+    Args:
+      task(EmmentalTask): Task to do slicing learning.
+      slice_func_dict(dict): Slicing functions.
+      slice_scorer(Scorer): Slice scorer, defaults to None.
+      slice_distribution(dict): Slice data class distribution, defaults to {}.
+      dropout(float): Dropout, defaults to 0.0.
+      slice_ind_head_module(nn.Module, optional): Slice indicator head module,
+        defaults to None.
+      sep_slice_ind_feature(bool): Whether to use sep slice ind feature,
+        defaults to False.
+
+    Returns:
+      List[EmmentalTask]: list of tasks.
+
     """
 
     # Collect task predictor module info

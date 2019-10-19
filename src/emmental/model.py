@@ -3,12 +3,18 @@ import logging
 import os
 from collections import defaultdict
 from collections.abc import Iterable
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import torch
 import torch.nn as nn
+from numpy import ndarray
+from torch import Tensor
+from torch.nn import ModuleDict
 
+from emmental.data import EmmentalDataLoader
 from emmental.meta import Meta
+from emmental.scorer import Scorer
 from emmental.task import EmmentalTask
 from emmental.utils.utils import construct_identifier, move_to_device, prob_to_pred
 
@@ -16,26 +22,30 @@ logger = logging.getLogger(__name__)
 
 
 class EmmentalModel(nn.Module):
-    """A class to build multi-task model.
+    r"""A class to build multi-task model.
 
-    :param name: Name of the model
-    :type name: str
-    :param tasks: a list of Tasks that trains jointly
-    :type tasks: list of Task project
+    Args:
+      name(str, optional): Name of the model, defaults to None.
+      tasks(EmmentalTask or List[EmmentalTask]): A task or a list of tasks.
+
     """
 
-    def __init__(self, name=None, tasks=None):
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        tasks: Optional[Union[EmmentalTask, List[EmmentalTask]]] = None,
+    ) -> None:
         super().__init__()
         self.name = name if name is not None else type(self).__name__
 
         # Initiate the model attributes
-        self.module_pool = nn.ModuleDict()
-        self.task_names = set()
-        self.task_flows = dict()
-        self.loss_funcs = dict()
-        self.output_funcs = dict()
-        self.scorers = dict()
-        self.weights = dict()
+        self.module_pool: ModuleDict = ModuleDict()
+        self.task_names: Set[str] = set()
+        self.task_flows: Dict[str, Any] = dict()  # TODO: make it concrete
+        self.loss_funcs: Dict[str, Callable] = dict()
+        self.output_funcs: Dict[str, Callable] = dict()
+        self.scorers: Dict[str, Scorer] = dict()
+        self.weights: Dict[str, float] = dict()
 
         # Build network with given tasks
         if tasks is not None:
@@ -50,8 +60,8 @@ class EmmentalModel(nn.Module):
         # Move model to specified device
         self._move_to_device()
 
-    def _move_to_device(self):
-        """Move model to specified device."""
+    def _move_to_device(self) -> None:
+        r"""Move model to specified device."""
 
         if Meta.config["model_config"]["device"] >= 0:
             if torch.cuda.is_available():
@@ -65,8 +75,13 @@ class EmmentalModel(nn.Module):
                 if Meta.config["meta_config"]["verbose"]:
                     logger.info("No cuda device available. Switch to cpu instead.")
 
-    def _build_network(self, tasks):
-        """Build the MTL network using all tasks"""
+    def _build_network(self, tasks: Union[EmmentalTask, List[EmmentalTask]]) -> None:
+        r"""Build the MTL network using all tasks.
+
+        Args:
+          tasks(EmmentalTask or List[EmmentalTask]): A task or a list of tasks.
+
+        """
 
         if not isinstance(tasks, Iterable):
             tasks = [tasks]
@@ -80,8 +95,13 @@ class EmmentalModel(nn.Module):
                 raise ValueError(f"Unrecognized task type {task}.")
             self.add_task(task)
 
-    def add_task(self, task):
-        """Add a single task into MTL network"""
+    def add_task(self, task: EmmentalTask) -> None:
+        r"""Add a single task into MTL network.
+
+        Args:
+          task(EmmentalTask): A task to add.
+
+        """
 
         # Combine module_pool from all tasks
         for key in task.module_pool.keys():
@@ -111,8 +131,13 @@ class EmmentalModel(nn.Module):
         # Move model to specified device
         self._move_to_device()
 
-    def update_task(self, task):
-        """Update a existing task in MTL network"""
+    def update_task(self, task: EmmentalTask) -> None:
+        r"""Update a existing task in MTL network
+
+        Args:
+          task(EmmentalTask): A task to update.
+
+        """
 
         # Update module_pool with task
         for key in task.module_pool.keys():
@@ -135,8 +160,13 @@ class EmmentalModel(nn.Module):
         # Move model to specified device
         self._move_to_device()
 
-    def remove_task(self, task_name):
-        """Remove a existing task from MTL network"""
+    def remove_task(self, task_name: str) -> None:
+        r"""Remove a existing task from MTL network
+
+        Args:
+          task_name(str): The task name to remove.
+
+        """
         if task_name not in self.task_flows:
             if Meta.config["meta_config"]["verbose"]:
                 logger.info(f"Task ({task_name}) not in the current model, skip...")
@@ -154,21 +184,22 @@ class EmmentalModel(nn.Module):
         del self.weights[task_name]
         # TODO: remove the modules only associate with that task
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         cls_name = type(self).__name__
         return f"{cls_name}(name={self.name})"
 
-    def flow(self, X_dict, task_names):
-        """Forward based on input and task flow.
-        Note: We assume that all shared modules from all tasks are based on the
-        same input.
+    def flow(self, X_dict: Dict[str, Any], task_names: List[str]) -> Dict[str, Any]:
+        r"""Forward based on input and task flow.
+          Note: We assume that all shared modules from all tasks are based on the
+          same input.
 
-        :param X_dict: The input data
-        :type X_dict: dict of tensor
-        :param task_names: The task names that needs to forward
-        :type task_names: list of str
-        :return: The output of all forwarded modules
-        :rtype: dict
+        Args:
+          X_dict(dict): The input data
+          task_names(list): The task names that needs to forward.
+
+        Returns:
+          dict: The output of all forwarded modules
+
         """
 
         X_dict = move_to_device(X_dict, Meta.config["model_config"]["device"])
@@ -198,27 +229,34 @@ class EmmentalModel(nn.Module):
 
         return output_dict
 
-    def forward(self, uids, X_dict, Y_dict, task_to_label_dict):
-        """Calculate the loss, prob for the batch.
+    def forward(
+        self,
+        uids: List[str],
+        X_dict: Dict[str, Any],
+        Y_dict: Dict[str, Tensor],
+        task_to_label_dict: Dict[str, str],
+    ) -> Tuple[
+        Dict[str, List[str]], Dict[str, ndarray], Dict[str, ndarray], Dict[str, ndarray]
+    ]:
+        r"""Forward function.
 
-        :param uids: The uids of input data
-        :type uids: list
-        :param X_dict: The input data
-        :type X_dict: dict of tensors
-        :param Y_dict: The output data
-        :type Y_dict: dict of tensors
-        :param task_to_label_dict: The task to label mapping
-        :type task_to_label_dict: dict
-        :return: The (active) uids, loss and prob in the batch of all tasks
-        :rtype: dict, dict, dict
+        Args:
+          uids(list): The uids of input data.
+          X_dict(dict): The input data.
+          Y_dict(dict): The output data.
+          task_to_label_dict(dict): The task to label mapping.
+
+        Returns:
+          tuple: The (active) uids, loss and prob in the batch of all tasks.
+
         """
 
-        uid_dict = defaultdict(list)
-        loss_dict = defaultdict(list)
-        prob_dict = defaultdict(list)
-        gold_dict = defaultdict(list)
+        uid_dict: Dict[str, List[str]] = defaultdict(list)
+        loss_dict: Dict[str, ndarray] = defaultdict(float)
+        gold_dict: Dict[str, ndarray] = defaultdict(list)
+        prob_dict: Dict[str, ndarray] = defaultdict(list)
 
-        output_dict = self.flow(X_dict, task_to_label_dict.keys())
+        output_dict = self.flow(X_dict, list(task_to_label_dict.keys()))
 
         # Calculate loss for each task
         for task_name, label_name in task_to_label_dict.items():
@@ -258,15 +296,27 @@ class EmmentalModel(nn.Module):
         return uid_dict, loss_dict, prob_dict, gold_dict
 
     @torch.no_grad()
-    def predict(self, dataloader, return_preds=False):
+    def predict(
+        self, dataloader: EmmentalDataLoader, return_preds: bool = False
+    ) -> Dict[str, Any]:
+        r"""Predict from dataloader.
+
+        Args:
+          dataloader(EmmentalDataLoader): The dataloader to predict.
+          return_preds(bool): Whether return predictions or not, defaults to False.
+
+        Returns:
+          dict: The result dict.
+
+        """
 
         self.eval()
 
-        uid_dict = defaultdict(list)
-        gold_dict = defaultdict(list)
-        prob_dict = defaultdict(list)
-        pred_dict = defaultdict(list)
-        loss_dict = defaultdict(float)
+        uid_dict: Dict[str, List[str]] = defaultdict(list)
+        gold_dict: Dict[str, List[Union[ndarray, int, float]]] = defaultdict(list)
+        prob_dict: Dict[str, List[Union[ndarray, int, float]]] = defaultdict(list)
+        pred_dict: Dict[str, List[ndarray]] = defaultdict(list)
+        loss_dict: Dict[str, Union[ndarray, float]] = defaultdict(float)
 
         # Collect dataloader information
         task_to_label_dict = dataloader.task_to_label_dict
@@ -303,13 +353,21 @@ class EmmentalModel(nn.Module):
         return res
 
     @torch.no_grad()
-    def score(self, dataloaders, return_average=True):
-        """Score the data from dataloader with the model
+    def score(
+        self,
+        dataloaders: Union[EmmentalDataLoader, List[EmmentalDataLoader]],
+        return_average: bool = True,
+    ) -> Dict[str, float]:
+        """Score the data from dataloader.
 
-        :param dataloaders: the dataloader that performs scoring
-        :type dataloaders: dataloader
-        :param return_average: Whether return average scores
-        :type return_average: bool
+        Args:
+          dataloaders(EmmentalDataLoader or List[EmmentalDataLoader]): The dataloaders
+            to score.
+          return_average(bool): Whether to return average score.
+
+        Returns:
+          dict: Score dict.
+
         """
 
         self.eval()
@@ -320,9 +378,9 @@ class EmmentalModel(nn.Module):
         metric_score_dict = dict()
 
         if return_average:
-            micro_score_dict = defaultdict(list)
-            macro_score_dict = defaultdict(list)
-            macro_loss_dict = defaultdict(list)
+            micro_score_dict: defaultdict = defaultdict(list)
+            macro_score_dict: defaultdict = defaultdict(list)
+            macro_loss_dict: defaultdict = defaultdict(list)
 
         for dataloader in dataloaders:
             predictions = self.predict(dataloader, return_preds=True)
@@ -399,11 +457,12 @@ class EmmentalModel(nn.Module):
 
         return metric_score_dict
 
-    def save(self, model_path):
-        """Save the current model
+    def save(self, model_path: str) -> None:
+        r"""Save the current model.
 
-        :param model_path: Saved model path.
-        :type model_path: str
+        Args:
+          model_path(str): Saved model path.
+
         """
 
         # Check existence of model saving directory and create if does not exist.
@@ -430,11 +489,12 @@ class EmmentalModel(nn.Module):
         if Meta.config["meta_config"]["verbose"]:
             logger.info(f"[{self.name}] Model saved in {model_path}")
 
-    def load(self, model_path):
-        """Load model state_dict from file and reinitialize the model weights.
+    def load(self, model_path: str) -> None:
+        r"""Load model state_dict from file and reinitialize the model weights.
 
-        :param model_path: Saved model path.
-        :type model_path: str
+        Args:
+          model_path(str): Saved model path.
+
         """
 
         if not os.path.exists(model_path):
@@ -454,8 +514,10 @@ class EmmentalModel(nn.Module):
         # Move model to specified device
         self._move_to_device()
 
-    def collect_state_dict(self):
-        state_dict = defaultdict(list)
+    def collect_state_dict(self) -> Dict[str, Any]:
+        r"""Collect the state dict."""
+
+        state_dict: Dict[str, Any] = defaultdict(list)
 
         for module_name, module in self.module_pool.items():
             if Meta.config["model_config"]["dataparallel"]:
@@ -465,7 +527,13 @@ class EmmentalModel(nn.Module):
 
         return state_dict
 
-    def load_state_dict(self, state_dict):
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+        r"""Load the state dict.
+
+        Args:
+          state_dict(dict): The state dict to load.
+
+        """
 
         for module_name, module_state_dict in state_dict.items():
             if module_name in self.module_pool:

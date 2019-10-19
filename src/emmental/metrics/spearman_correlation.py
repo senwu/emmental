@@ -1,22 +1,30 @@
+from typing import Dict, List, Optional
+
 import numpy as np
+from numpy import ndarray
 from scipy.stats import spearmanr
 
 
-def spearman_correlation_scorer(golds, probs, preds, uids=None, return_pvalue=False):
+def spearman_correlation_scorer(
+    golds: ndarray,
+    probs: ndarray,
+    preds: Optional[ndarray],
+    uids: Optional[List[str]] = None,
+    return_pvalue: bool = False,
+) -> Dict[str, float]:
     """Spearman rank-order correlation coefficient and the p-value.
 
-    :param golds: Ground truth (correct) target values.
-    :type golds: 1-d np.array
-    :param probs: Predicted target probabilities.
-    :type probs: 1-d np.array
-    :param preds: Predicted target values. (Not used!)
-    :type preds: 1-d np.array
-    :param uids: Unique ids.
-    :type uids: list
-    :para return_pvalue: Whether return pvalue.
-    :type return_pvalue: bool
-    :return: Spearman rank-order correlation coefficient and the p-value
-    :rtype: dict
+    Args:
+      golds(np.array): Ground truth values.
+      probs(np.array): Predicted probabilities.
+      preds(np.array or None): Predicted values.
+      uids(list, optional): Unique ids, defaults to None.
+      return_pvalue(bool, optional): Whether return pvalue or not, defaults to False.
+
+    Returns:
+      dict: Spearman rank-order correlation coefficient (with pvalue if return_pvalue
+        is True).
+
     """
 
     probs = np.vstack(probs).squeeze()

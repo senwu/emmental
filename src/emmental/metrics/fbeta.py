@@ -1,24 +1,32 @@
+from typing import Dict, List, Optional
+
+from numpy import ndarray
+
 from emmental.metrics.precision import precision_scorer
 from emmental.metrics.recall import recall_scorer
 
 
-def fbeta_scorer(golds, probs, preds, uids=None, pos_label=1, beta=1):
+def fbeta_scorer(
+    golds: ndarray,
+    probs: Optional[ndarray],
+    preds: ndarray,
+    uids: Optional[List[str]] = None,
+    pos_label: int = 1,
+    beta: int = 1,
+) -> Dict[str, float]:
     """F-beta score is the weighted harmonic mean of precision and recall.
 
-    :param golds: Ground truth (correct) target values.
-    :type golds: 1-d np.array
-    :param probs: Predicted target probabilities. (Not used!)
-    :type probs: k-d np.array
-    :param preds: Predicted target values.
-    :type preds: 1-d np.array
-    :param uids: Unique ids.
-    :type uids: list
-    :param pos_label: The positive class label, defaults to 1
-    :param pos_label: int, optional
-    :param beta: Weight of precision in harmonic mean, defaults to 1
-    :param beta: float, optional
-    :return: F-beta score.
-    :rtype: dict
+    Args:
+      golds(np.array): Ground truth values.
+      probs(np.array or None): Predicted probabilities.
+      preds(np.array): Predicted values.
+      uids(list, optional): Unique ids, defaults to None.
+      pos_label(int, optional): The positive class label, defaults to 1.
+      beta(float, optional): Weight of precision in harmonic mean, defaults to 1.
+
+    Returns:
+      dict: F-beta score.
+
     """
 
     precision = precision_scorer(golds, probs, preds, uids, pos_label)["precision"]
@@ -33,5 +41,25 @@ def fbeta_scorer(golds, probs, preds, uids=None, pos_label=1, beta=1):
     return {f"f{beta}": fbeta}
 
 
-def f1_scorer(golds, probs, preds, uids=None, pos_label=1):
+def f1_scorer(
+    golds: ndarray,
+    probs: Optional[ndarray],
+    preds: ndarray,
+    uids: Optional[List[str]] = None,
+    pos_label: int = 1,
+) -> Dict[str, float]:
+    """F-1 score.
+
+    Args:
+      golds(np.array): Ground truth values.
+      probs(np.array or None): Predicted probabilities. (Not used!)
+      preds(np.array): Predicted values.
+      uids(list, optional): Unique ids.
+      pos_label(int, optional): The positive class label, defaults to 1.
+
+    Returns:
+      dict: F-1 score.
+
+    """
+
     return {"f1": fbeta_scorer(golds, probs, preds, uids, pos_label, beta=1)["f1"]}

@@ -1,36 +1,34 @@
+from typing import Optional
+
 import torch
 import torch.nn as nn
+from torch import Tensor
 
 
 class RNN(nn.Module):
-    """A recurrent neural network module.
+    r"""A recurrent neural network module.
 
-    :param num_classes: Number of classes.
-    :type num_classes: int
-    :param emb_size: Dimension of embeddings.
-    :type emb_size: int
-    :param lstm_hidden: Size of LSTM hidden layer size.
-    :type lstm_hidden: int
-    :param num_layers: Number of recurrent layers.
-    :type num_layers: int
-    :param dropout: Dropout parameter of LSTM.
-    :type dropout: float
-    :param attention: Use attention or not.
-    :type attention: bool
-    :param bidirectional: Use bidirectional LSTM or not.
-    :type bidirectional: bool
+    Args:
+      num_classes(int): Number of classes.
+      emb_size(int): Dimension of embeddings.
+      lstm_hidden(int): Size of LSTM hidden layer size.
+      num_layers(int): Number of recurrent layers, defaults to 1.
+      dropout(float): Dropout parameter of LSTM, defaults to 0.0.
+      attention(bool): Use attention or not, defaults to True.
+      bidirectional(bool): Use bidirectional LSTM or not, defaults to True.
+
     """
 
     def __init__(
         self,
-        num_classes,
-        emb_size,
-        lstm_hidden,
-        num_layers=1,
-        dropout=0.0,
-        attention=True,
-        bidirectional=True,
-    ):
+        num_classes: int,
+        emb_size: int,
+        lstm_hidden: int,
+        num_layers: int = 1,
+        dropout: float = 0.0,
+        attention: bool = True,
+        bidirectional: bool = True,
+    ) -> None:
 
         super().__init__()
 
@@ -70,16 +68,16 @@ class RNN(nn.Module):
         if self.final_linear:
             self.linear = nn.Linear(b * lstm_hidden, num_classes)
 
-    def forward(self, x, x_mask=None):
-        """Forward function.
+    def forward(self, x: Tensor, x_mask: Optional[Tensor] = None) -> Tensor:
+        r"""Forward function.
 
-        :param x: Input tensor.
-        :type x: torch.Tensor of shape (batch_size * length * dim)
-        :param x_mask: Input mask tensor.
-        :type x_mask: torch.Tensor of shape (batch_size * length)
-        :return: Output of LSTM layer, either after mean pooling or attention.
-        :rtype: torch.Tensor with shape (batch_size, num_directions * hidden_size)
-            if num_classes > 0 otherwise with shape (batch_size, num_classes)
+        Args:
+          x(Tensor): Input tensor.
+          x_mask(Tensor, optional): Input mask tensor, defaults to None.
+
+        Returns:
+          Tensor: Output tensor.
+
         """
         x_emb = self.drop(x)
         output_word, state_word = self.word_lstm(x_emb)

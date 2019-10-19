@@ -1,21 +1,27 @@
 import logging
+from typing import Dict, Union
+
+from torch.optim.lr_scheduler import _LRScheduler
+from torch.optim.optimizer import Optimizer
 
 from emmental import Meta
 from emmental.logging.checkpointer import Checkpointer
 from emmental.logging.log_writer import LogWriter
 from emmental.logging.tensorboard_writer import TensorBoardWriter
+from emmental.model import EmmentalModel
 
 logger = logging.getLogger(__name__)
 
 
 class LoggingManager(object):
-    """A class to manage logging during training progress
+    r"""A class to manage logging during training progress.
 
-    :param n_batches_per_epoch: total number batches per epoch
-    :type n_batches_per_epoch: int
+    Args:
+      n_batches_per_epoch(int): Total number batches per epoch.
+
     """
 
-    def __init__(self, n_batches_per_epoch):
+    def __init__(self, n_batches_per_epoch: int) -> None:
         self.n_batches_per_epoch = n_batches_per_epoch
 
         # Set up counter
@@ -50,23 +56,23 @@ class LoggingManager(object):
 
         # Set up number of samples passed since last evaluation/checkpointing and
         # total number of samples passed since learning process
-        self.sample_count = 0
-        self.sample_total = 0
+        self.sample_count: int = 0
+        self.sample_total: int = 0
 
         # Set up number of batches passed since last evaluation/checkpointing and
         # total number of batches passed since learning process
-        self.batch_count = 0
-        self.batch_total = 0
+        self.batch_count: int = 0
+        self.batch_total: int = 0
 
         # Set up number of epochs passed since last evaluation/checkpointing and
         # total number of epochs passed since learning process
-        self.epoch_count = 0
-        self.epoch_total = 0
+        self.epoch_count: Union[float, int] = 0
+        self.epoch_total: Union[float, int] = 0
 
         # Set up number of unit passed since last evaluation/checkpointing and
         # total number of unit passed since learning process
-        self.unit_count = 0
-        self.unit_total = 0
+        self.unit_count: Union[float, int] = 0
+        self.unit_total: Union[float, int] = 0
 
         # Set up count that triggers the evaluation since last checkpointing
         self.trigger_count = 0
@@ -83,11 +89,12 @@ class LoggingManager(object):
         else:
             raise ValueError(f"Unrecognized writer option '{writer_opt}'")
 
-    def update(self, batch_size):
-        """Update the counter
+    def update(self, batch_size: int) -> None:
+        r"""Update the counter.
 
-        :param batch_size: number of the samples in the batch
-        :type batch_size: int
+        Args:
+          batch_size(int): The number of the samples in the batch.
+
         """
 
         # Update number of samples
@@ -113,16 +120,18 @@ class LoggingManager(object):
             self.unit_count = self.epoch_count
             self.unit_total = self.epoch_total
 
-    def trigger_evaluation(self):
-        """Check if triggers the evaluation"""
+    def trigger_evaluation(self) -> bool:
+        r"""Check if triggers the evaluation."""
+
         satisfied = self.unit_count >= self.evaluation_freq
         if satisfied:
             self.trigger_count += 1
             self.reset()
         return satisfied
 
-    def trigger_checkpointing(self):
-        """Check if triggers the checkpointing"""
+    def trigger_checkpointing(self) -> bool:
+        r"""Check if triggers the checkpointing."""
+
         if not self.checkpointing:
             return False
         satisfied = self.trigger_count >= self.checkpointing_freq
@@ -130,45 +139,54 @@ class LoggingManager(object):
             self.trigger_count = 0
         return satisfied
 
-    def reset(self):
-        """Reset the counter."""
+    def reset(self) -> None:
+        r"""Reset the counter."""
+
         self.sample_count = 0
         self.batch_count = 0
         self.epoch_count = 0
         self.unit_count = 0
 
-    def write_log(self, metric_dict):
-        """Write the metrics to the log.
+    def write_log(self, metric_dict: Dict[str, float]) -> None:
+        r"""Write the metrics to the log.
 
-        :param metric_dict: the metric dict
-        :type metric_dict: dict
+        Args:
+          metric_dict(dict): The metric dict.
+
         """
         for metric_name, metric_value in metric_dict.items():
             self.writer.add_scalar(metric_name, metric_value, self.batch_total)
 
-    def checkpoint_model(self, model, optimizer, lr_scheduler, metric_dict):
-        """Checkpoint the model.
+    def checkpoint_model(
+        self,
+        model: EmmentalModel,
+        optimizer: Optimizer,
+        lr_scheduler: _LRScheduler,
+        metric_dict: Dict[str, float],
+    ) -> None:
+        r"""Checkpoint the model.
 
-        :param model: The model to checkpoint
-        :type model: EmmentalModel
-        :param optimizer: The optimizer used during training process
-        :type optimizer: torch.optim
-        :param lr_scheduler: Learning rate scheduler
-        :type lr_scheduler: optim.lr_scheduler
-        :param metric_dict: the metric dict
-        :type metric_dict: dict
+        Args:
+          model(EmmentalModel): The model to checkpoint.
+          optimizer(Optimizer): The optimizer used during training process.
+          lr_scheduler(_LRScheduler): Learning rate scheduler.
+          metric_dict(dict): the metric dict.
+
         """
+
         self.checkpointer.checkpoint(
             self.unit_total, model, optimizer, lr_scheduler, metric_dict
         )
 
-    def close(self, model):
-        """Close the checkpointer and reload the model if necessary.
+    def close(self, model: EmmentalModel) -> EmmentalModel:
+        r"""Close the checkpointer and reload the model if necessary.
 
-        :param model: The trained model
-        :type model: EmmentalModel
-        :return: The reloaded model if necessary
-        :rtype: EmmentalModel
+        Args:
+          model(EmmentalModel): The trained model.
+
+        Returns:
+          EmmentalModel: The reloaded model if necessary
+
         """
         self.writer.close()
         if self.checkpointing:

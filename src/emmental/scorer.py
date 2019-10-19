@@ -1,4 +1,7 @@
 import logging
+from typing import Callable, Dict, List
+
+from numpy import ndarray
 
 from emmental.metrics import METRICS
 from emmental.utils.utils import array_to_numpy
@@ -7,18 +10,21 @@ logger = logging.getLogger(__name__)
 
 
 class Scorer(object):
-    """A class to score tasks
+    r"""A class to score tasks.
 
-    :param metrics: a list of metric names which provides in emmental (e.g., accuracy)
-    :type metrics: list
-    :param customize_metric_funcs: a dict of customize metric where key is the metric
-        name and value is the metric function which takes gold, preds, probs, uids as
-        input
-    :type customize_metric_funcs: dict
+    Args:
+      metrics(list): a list of metric names which provides
+        in emmental (e.g., accuracy), defaults to [].
+      customize_metric_funcs(dict): a dict of customize metric where key is the metric
+    name and value is the metric function which takes gold, preds, probs, uids as
+    input, defaults to {}.
+
     """
 
-    def __init__(self, metrics=[], customize_metric_funcs={}):
-        self.metrics = dict()
+    def __init__(
+        self, metrics: List[str] = [], customize_metric_funcs: Dict[str, Callable] = {}
+    ) -> None:
+        self.metrics: Dict[str, Callable] = dict()
         for metric in metrics:
             if metric not in METRICS:
                 raise ValueError(f"Unrecognized metric: {metric}")
@@ -26,7 +32,22 @@ class Scorer(object):
 
         self.metrics.update(customize_metric_funcs)
 
-    def score(self, golds, preds, probs, uids=None):
+    def score(
+        self, golds: ndarray, preds: ndarray, probs: ndarray, uids: List[str] = None
+    ) -> Dict[str, float]:
+        """Calculate the score.
+
+        Args:
+          golds(ndarray): Ground truth values.
+          probs(ndarray): Predicted probabilities.
+          preds(ndarray): Predicted values.
+          uids(list, optional): Unique ids, defaults to None.
+
+        Returns:
+          dict: score dict.
+
+        """
+
         metric_dict = dict()
 
         for metric_name, metric in self.metrics.items():

@@ -2,22 +2,27 @@ import math
 
 import torch
 import torch.nn as nn
+from torch import Tensor
 
 
 class SparseLinear(nn.Module):
-    """A sparse linear module.
+    r"""A sparse linear module.
 
-    :param num_features: Size of features.
-    :type num_features: int
-    :param num_classes: Number of classes.
-    :type num_classes: int
-    :param bias: Use bias term or not.
-    :type bias: bool
-    :param padding_idx: padding index.
-    :type padding_idx: int
+    Args:
+      num_features(int): Size of features.
+      num_classes(int): Number of classes.
+      bias(bool): Use bias term or not, defaults to False.
+      padding_idx(int): padding index, defaults to 0.
+
     """
 
-    def __init__(self, num_features, num_classes, bias=False, padding_idx=0):
+    def __init__(
+        self,
+        num_features: int,
+        num_classes: int,
+        bias: bool = False,
+        padding_idx: int = 0,
+    ) -> None:
 
         super().__init__()
 
@@ -35,9 +40,8 @@ class SparseLinear(nn.Module):
 
         self.reset_parameters()
 
-    def reset_parameters(self):
-        """Reinitiate the weight parameters.
-        """
+    def reset_parameters(self) -> None:
+        r"""Reinitiate the weight parameters."""
 
         stdv = 1.0 / math.sqrt(self.num_features)
         self.weight.weight.data.uniform_(-stdv, stdv)
@@ -46,14 +50,16 @@ class SparseLinear(nn.Module):
         if self.padding_idx is not None:
             self.weight.weight.data[self.padding_idx].fill_(0)
 
-    def forward(self, x, w):
-        """Forward function.
-        :param x: Feature indices.
-        :type x: torch.Tensor of shape (batch_size * length)
-        :param w: Feature weights.
-        :type w: torch.Tensor of shape (batch_size * length)
-        :return: Output of linear layer.
-        :rtype: torch.Tensor of shape (batch_size, num_classes)
+    def forward(self, x: Tensor, w: Tensor) -> Tensor:
+        r"""Forward function.
+
+        Args:
+          x(Tensor): Feature indices.
+          w(Tensor): Feature weights.
+
+        Returns:
+          Tensor: Output of linear layer.
+
         """
 
         if self.bias is None:

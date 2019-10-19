@@ -2,19 +2,23 @@ import glob
 import logging
 import os
 from shutil import copyfile
+from typing import Any, Dict, Set, Union
 
 import torch
+from torch.optim.lr_scheduler import _LRScheduler
+from torch.optim.optimizer import Optimizer
 
 from emmental.meta import Meta
+from emmental.model import EmmentalModel
 
 logger = logging.getLogger(__name__)
 
 
 class Checkpointer(object):
-    """Checkpointing class to log train infomation"""
+    r"""Checkpointing class to log train information"""
 
-    def __init__(self):
-        """Initialize the checkpointer.
+    def __init__(self) -> None:
+        r"""Initialize the checkpointer.
         """
 
         # Set up checkpoint directory
@@ -91,21 +95,25 @@ class Checkpointer(object):
         # Set up checkpoint flag
         self.checkpoint_condition_met = False
 
-        self.best_metric_dict = dict()
+        self.best_metric_dict: Dict[str, float] = dict()
 
-    def checkpoint(self, iteration, model, optimizer, lr_scheduler, metric_dict):
-        """Checkpointing the checkpoint.
+    def checkpoint(
+        self,
+        iteration: Union[float, int],
+        model: EmmentalModel,
+        optimizer: Optimizer,
+        lr_scheduler: _LRScheduler,
+        metric_dict: Dict[str, float],
+    ) -> None:
+        r"""Checkpointing the checkpoint.
 
-        :param iteration: The current iteration.
-        :type iteration: float or int.
-        :param model: The model to checkpoint
-        :type model: EmmentalModel
-        :param optimizer: The optimizer used during training process
-        :type optimizer: torch.optim
-        :param lr_scheduler: Learning rate scheduler
-        :type lr_scheduler: optim.lr_scheduler
-        :param metric_dict: the metric dict
-        :type metric_dict: dict
+        Args:
+          iteration(float or int): The current iteration.
+          model(EmmentalModel): The model to checkpoint.
+          optimizer(Optimizer): The optimizer used during training process.
+          lr_scheduler(_LRScheduler): Learning rate scheduler.
+          metric_dict(dict): The metric dict.
+
         """
 
         # Check the checkpoint_runway condition is met
@@ -143,13 +151,15 @@ class Checkpointer(object):
                     f"/best_model_{metric.replace('/', '_')}.pth"
                 )
 
-    def is_new_best(self, metric_dict):
-        """Update the best score.
+    def is_new_best(self, metric_dict: Dict[str, float]) -> Set[str]:
+        r"""Update the best score.
 
-        :param metric_dict: The current metric dict
-        :type metric_dict: dict
-        :return: The updated best metric dict
-        :rtype: dict
+        Args:
+          metric_dict(dict): The current metric dict.
+
+        Returns:
+          set: The updated best metric set.
+
         """
 
         best_metric = set()
@@ -175,9 +185,8 @@ class Checkpointer(object):
 
         return best_metric
 
-    def clear(self):
-        """Clear checkpoints.
-        """
+    def clear(self) -> None:
+        r"""Clear checkpoints."""
 
         if self.clear_all_checkpoints:
             logger.info("Clear all checkpoints.")
@@ -191,20 +200,24 @@ class Checkpointer(object):
                 os.remove(file)
 
     def collect_state_dict(
-        self, iteration, model, optimizer, lr_scheduler, metric_dict
-    ):
-        """Collect the state dict of the model.
+        self,
+        iteration: Union[float, int],
+        model: EmmentalModel,
+        optimizer: Optimizer,
+        lr_scheduler: _LRScheduler,
+        metric_dict: Dict[str, float],
+    ) -> Dict[str, Any]:
+        r"""Collect the state dict of the model.
 
-        :param iteration: The current iteration.
-        :type iteration: float or int.
-        :param model: The model to checkpoint
-        :type model: EmmentalModel
-        :param optimizer: The optimizer used during training process
-        :type optimizer: torch.optim
-        :param lr_scheduler: Learning rate scheduler
-        :type lr_scheduler: optim.lr_scheduler
-        :param metric_dict: the metric dict
-        :type metric_dict: dict
+        Args:
+          iteration(float or int): The current iteration.
+          model(EmmentalModel): The model to checkpoint.
+          optimizer(Optimizer): The optimizer used during training process.
+          lr_scheduler(_LRScheduler): Learning rate scheduler.
+          metric_dict(dict): the metric dict.
+
+        Returns:
+          dict: The state dict.
         """
 
         model_params = {
@@ -227,13 +240,15 @@ class Checkpointer(object):
 
         return state_dict
 
-    def load_best_model(self, model):
-        """Load the best model from the checkpoint.
+    def load_best_model(self, model: EmmentalModel) -> EmmentalModel:
+        r"""Load the best model from the checkpoint.
 
-        :param model: The current model.
-        :type model: EmmentalModel.
-        :return: The best model load from the checkpoint.
-        :rtype: EmmentalModel
+        Args:
+          model(EmmentalModel.): The current model.
+
+        Returns:
+          EmmentalModel: The best model load from the checkpoint.
+
         """
 
         if list(self.checkpoint_metric.keys())[0] not in self.best_metric_dict:

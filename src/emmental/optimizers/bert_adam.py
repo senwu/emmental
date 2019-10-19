@@ -16,34 +16,37 @@
 """PyTorch optimization for BERT model."""
 
 import logging
+from typing import Any, Callable, Iterable, Optional, Tuple
 
 import torch
-from torch.optim import Optimizer
+from torch.optim.optimizer import Optimizer
 
 logger = logging.getLogger(__name__)
 
 
 class BertAdam(Optimizer):
-    """Implements BERT version of Adam algorithm with weight decay fix.
+    r"""Implements BERT version of Adam algorithm with weight decay fix.
 
-    :param params: iterable of parameters to optimize or dicts defining parameter
-    groups
-    :type params: iterable
-    :param lr: learning rate, defaults to 1e-3
-    :type lr: float, optional
-    :param betas: coefficients used for computing running averages of gradient
-    and its square, defaults to (0.9, 0.999)
-    :type betas: Tuple[float, float], optional
-    :param eps: term added to the denominator to improve numerical stability,
-    defaults to 1e-6
-    :type eps: float, optional
-    :param weight_decay: weight decay (L2 penalty), defaults to 0.01
-    :type weight_decay: float, optional
+    Args:
+      params(iterable): Iterable of parameters to optimize or dicts defining
+        parameter groups.
+      lr(float, optional): Learning rate, defaults to 1e-3.
+      betas(Tuple[float, float], optional): Coefficients used for computing running
+        averages of gradient and its square, defaults to (0.9, 0.999).
+      eps(float, optional): Term added to the denominator to improve numerical
+        stability, defaults to 1e-6.
+      weight_decay(float, optional): Weight decay (L2 penalty), defaults to 0.01.
+
     """
 
     def __init__(
-        self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-6, weight_decay=0.01
-    ):
+        self,
+        params: Iterable[Any],
+        lr: float = 1e-3,
+        betas: Tuple[float, float] = (0.9, 0.999),
+        eps: float = 1e-6,
+        weight_decay: float = 0.01,
+    ) -> None:
         if not 0.0 <= lr:
             raise ValueError("Invalid learning rate: {}".format(lr))
         if not 0.0 <= eps:
@@ -56,11 +59,13 @@ class BertAdam(Optimizer):
         defaults = dict(lr=lr, betas=betas, eps=eps, weight_decay=weight_decay)
         super(BertAdam, self).__init__(params, defaults)
 
-    def step(self, closure=None):
+    def step(self, closure: Optional[Callable] = None) -> Any:
         """Performs a single optimization step.
 
-        :param closure: A closure that reevaluates the model and returns the loss.
-        :type closure: callable, optional
+        Args:
+          closure(callable, optional): A closure that reevaluates the model and returns
+            the loss, defaults to None.
+
         """
 
         loss = None

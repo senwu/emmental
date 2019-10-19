@@ -3,7 +3,11 @@
 
 Added
 ^^^^^
-* `@senwu`_: Add `clear_intermediate_checkpoints` and `clear_all_checkpoints` arguments
+* `@senwu`_: Add `get_num_batches` to calculate the total number batches from all
+  dataloaders.
+* `@senwu`_: Add `n_batches` in `EmmentalDataLoader` and `fillup` in `Scheduler` to
+  support customize dataloader.
+* `@senwu`_: Add overall and task specific loss during evaluating as default.
   to support user needs for clear checkpoins.
 * `@senwu`_: Add `min_len` and `max_len` in `Meta.config` to support setting sequence
   length.
@@ -29,6 +33,7 @@ Added
 
 Fixed
 ^^^^^
+* `@senwu`_: Add type for class.
 * `@senwu`_: Add warning for one class in ROC AUC metric.
 * `@senwu`_: Fix missing support for StepLR and MultiStepLR lr scheduler.
 * `@senwu`_: Fix missing pytest.ini and fix test cannot remove temp dir issue.

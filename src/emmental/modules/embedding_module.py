@@ -1,28 +1,27 @@
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
 import torch
 import torch.nn as nn
+from numpy import ndarray
+from torch import Tensor
 
 
 class EmbeddingModule(nn.Module):
-    """An embedding module.
+    r"""Embedding module.
 
-    :param word_counter: Word count dictionary that contians the frequencies of
-        each word (default: None)
-    :type word_counter: dict
-    :param max_size: Max size of word dictionary (default: None)
-    :type max_size: int
-    :param word_dim: Dimension of embeddings (default: 300)
-    :type word_dim: int
-    :param specials: The list of special tokens (e.g., padding or eos) that will
-        be prepended to the vocabulary. (default: [])
-    :type specials: list
-    :param threshold: The minimum frequency needed to include a token in the
-        vocabulary (default: None)
-    :type threshold: int
-    :param embedding_file: The pretrained embedding file path (default: None)
-    :type embedding_file: str
-    :param fix_emb: Whether fix word embeddings or not (default: False)
-    :type fix_emb: bool
+    Args:
+      word_counter(dict): Word count dictionary that contians the frequencies of
+        each word, defaults to None.
+      max_size(int): Max size of word dictionary, defaults to None.
+      word_dim(int): Dimension of embeddings, defaults to 300.
+      specials(list): The list of special tokens (e.g., padding or eos) that will
+        be prepended to the vocabulary, defaults to [].
+      threshold(int): The minimum frequency needed to include a token in the
+        vocabulary, defaults to None.
+      embedding_file(str): The pretrained embedding file path, defaults to None.
+      fix_emb(bool): Whether fix word embeddings or not, defaults to False.
+
     """
 
     UNK = "<unk>"
@@ -30,14 +29,14 @@ class EmbeddingModule(nn.Module):
 
     def __init__(
         self,
-        word_counter=None,
-        max_size=None,
-        word_dim=300,
-        specials=[],
-        threshold=0,
-        embedding_file=None,
-        fix_emb=False,
-    ):
+        word_counter: Optional[Dict[str, int]] = None,
+        max_size: Optional[int] = None,
+        word_dim: int = 300,
+        specials: List[str] = [],
+        threshold: int = 0,
+        embedding_file: Optional[str] = None,
+        fix_emb: bool = False,
+    ) -> None:
 
         super().__init__()
         assert (
@@ -101,9 +100,21 @@ class EmbeddingModule(nn.Module):
         if fix_emb:
             self.embeddings.weight.requires_grad = False
 
-    def _load_embedding(self, embedding_file):
+    def _load_embedding(
+        self, embedding_file: str
+    ) -> Tuple[int, Dict[str, int], List[ndarray]]:
+        r"""Load the pre-trained embeddings from file.
+
+        Args:
+          embedding_file: The pretrained embedding file path.
+
+        Returns:
+          tuple: word embedding dimension, word to index dict, and embedding vectors.
+
+        """
+
         emb_dim = 0
-        emb_w2i = {}
+        emb_w2i: Dict[str, int] = {}
         emb_wv = []
 
         with open(embedding_file, encoding="utf8") as f:
@@ -124,5 +135,14 @@ class EmbeddingModule(nn.Module):
                     emb_wv.append(np.array([float(v) for v in elems[1:]]))
         return emb_dim, emb_w2i, emb_wv
 
-    def forward(self, input):
+    def forward(self, input: Tensor) -> Tensor:
+        r"""Forward function.
+
+        Args:
+          input(Tensor): Input tensor.
+
+        Returns:
+          Tensor: Output tensor.
+
+        """
         return self.embeddings(input)

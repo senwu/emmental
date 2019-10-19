@@ -1,35 +1,43 @@
 from abc import ABC, abstractmethod
+from typing import Any, Iterator, List
+
+from emmental.data import EmmentalDataLoader
 
 
 class Scheduler(ABC):
-    """Generate batch generator from all dataloaders in designed order for MTL
-    training.
+    r"""Generate batch generator from all dataloaders in designed order for MTL
+      training.
+
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         pass
 
-    def get_num_batches(dataloaders):
-        """Get total number of batches per epoch.
+    def get_num_batches(self, dataloaders: List[EmmentalDataLoader]) -> int:
+        r"""Get total number of batches per epoch.
 
-        :param dataloaders: a list of dataloaders
-        :type dataloaders: list
-        :return: Total number of batches per epoch
-        :rtype: int
+        Args:
+          dataloaders(list): List of dataloaders.
+
+        Returns:
+          int: Total number of batches per epoch.
+
         """
 
         raise NotImplementedError()
 
     @abstractmethod
-    def get_batches(self, dataloaders):
-        """Generate batch generator from all dataloaders in designed order for
+    def get_batches(self, dataloaders: List[EmmentalDataLoader]) -> Iterator[Any]:
+        r"""Generate batch generator from all dataloaders in designed order for
         one epoch.
 
-        :param dataloaders: a list of dataloaders
-        :type dataloaders: list
-        :return: A generator of all batches
-        :rtype: genertor
+        Args:
+          dataloaders(list): List of dataloaders.
+
+        Returns:
+          genertor: A generator of all batches.
+
         """
 
-        pass
+        raise NotImplementedError()

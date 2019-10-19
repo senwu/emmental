@@ -1,23 +1,34 @@
+from typing import Dict, Iterator, List, Tuple, Union
+
+from torch import Tensor
+
+from emmental.data import EmmentalDataLoader
 from emmental.schedulers.scheduler import Scheduler
 
 
 class SequentialScheduler(Scheduler):
-    """Generate batch generator from all dataloaders in sequential order for MTL
-    training.
+    r"""Generate batch generator from all dataloaders in sequential order for MTL
+      training.
+
+    Args:
+      fillup(bool): Whether fillup to make all dataloader the same size.
+
     """
 
-    def __init__(self, fillup=False):
+    def __init__(self, fillup: bool = False) -> None:
         super().__init__()
 
         self.fillup = fillup
 
-    def get_num_batches(self, dataloaders):
-        """Get total number of batches per epoch.
+    def get_num_batches(self, dataloaders: List[EmmentalDataLoader]) -> int:
+        r"""Get total number of batches per epoch.
 
-        :param dataloaders: a list of dataloaders
-        :type dataloaders: list
-        :return: Total number of batches per epoch
-        :rtype: int
+        Args:
+          dataloaders(list): List of dataloaders.
+
+        Returns:
+          int: Total number of batches per epoch.
+
         """
 
         batch_counts = [len(dataloader) for dataloader in dataloaders]
@@ -30,14 +41,27 @@ class SequentialScheduler(Scheduler):
 
         return sum(batch_counts)
 
-    def get_batches(self, dataloaders):
-        """Generate batch generator from all dataloaders in sequential order for
+    def get_batches(
+        self, dataloaders: List[EmmentalDataLoader]
+    ) -> Iterator[
+        Tuple[
+            List[str],
+            Dict[str, Union[Tensor, List[str]]],
+            Dict[str, Tensor],
+            Dict[str, str],
+            str,
+            str,
+        ]
+    ]:
+        r"""Generate batch generator from all dataloaders in sequential order for
         one epoch.
 
-        :param dataloaders: a list of dataloaders
-        :type dataloaders: list
-        :return: A generator of all batches
-        :rtype: genertor
+        Args:
+          dataloaders(list): List of dataloaders.
+
+        Returns:
+          genertor: A generator of all batches.
+
         """
 
         task_to_label_dicts = [

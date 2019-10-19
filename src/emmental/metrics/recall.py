@@ -1,21 +1,30 @@
+from typing import Dict, List, Optional
+
 import numpy as np
+from numpy import ndarray
 
 from emmental.utils.utils import prob_to_pred
 
 
-def recall_scorer(golds, probs, preds, uids=None, pos_label=1):
+def recall_scorer(
+    golds: ndarray,
+    probs: Optional[ndarray],
+    preds: ndarray,
+    uids: Optional[List[str]] = None,
+    pos_label: int = 1,
+) -> Dict[str, float]:
     """Recall.
 
-    :param golds: Ground truth (correct) target values.
-    :type golds: 1-d np.array
-    :param probs: Predicted target probabilities. (Not used!)
-    :type probs: k-d np.array
-    :param preds: Predicted target values.
-    :type preds: 1-d np.array
-    :param uids: Unique ids.
-    :type uids: list
-    :return: Recall.
-    :rtype: dict
+    Args:
+      golds(np.array): Ground truth values.
+      probs(np.array or None): Predicted probabilities.
+      preds(np.array): Predicted values.
+      uids(list, optional): Unique ids, defaults to None.
+      pos_label(int, optional): The positive class label, defaults to 1.
+
+    Returns:
+      dict: Recall.
+
     """
     if len(golds.shape) > 1:
         golds = prob_to_pred(golds)

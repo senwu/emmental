@@ -1,24 +1,46 @@
+from typing import Any, Dict
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
 
 
 class SliceAttentionModule(nn.Module):
-    """An attention module to leverage all slice representations."""
+    r"""An attention module to leverage all slice representations.
+
+    Args:
+      slice_ind_key(str): Slice indicator head key, defaults to "_slice_ind_".
+      slice_pred_key(str): Slice prediction head key, defaults to "_slice_pred_",
+      slice_pred_feat_key(str): Slice prediction feature key,
+        defaults to "_slice_feat_".
+
+    """
 
     def __init__(
         self,
-        slice_ind_key="_slice_ind_",
-        slice_pred_key="_slice_pred_",
-        slice_pred_feat_key="_slice_feat_",
-    ):
+        slice_ind_key: str = "_slice_ind_",
+        slice_pred_key: str = "_slice_pred_",
+        slice_pred_feat_key: str = "_slice_feat_",
+    ) -> None:
+
         super().__init__()
 
         self.slice_ind_key = slice_ind_key
         self.slice_pred_key = slice_pred_key
         self.slice_pred_feat_key = slice_pred_feat_key
 
-    def forward(self, intermediate_output_dict):
+    def forward(self, intermediate_output_dict: Dict[str, Any]) -> Tensor:
+        r"""Forward function.
+
+        Args:
+          intermediate_output_dict(dict): output dict.
+
+        Returns:
+          Tensor: output of attention.
+
+        """
+
         # Collect ordered slice indicator head names
         slice_indicator_names = sorted(
             [
