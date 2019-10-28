@@ -107,8 +107,7 @@ def pad_batch(
 
 
 def prob_to_pred(probs: ndarray) -> ndarray:
-    r"""Identify the class with the maximum probability (add 1 since we assume label
-      class starts from 1).
+    r"""Identify the class with the maximum probability.
 
     Args:
       probs(ndarray): predicted probabilities.
@@ -118,7 +117,7 @@ def prob_to_pred(probs: ndarray) -> ndarray:
 
     """
 
-    return np.argmax(probs, axis=-1) + 1
+    return np.argmax(probs, axis=-1)
 
 
 def pred_to_prob(preds: ndarray, n_classes: int) -> ndarray:
@@ -137,7 +136,7 @@ def pred_to_prob(preds: ndarray, n_classes: int) -> ndarray:
     probs = np.zeros((preds.shape[0], n_classes))
 
     for idx, class_idx in enumerate(preds):
-        probs[idx, class_idx - 1] = 1.0
+        probs[idx, class_idx] = 1.0
 
     return probs
 

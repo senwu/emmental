@@ -44,6 +44,7 @@ Fixed
 
 Changed
 ^^^^^^^
+* `@senwu`_: Change default class index to 0-index.
 * `@senwu`_: Change default ignore_index to None.
 * `@senwu`_: Change the default counter unit to epoch.
 * `@senwu`_: Update the metric to return one metric value by default.
