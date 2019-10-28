@@ -33,6 +33,7 @@ Added
 
 Fixed
 ^^^^^
+* `@senwu`_: Correct lr update for epoch-wised scheduler.
 * `@senwu`_: Add type for class.
 * `@senwu`_: Add warning for one class in ROC AUC metric.
 * `@senwu`_: Fix missing support for StepLR and MultiStepLR lr scheduler.

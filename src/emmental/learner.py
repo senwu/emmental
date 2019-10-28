@@ -212,7 +212,7 @@ class EmmentalLearner(object):
             elif (
                 opt in ["step", "multi_step"]
                 and step > 0
-                and step % self.n_batches_per_epoch == 0
+                and (step + 1) % self.n_batches_per_epoch == 0
             ):
                 self.lr_scheduler.step()
             min_lr = Meta.config["learner_config"]["lr_scheduler_config"]["min_lr"]
