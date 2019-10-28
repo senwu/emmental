@@ -2,7 +2,7 @@ import argparse
 from argparse import ArgumentParser, Namespace
 from typing import Any, Dict, Optional
 
-from emmental.utils.utils import nullable_string, str2bool, str2dict
+from emmental.utils.utils import nullable_int, nullable_string, str2bool, str2dict
 
 
 def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
@@ -109,8 +109,8 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
 
     learner_config.add_argument(
         "--ignore_index",
-        type=int,
-        default=0,
+        type=nullable_int,
+        default=None,
         help="The ignore index, uses for masking samples",
     )
 

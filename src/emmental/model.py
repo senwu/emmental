@@ -265,12 +265,16 @@ class EmmentalModel(nn.Module):
             Y = Y_dict[label_name]
 
             # Select the active samples
-            if len(Y.size()) == 1:
-                active = Y.detach() != Meta.config["learner_config"]["ignore_index"]
+            if Meta.config["learner_config"]["ignore_index"] is not None:
+                if len(Y.size()) == 1:
+                    active = Y.detach() != Meta.config["learner_config"]["ignore_index"]
+                else:
+                    active = torch.any(
+                        Y.detach() != Meta.config["learner_config"]["ignore_index"],
+                        dim=1,
+                    )
             else:
-                active = torch.any(
-                    Y.detach() != Meta.config["learner_config"]["ignore_index"], dim=1
-                )
+                active = torch.BoolTensor([True] * Y.size()[0])
 
             # Only calculate the loss when active example exists
             if active.any():

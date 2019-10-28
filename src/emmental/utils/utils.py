@@ -280,6 +280,21 @@ def str2list(v: str, delim: str = ",") -> List[str]:
     return [t.strip() for t in v.split(delim)]
 
 
+def nullable_int(v: str) -> Optional[int]:
+    r"""Parse string to nullable int.
+
+    Args:
+      v(str): The string to parse.
+
+    Returns:
+      int or None: The parsed value.
+
+    """
+    if not v or v.lower() in ["none", "null"]:
+        return None
+    return int(v)
+
+
 def nullable_string(v: str) -> Optional[str]:
     r"""Parse string to nullable string.
 
