@@ -15,6 +15,8 @@ def set_random_seed(seed: int) -> None:
       seed(int): The random seed.
 
     """
+    if seed is None:
+        return
 
     seed = int(seed)
 
@@ -277,6 +279,21 @@ def str2list(v: str, delim: str = ",") -> List[str]:
     """
 
     return [t.strip() for t in v.split(delim)]
+
+
+def nullable_float(v: str) -> Optional[float]:
+    r"""Parse string to nullable float.
+
+    Args:
+      v(str): The string to parse.
+
+    Returns:
+      float or None: The parsed value.
+
+    """
+    if not v or v.lower() in ["none", "null"]:
+        return None
+    return float(v)
 
 
 def nullable_int(v: str) -> Optional[int]:

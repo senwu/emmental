@@ -2,7 +2,13 @@ import argparse
 from argparse import ArgumentParser, Namespace
 from typing import Any, Dict, Optional
 
-from emmental.utils.utils import nullable_int, nullable_string, str2bool, str2dict
+from emmental.utils.utils import (
+    nullable_float,
+    nullable_int,
+    nullable_string,
+    str2bool,
+    str2dict,
+)
 
 
 def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
@@ -27,7 +33,7 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
 
     meta_config.add_argument(
         "--seed",
-        type=int,
+        type=nullable_int,
         default=0,
         help="Random seed for all numpy/torch/cuda operations in model and learning",
     )
@@ -132,7 +138,7 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     optimizer_config.add_argument(
-        "--grad_clip", type=float, default=1.0, help="Gradient clipping"
+        "--grad_clip", type=nullable_float, default=None, help="Gradient clipping"
     )
 
     optimizer_config.add_argument(
