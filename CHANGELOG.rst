@@ -3,6 +3,7 @@
 
 Added
 ^^^^^
+* `@senwu`_: Log metric dict into log file every trigger evaluation time or full epoch.
 * `@senwu`_: Add `get_num_batches` to calculate the total number batches from all
   dataloaders.
 * `@senwu`_: Add `n_batches` in `EmmentalDataLoader` and `fillup` in `Scheduler` to
