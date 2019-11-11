@@ -36,7 +36,7 @@ before_install:
   fi
 
 install:
-- make -s dev > /dev/null
+- make dev
 - make check
 - make docs
 - pip install -q coveralls
