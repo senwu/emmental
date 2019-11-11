@@ -15,6 +15,8 @@ def set_random_seed(seed: int) -> None:
       seed(int): The random seed.
 
     """
+    if seed is None:
+        return
 
     seed = int(seed)
 
@@ -107,8 +109,7 @@ def pad_batch(
 
 
 def prob_to_pred(probs: ndarray) -> ndarray:
-    r"""Identify the class with the maximum probability (add 1 since we assume label
-      class starts from 1).
+    r"""Identify the class with the maximum probability.
 
     Args:
       probs(ndarray): predicted probabilities.
@@ -118,7 +119,7 @@ def prob_to_pred(probs: ndarray) -> ndarray:
 
     """
 
-    return np.argmax(probs, axis=-1) + 1
+    return np.argmax(probs, axis=-1)
 
 
 def pred_to_prob(preds: ndarray, n_classes: int) -> ndarray:
@@ -137,7 +138,7 @@ def pred_to_prob(preds: ndarray, n_classes: int) -> ndarray:
     probs = np.zeros((preds.shape[0], n_classes))
 
     for idx, class_idx in enumerate(preds):
-        probs[idx, class_idx - 1] = 1.0
+        probs[idx, class_idx] = 1.0
 
     return probs
 
@@ -278,6 +279,36 @@ def str2list(v: str, delim: str = ",") -> List[str]:
     """
 
     return [t.strip() for t in v.split(delim)]
+
+
+def nullable_float(v: str) -> Optional[float]:
+    r"""Parse string to nullable float.
+
+    Args:
+      v(str): The string to parse.
+
+    Returns:
+      float or None: The parsed value.
+
+    """
+    if not v or v.lower() in ["none", "null"]:
+        return None
+    return float(v)
+
+
+def nullable_int(v: str) -> Optional[int]:
+    r"""Parse string to nullable int.
+
+    Args:
+      v(str): The string to parse.
+
+    Returns:
+      int or None: The parsed value.
+
+    """
+    if not v or v.lower() in ["none", "null"]:
+        return None
+    return int(v)
 
 
 def nullable_string(v: str) -> Optional[str]:

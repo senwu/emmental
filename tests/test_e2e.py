@@ -49,8 +49,8 @@ def test_e2e(caplog):
     # Generate synthetic data
     N = 50
     X = np.random.random((N, 2)) * 2 - 1
-    Y1 = (X[:, 0] > X[:, 1] + 0.25).astype(int) + 1
-    Y2 = (-X[:, 0] > X[:, 1] + 0.25).astype(int) + 1
+    Y1 = (X[:, 0] > X[:, 1] + 0.25).astype(int)
+    Y2 = (-X[:, 0] > X[:, 1] + 0.25).astype(int)
 
     # Create dataset and dataloader
 
@@ -152,7 +152,7 @@ def test_e2e(caplog):
     def ce_loss(task_name, immediate_ouput_dict, Y, active):
         module_name = f"{task_name}_pred_head"
         return F.cross_entropy(
-            immediate_ouput_dict[module_name][0][active], (Y.view(-1) - 1)[active]
+            immediate_ouput_dict[module_name][0][active], (Y.view(-1))[active]
         )
 
     def output(task_name, immediate_ouput_dict):

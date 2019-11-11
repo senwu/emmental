@@ -212,7 +212,7 @@ class EmmentalLearner(object):
             elif (
                 opt in ["step", "multi_step"]
                 and step > 0
-                and step % self.n_batches_per_epoch == 0
+                and (step + 1) % self.n_batches_per_epoch == 0
             ):
                 self.lr_scheduler.step()
             min_lr = Meta.config["learner_config"]["lr_scheduler_config"]["min_lr"]
@@ -290,7 +290,8 @@ class EmmentalLearner(object):
         metric_dict.update(self._aggregate_running_metrics(model))
 
         # Evaluate the model and log the metric
-        if self.logging_manager.trigger_evaluation():
+        trigger_evaluation = self.logging_manager.trigger_evaluation()
+        if trigger_evaluation:
 
             # Log task specific metric
             metric_dict.update(
@@ -302,6 +303,15 @@ class EmmentalLearner(object):
             self.logging_manager.write_log(metric_dict)
 
             self._reset_losses()
+
+        # Log metric dict every trigger evaluation time or full epoch
+        if trigger_evaluation or self.logging_manager.epoch_total == int(
+            self.logging_manager.epoch_total
+        ):
+            logger.info(
+                f"{self.logging_manager.counter_unit.capitalize()}: "
+                f"{self.logging_manager.unit_total:.2f} {metric_dict}"
+            )
 
         # Checkpoint the model
         if self.logging_manager.trigger_checkpointing():

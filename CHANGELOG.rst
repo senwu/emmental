@@ -3,6 +3,7 @@
 
 Added
 ^^^^^
+* `@senwu`_: Log metric dict into log file every trigger evaluation time or full epoch.
 * `@senwu`_: Add `get_num_batches` to calculate the total number batches from all
   dataloaders.
 * `@senwu`_: Add `n_batches` in `EmmentalDataLoader` and `fillup` in `Scheduler` to
@@ -33,6 +34,7 @@ Added
 
 Fixed
 ^^^^^
+* `@senwu`_: Correct lr update for epoch-wised scheduler.
 * `@senwu`_: Add type for class.
 * `@senwu`_: Add warning for one class in ROC AUC metric.
 * `@senwu`_: Fix missing support for StepLR and MultiStepLR lr scheduler.
@@ -43,6 +45,10 @@ Fixed
 
 Changed
 ^^^^^^^
+* `@senwu`_: Change default grad clip to None.
+* `@senwu`_: Update seed and grad_clip to nullable.
+* `@senwu`_: Change default class index to 0-index.
+* `@senwu`_: Change default ignore_index to None.
 * `@senwu`_: Change the default counter unit to epoch.
 * `@senwu`_: Update the metric to return one metric value by default.
 

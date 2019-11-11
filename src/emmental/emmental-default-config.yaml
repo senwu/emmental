@@ -22,12 +22,12 @@ learner_config:
     train_split: train # the split for training, accepts str or list of strs
     valid_split: valid # the split for validation, accepts str or list of strs
     test_split: test # the split for testing, accepts str or list of strs
-    ignore_index: 0 # the ignore index, uses for masking samples
+    ignore_index: # the ignore index, uses for masking samples
     optimizer_config:
         optimizer: adam # [sgd, adam, adamax, bert_adam]
         lr: 0.001 # Learing rate
         l2: 0.0 # l2 regularization
-        grad_clip: 1.0 # gradient clipping
+        grad_clip: # gradient clipping
         sgd_config:
             momentum: 0.9
         adam_config:
