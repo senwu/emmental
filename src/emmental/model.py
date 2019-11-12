@@ -274,7 +274,7 @@ class EmmentalModel(nn.Module):
                         dim=1,
                     )
             else:
-                active = torch.BoolTensor([True] * Y.size()[0])
+                active = torch.ByteTensor([True] * Y.size()[0])
 
             # Only calculate the loss when active example exists
             if active.any():
