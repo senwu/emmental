@@ -16,7 +16,6 @@ setup(
     py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
     install_requires=[
         "numpy>=1.11, <2.0",
-        "pandas>=0.23.4, <0.24.0",
         "pyyaml>=4.2b1, <5.0",
         "scikit-learn>=0.20.3, <0.21.0",
         "scipy>=1.1.0, <2.0.0",
