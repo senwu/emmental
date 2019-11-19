@@ -30,6 +30,8 @@ learner_config:
         grad_clip: # gradient clipping
         sgd_config:
             momentum: 0.9
+            dampening: 0
+            nesterov: False
         adam_config:
             betas: !!python/tuple [0.9, 0.999]
             eps: 0.00000001
