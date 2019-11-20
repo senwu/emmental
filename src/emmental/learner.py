@@ -513,11 +513,11 @@ class EmmentalLearner(object):
                 # Update the parameters
                 self.optimizer.step()
 
-                # Update lr using lr scheduler
-                self._update_lr_scheduler(model, total_batch_num)
-
                 self.metrics.update(self._logging(model, dataloaders, batch_size))
 
                 batches.set_postfix(self.metrics)
+
+                # Update lr using lr scheduler
+                self._update_lr_scheduler(model, total_batch_num)
 
         model = self.logging_manager.close(model)
