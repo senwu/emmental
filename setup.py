@@ -19,7 +19,7 @@ setup(
         "pyyaml>=4.2b1, <5.0",
         "scikit-learn>=0.20.3, <0.21.0",
         "scipy>=1.1.0, <2.0.0",
-        "tensorboardX>=1.6, <2.0",
+        "tensorboard>=2.0.1, <3.0.0",
         "torch>=1.3.1, <2.0.0",
         "tqdm>=4.36.0, <5.0.0",
     ],
