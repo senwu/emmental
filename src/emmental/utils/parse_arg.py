@@ -106,7 +106,11 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     learner_config.add_argument(
-        "--valid_split", type=str, default="valid", help="The split for validation"
+        "--valid_split",
+        nargs="+",
+        type=str,
+        default=["valid"],
+        help="The split for validation",
     )
 
     learner_config.add_argument(
@@ -143,6 +147,14 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
 
     optimizer_config.add_argument(
         "--sgd_momentum", type=float, default=0.9, help="SGD momentum"
+    )
+
+    optimizer_config.add_argument(
+        "--sgd_dampening", type=float, default=0, help="SGD dampening"
+    )
+
+    optimizer_config.add_argument(
+        "--sgd_nesterov", type=str2bool, default=False, help="SGD nesterov"
     )
 
     # TODO: add adam/adamax/bert_adam betas
@@ -308,7 +320,7 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     logging_config.add_argument(
-        "--evaluation_freq", type=float, default=2, help="Logging evaluation frequency"
+        "--evaluation_freq", type=float, default=1, help="Logging evaluation frequency"
     )
 
     logging_config.add_argument(
@@ -418,7 +430,11 @@ def parse_arg_to_config(args: Namespace) -> Dict[str, Any]:
                 "lr": args.lr,
                 "l2": args.l2,
                 "grad_clip": args.grad_clip,
-                "sgd_config": {"momentum": args.sgd_momentum},
+                "sgd_config": {
+                    "momentum": args.sgd_momentum,
+                    "dampening": args.sgd_dampening,
+                    "nesterov": args.sgd_nesterov,
+                },
                 "adam_config": {
                     "betas": (0.9, 0.999),
                     "amsgrad": args.amsgrad,
