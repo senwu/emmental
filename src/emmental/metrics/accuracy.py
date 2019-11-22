@@ -3,6 +3,8 @@ from typing import Dict, List, Optional, Union
 import numpy as np
 from numpy import ndarray
 
+from emmental.utils.utils import prob_to_pred
+
 
 def accuracy_scorer(
     golds: ndarray,
@@ -26,6 +28,9 @@ def accuracy_scorer(
       samples (int).
 
     """
+
+    if len(golds.shape) == 2:
+        golds = prob_to_pred(golds)
 
     if normalize:
         return {"accuracy": np.where(golds == preds)[0].shape[0] / golds.shape[0]}
