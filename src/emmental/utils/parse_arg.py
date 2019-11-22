@@ -106,7 +106,11 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     learner_config.add_argument(
-        "--valid_split", type=str, default="valid", help="The split for validation"
+        "--valid_split",
+        nargs="+",
+        type=str,
+        default=["valid"],
+        help="The split for validation",
     )
 
     learner_config.add_argument(
@@ -145,6 +149,14 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         "--sgd_momentum", type=float, default=0.9, help="SGD momentum"
     )
 
+    optimizer_config.add_argument(
+        "--sgd_dampening", type=float, default=0, help="SGD dampening"
+    )
+
+    optimizer_config.add_argument(
+        "--sgd_nesterov", type=str2bool, default=False, help="SGD nesterov"
+    )
+
     # TODO: add adam/adamax/bert_adam betas
 
     optimizer_config.add_argument(
@@ -165,7 +177,7 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         "--lr_scheduler",
         type=nullable_string,
         default=None,
-        choices=["linear", "exponential", "step", "multi_step"],
+        choices=["linear", "exponential", "step", "multi_step", "cosine_annealing"],
         help="Learning rate scheduler",
     )
 
@@ -268,18 +280,25 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     scheduler_config.add_argument(
+        "--cosine_annealing_lr_scheduler_last_epoch",
+        type=int,
+        default=-1,
+        help="The index of last epoch",
+    )
+
+    scheduler_config.add_argument(
         "--task_scheduler",
         type=str,
         default="round_robin",
         choices=["sequential", "round_robin", "mixed"],
-        help="task scheduler",
+        help="Task scheduler",
     )
 
     scheduler_config.add_argument(
         "--sequential_scheduler_fillup",
         type=str2bool,
         default=False,
-        help="whether fillup in sequential scheduler",
+        help="Whether fillup in sequential scheduler",
     )
 
     scheduler_config.add_argument(
@@ -308,7 +327,7 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     logging_config.add_argument(
-        "--evaluation_freq", type=float, default=2, help="Logging evaluation frequency"
+        "--evaluation_freq", type=float, default=1, help="Logging evaluation frequency"
     )
 
     logging_config.add_argument(
@@ -418,7 +437,11 @@ def parse_arg_to_config(args: Namespace) -> Dict[str, Any]:
                 "lr": args.lr,
                 "l2": args.l2,
                 "grad_clip": args.grad_clip,
-                "sgd_config": {"momentum": args.sgd_momentum},
+                "sgd_config": {
+                    "momentum": args.sgd_momentum,
+                    "dampening": args.sgd_dampening,
+                    "nesterov": args.sgd_nesterov,
+                },
                 "adam_config": {
                     "betas": (0.9, 0.999),
                     "amsgrad": args.amsgrad,
@@ -449,6 +472,9 @@ def parse_arg_to_config(args: Namespace) -> Dict[str, Any]:
                     "milestones": args.multi_step_lr_scheduler_milestones,
                     "gamma": args.multi_step_lr_scheduler_gamma,
                     "last_epoch": args.multi_step_lr_scheduler_last_epoch,
+                },
+                "cosine_annealing_config": {
+                    "last_epoch": args.cosine_annealing_lr_scheduler_last_epoch
                 },
             },
             "task_scheduler_config": {
