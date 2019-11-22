@@ -177,7 +177,7 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         "--lr_scheduler",
         type=nullable_string,
         default=None,
-        choices=["linear", "exponential", "step", "multi_step"],
+        choices=["linear", "exponential", "step", "multi_step", "cosine_annealing"],
         help="Learning rate scheduler",
     )
 
@@ -280,18 +280,25 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     scheduler_config.add_argument(
+        "--cosine_annealing_lr_scheduler_last_epoch",
+        type=int,
+        default=-1,
+        help="The index of last epoch",
+    )
+
+    scheduler_config.add_argument(
         "--task_scheduler",
         type=str,
         default="round_robin",
         choices=["sequential", "round_robin", "mixed"],
-        help="task scheduler",
+        help="Task scheduler",
     )
 
     scheduler_config.add_argument(
         "--sequential_scheduler_fillup",
         type=str2bool,
         default=False,
-        help="whether fillup in sequential scheduler",
+        help="Whether fillup in sequential scheduler",
     )
 
     scheduler_config.add_argument(
@@ -465,6 +472,9 @@ def parse_arg_to_config(args: Namespace) -> Dict[str, Any]:
                     "milestones": args.multi_step_lr_scheduler_milestones,
                     "gamma": args.multi_step_lr_scheduler_gamma,
                     "last_epoch": args.multi_step_lr_scheduler_last_epoch,
+                },
+                "cosine_annealing_config": {
+                    "last_epoch": args.cosine_annealing_lr_scheduler_last_epoch
                 },
             },
             "task_scheduler_config": {

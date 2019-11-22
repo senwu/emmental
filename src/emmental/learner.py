@@ -133,6 +133,16 @@ class EmmentalLearner(object):
             lr_scheduler = optim.lr_scheduler.MultiStepLR(
                 self.optimizer, **lr_scheduler_config["multi_step_config"]
             )
+        elif opt == "cosine_annealing":
+            total_steps = (
+                self.n_batches_per_epoch * Meta.config["learner_config"]["n_epochs"]
+            )
+            lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(
+                self.optimizer,
+                total_steps,
+                eta_min=lr_scheduler_config["min_lr"],
+                **lr_scheduler_config["cosine_annealing_config"],
+            )
         # elif opt == "reduce_on_plateau":
         #     lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         #         self.optimizer,
@@ -207,7 +217,7 @@ class EmmentalLearner(object):
             self.warmup_scheduler.step()
         elif self.lr_scheduler is not None:
             opt = Meta.config["learner_config"]["lr_scheduler_config"]["lr_scheduler"]
-            if opt in ["linear", "exponential"]:
+            if opt in ["linear", "exponential", "cosine_annealing"]:
                 self.lr_scheduler.step()
             elif (
                 opt in ["step", "multi_step"]

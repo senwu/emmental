@@ -1,5 +1,12 @@
-[Unreleased]
-------------
+Unreleased_
+-----------
+
+Added
+^^^^^
+* `@senwu`_: Support cosine annealing lr scheduler.
+
+0.0.4_ - 2019-11-11
+-------------------
 
 Added
 ^^^^^
@@ -55,6 +62,9 @@ Changed
 Removed
 ^^^^^^^
 * `@senwu`_: Remove `checkpoint_clear` argument.
+
+.. _Unreleased: https://github.com/senwu/emmental/compare/v0.0.4...master
+.. _0.0.4: https://github.com/senwu/emmental/compare/v0.0.3...v0.0.4
 
 ..
   For convenience, all username links for contributors can be listed here
