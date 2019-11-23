@@ -44,11 +44,22 @@ def test_accuracy(caplog):
     caplog.set_level(logging.INFO)
 
     golds = np.array([0, 1, 0, 1, 0, 1])
+    probs = np.array(
+        [[0.9, 0.1], [0.6, 0.4], [1.0, 0.0], [0.8, 0.2], [0.6, 0.4], [0.05, 0.95]]
+    )
     preds = np.array([0, 0, 0, 0, 0, 1])
 
     metric_dict = accuracy_scorer(golds, None, preds)
 
     assert isequal(metric_dict, {"accuracy": 0.6666666666666666})
+
+    metric_dict = accuracy_scorer(golds, probs, None)
+
+    assert isequal(metric_dict, {"accuracy": 0.6666666666666666})
+
+    metric_dict = accuracy_scorer(golds, probs, preds, topk=2)
+
+    assert isequal(metric_dict, {"accuracy@2": 1.0})
 
 
 def test_precision(caplog):

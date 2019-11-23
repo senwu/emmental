@@ -1,4 +1,5 @@
 import logging
+from functools import partial
 from typing import Callable, Dict, List
 
 from numpy import ndarray
@@ -26,9 +27,14 @@ class Scorer(object):
     ) -> None:
         self.metrics: Dict[str, Callable] = dict()
         for metric in metrics:
-            if metric not in METRICS:
+            if metric in METRICS:
+                self.metrics[metric] = METRICS[metric]
+            elif metric.startswith("accuracy@"):
+                self.metrics[metric] = partial(
+                    METRICS["accuracy"], topk=int(metric.split("@")[1])
+                )
+            else:
                 raise ValueError(f"Unrecognized metric: {metric}")
-            self.metrics[metric] = METRICS[metric]
 
         self.metrics.update(customize_metric_funcs)
 
