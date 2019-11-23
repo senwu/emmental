@@ -3,6 +3,7 @@ Unreleased_
 
 Added
 ^^^^^
+* `@senwu`_: Support accuracy@k metric.
 * `@senwu`_: Support cosine annealing lr scheduler.
 
 0.0.4_ - 2019-11-11
