@@ -102,7 +102,11 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     learner_config.add_argument(
-        "--train_split", type=str, default="train", help="The split for training"
+        "--train_split",
+        nargs="+",
+        type=str,
+        default=["train"],
+        help="The split for training",
     )
 
     learner_config.add_argument(
@@ -114,7 +118,11 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     learner_config.add_argument(
-        "--test_split", type=str, default="test", help="The split for testing"
+        "--test_split",
+        nargs="+",
+        type=str,
+        default=["test"],
+        help="The split for testing",
     )
 
     learner_config.add_argument(
