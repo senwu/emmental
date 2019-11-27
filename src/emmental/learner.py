@@ -13,6 +13,7 @@ from emmental.logging import LoggingManager
 from emmental.model import EmmentalModel
 from emmental.optimizers.bert_adam import BertAdam
 from emmental.schedulers import SCHEDULERS
+from emmental.schedulers.scheduler import Scheduler
 from emmental.utils.utils import construct_identifier, prob_to_pred
 
 try:
@@ -240,6 +241,8 @@ class EmmentalLearner(object):
                     f"{opt}_scheduler_config"
                 ]
             )
+        elif isinstance(opt, Scheduler):
+            self.task_scheduler = opt
         else:
             raise ValueError(f"Unrecognized task scheduler option '{opt}'")
 

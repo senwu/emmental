@@ -34,7 +34,7 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     meta_config.add_argument(
         "--seed",
         type=nullable_int,
-        default=0,
+        default=None,
         help="Random seed for all numpy/torch/cuda operations in model and learning",
     )
 
@@ -298,7 +298,7 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         "--task_scheduler",
         type=str,
         default="round_robin",
-        choices=["sequential", "round_robin", "mixed"],
+        # choices=["sequential", "round_robin", "mixed"],
         help="Task scheduler",
     )
 
