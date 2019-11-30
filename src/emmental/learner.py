@@ -59,34 +59,22 @@ class EmmentalLearner(object):
 
         parameters = filter(lambda p: p.requires_grad, model.parameters())
 
-        if opt == "sgd":
-            optimizer = optim.SGD(
+        optim_dict = {
+            "sgd": optim.SGD,
+            "adam": optim.Adam,
+            "adamax": optim.Adamax,
+            "bert_adam": BertAdam,
+        }
+
+        if opt in optim_dict.keys():
+            optimizer = optim_dict[opt](
                 parameters,
                 lr=optimizer_config["lr"],
                 weight_decay=optimizer_config["l2"],
-                **optimizer_config["sgd_config"],
+                **optimizer_config[f"{opt}_config"],
             )
-        elif opt == "adam":
-            optimizer = optim.Adam(
-                parameters,
-                lr=optimizer_config["lr"],
-                weight_decay=optimizer_config["l2"],
-                **optimizer_config["adam_config"],
-            )
-        elif opt == "adamax":
-            optimizer = optim.Adamax(
-                parameters,
-                lr=optimizer_config["lr"],
-                weight_decay=optimizer_config["l2"],
-                **optimizer_config["adamax_config"],
-            )
-        elif opt == "bert_adam":
-            optimizer = BertAdam(
-                parameters,
-                lr=optimizer_config["lr"],
-                weight_decay=optimizer_config["l2"],
-                **optimizer_config["bert_adam_config"],
-            )
+        elif isinstance(opt, optim.Optimizer):
+            optimizer = opt(parameters)
         else:
             raise ValueError(f"Unrecognized optimizer option '{opt}'")
 
