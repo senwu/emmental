@@ -1,7 +1,9 @@
 import logging
 import shutil
 
+import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 import emmental
 from emmental import Meta
@@ -55,5 +57,11 @@ def test_bert_adam_optimizer(caplog):
         "eps": 1e-05,
         "weight_decay": 0.05,
     }
+
+    # Test BertAdam setp
+    emmental_learner.optimizer.zero_grad()
+    torch.Tensor(1)
+    F.mse_loss(model(torch.randn(1, 1)), torch.randn(1, 1)).backward()
+    emmental_learner.optimizer.step()
 
     shutil.rmtree(dirpath)
