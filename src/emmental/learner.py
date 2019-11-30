@@ -52,8 +52,6 @@ class EmmentalLearner(object):
           model(EmmentalModel): The model to set up the optimizer.
 
         """
-
-        # TODO: add more optimizer support and fp16
         optimizer_config = Meta.config["learner_config"]["optimizer_config"]
         opt = optimizer_config["optimizer"]
 

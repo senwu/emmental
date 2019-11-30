@@ -66,7 +66,7 @@ learner_config:
             etas: !!python/tuple [0.5, 1.2]
             step_sizes: !!python/tuple [0.000001, 50]
         sgd_config:
-            momentum: 0.9
+            momentum: 0
             dampening: 0
             nesterov: False
         sparse_adam_config:

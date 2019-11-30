@@ -313,7 +313,7 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
 
     # SGD config
     optimizer_config.add_argument(
-        "--sgd_momentum", type=float, default=0.9, help="SGD momentum"
+        "--sgd_momentum", type=float, default=0.0, help="SGD momentum"
     )
 
     optimizer_config.add_argument(
