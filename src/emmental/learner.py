@@ -60,9 +60,19 @@ class EmmentalLearner(object):
         parameters = filter(lambda p: p.requires_grad, model.parameters())
 
         optim_dict = {
-            "sgd": optim.SGD,
+            # PyTorch optimizer
+            "asgd": optim.ASGD,
+            "adadelta": optim.Adadelta,
+            "adagrad": optim.Adagrad,
             "adam": optim.Adam,
+            "adamw": optim.AdamW,
             "adamax": optim.Adamax,
+            "lbfgs": optim.LBFGS,
+            "rms_prop": optim.RMSprop,
+            "r_prop": optim.Rprop,
+            "sgd": optim.SGD,
+            "sparse_adam": optim.SparseAdam,
+            # Customize optimizer
             "bert_adam": BertAdam,
         }
 

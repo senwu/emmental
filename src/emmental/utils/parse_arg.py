@@ -137,9 +137,23 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
 
     optimizer_config.add_argument(
         "--optimizer",
-        type=str,
+        type=nullable_string,
         default="adam",
-        choices=["adam", "adamax", "sgd", "bert_adam"],
+        choices=[
+            "asgd",
+            "adadelta",
+            "adagrad",
+            "adam",
+            "adamw",
+            "adamax",
+            "lbfgs",
+            "rms_prop",
+            "r_prop",
+            "sgd",
+            "sparse_adam",
+            "bert_adam",
+            None,
+        ],
         help="The optimizer to use",
     )
 
@@ -153,6 +167,124 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         "--grad_clip", type=nullable_float, default=None, help="Gradient clipping"
     )
 
+    # ASGD config
+    optimizer_config.add_argument(
+        "--asgd_lambd", type=float, default=0.0001, help="ASGD lambd"
+    )
+
+    optimizer_config.add_argument(
+        "--asgd_alpha", type=float, default=0.75, help="ASGD alpha"
+    )
+
+    optimizer_config.add_argument(
+        "--asgd_t0", type=float, default=1000000.0, help="ASGD t0"
+    )
+
+    # Adadelta config
+    optimizer_config.add_argument(
+        "--adadelta_rho", type=float, default=0.9, help="Adadelta rho"
+    )
+
+    optimizer_config.add_argument(
+        "--adadelta_eps", type=float, default=0.000001, help="Adadelta eps"
+    )
+
+    # Adagrad config
+    optimizer_config.add_argument(
+        "--adagrad_lr_decay", type=float, default=0, help="Adagrad lr_decay"
+    )
+
+    optimizer_config.add_argument(
+        "--adagrad_initial_accumulator_value",
+        type=float,
+        default=0,
+        help="Adagrad initial accumulator value",
+    )
+
+    optimizer_config.add_argument(
+        "--adagrad_eps", type=float, default=0.0000000001, help="Adagrad eps"
+    )
+
+    # TODO: add adam/adamax/bert_adam betas
+
+    # Adam config
+    optimizer_config.add_argument(
+        "--adam_eps", type=float, default=1e-8, help="Adam eps"
+    )
+
+    optimizer_config.add_argument(
+        "--adam_amsgrad",
+        type=str2bool,
+        default=False,
+        help="Whether to use the AMSGrad variant of adam",
+    )
+
+    # AdamW config
+    optimizer_config.add_argument(
+        "--adamw_eps", type=float, default=1e-8, help="AdamW eps"
+    )
+
+    optimizer_config.add_argument(
+        "--adamw_amsgrad",
+        type=str2bool,
+        default=False,
+        help="Whether to use the AMSGrad variant of AdamW",
+    )
+
+    # Adamax config
+    optimizer_config.add_argument(
+        "--adamax_eps", type=float, default=1e-8, help="Adamax eps"
+    )
+
+    # LBFGS config
+    optimizer_config.add_argument(
+        "--lbfgs_max_iter", type=int, default=20, help="LBFGS max iter"
+    )
+
+    optimizer_config.add_argument(
+        "--lbfgs_max_eval", type=nullable_int, default=None, help="LBFGS max eval"
+    )
+
+    optimizer_config.add_argument(
+        "--lbfgs_tolerance_grad", type=float, default=1e-07, help="LBFGS tolerance grad"
+    )
+
+    optimizer_config.add_argument(
+        "--lbfgs_tolerance_change",
+        type=float,
+        default=1e-09,
+        help="LBFGS tolerance change",
+    )
+
+    optimizer_config.add_argument(
+        "--lbfgs_history_size", type=int, default=100, help="LBFGS history size"
+    )
+
+    optimizer_config.add_argument(
+        "--lbfgs_line_search_fn",
+        type=nullable_string,
+        default=None,
+        help="LBFGS line search fn",
+    )
+
+    # RMSprop config
+    optimizer_config.add_argument(
+        "--rms_prop_alpha", type=float, default=0.99, help="RMSprop alpha"
+    )
+
+    optimizer_config.add_argument(
+        "--rms_prop_eps", type=float, default=1e-08, help="RMSprop eps"
+    )
+
+    optimizer_config.add_argument(
+        "--rms_prop_momentum", type=float, default=0, help="RMSprop momentum"
+    )
+
+    optimizer_config.add_argument(
+        "--rms_prop_centered", type=str2bool, default=False, help="RMSprop centered"
+    )
+
+    # SGD config
     optimizer_config.add_argument(
         "--sgd_momentum", type=float, default=0.9, help="SGD momentum"
     )
@@ -165,17 +297,17 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         "--sgd_nesterov", type=str2bool, default=False, help="SGD nesterov"
     )
 
-    # TODO: add adam/adamax/bert_adam betas
+    # TODO: support etas and step_sizes in Rprop
+    # Rprop config
 
+    # SparseAdam config
     optimizer_config.add_argument(
-        "--amsgrad",
-        type=str2bool,
-        default=False,
-        help="Whether to use the AMSGrad variant of adam",
+        "--sparse_adam_eps", type=float, default=1e-08, help="SparseAdam eps"
     )
 
+    # BertAdam config
     optimizer_config.add_argument(
-        "--eps", type=float, default=1e-8, help="eps in adam, adamax, or bert_adam"
+        "--bert_adam_eps", type=float, default=1e-08, help="BertAdam eps"
     )
 
     # Scheduler configuration
@@ -445,18 +577,53 @@ def parse_arg_to_config(args: Namespace) -> Dict[str, Any]:
                 "lr": args.lr,
                 "l2": args.l2,
                 "grad_clip": args.grad_clip,
+                "asgd_config": {
+                    "lambd": args.asgd_lambd,
+                    "alpha": args.asgd_alpha,
+                    "t0": args.asgd_t0,
+                },
+                "adadelta_config": {"rho": args.adadelta_rho, "eps": args.adadelta_eps},
+                "adagrad_config": {
+                    "lr_decay": args.adagrad_lr_decay,
+                    "initial_accumulator_value": args.adagrad_initial_accumulator_value,
+                    "eps": args.adagrad_eps,
+                },
+                "adam_config": {
+                    "betas": (0.9, 0.999),
+                    "amsgrad": args.adam_amsgrad,
+                    "eps": args.adam_eps,
+                },
+                "adamw_config": {
+                    "betas": (0.9, 0.999),
+                    "amsgrad": args.adamw_amsgrad,
+                    "eps": args.adamw_eps,
+                },
+                "adamax_config": {"betas": (0.9, 0.999), "eps": args.adamax_eps},
+                "lbfgs_config": {
+                    "max_iter": args.lbfgs_max_iter,
+                    "max_eval": args.lbfgs_max_eval,
+                    "tolerance_grad": args.lbfgs_tolerance_grad,
+                    "tolerance_change": args.lbfgs_tolerance_change,
+                    "history_size": args.lbfgs_history_size,
+                    "line_search_fn": args.lbfgs_line_search_fn,
+                },
+                "rms_prop_config": {
+                    "alpha": args.rms_prop_alpha,
+                    "eps": args.rms_prop_eps,
+                    "momentum": args.rms_prop_momentum,
+                    "centered": args.rms_prop_centered,
+                },
+                "r_prop": {"etas": (0.5, 1.2), "step_sizes": (1e-06, 50)},
                 "sgd_config": {
                     "momentum": args.sgd_momentum,
                     "dampening": args.sgd_dampening,
                     "nesterov": args.sgd_nesterov,
                 },
-                "adam_config": {
+                "sparse_adam_config": {
                     "betas": (0.9, 0.999),
-                    "amsgrad": args.amsgrad,
-                    "eps": args.eps,
+                    "eps": args.sparse_adam_eps,
                 },
-                "adamax_config": {"betas": (0.9, 0.999), "eps": args.eps},
-                "bert_adam_config": {"betas": (0.9, 0.999), "eps": args.eps},
+                "bert_adam_config": {"betas": (0.9, 0.999), "eps": args.bert_adam_eps},
             },
             "lr_scheduler_config": {
                 "lr_scheduler": args.lr_scheduler,
