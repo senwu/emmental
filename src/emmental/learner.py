@@ -76,7 +76,13 @@ class EmmentalLearner(object):
             "bert_adam": BertAdam,
         }
 
-        if opt in optim_dict.keys():
+        if opt in ["lbfgs", "r_prop", "sparse_adam"]:
+            optimizer = optim_dict[opt](
+                parameters,
+                lr=optimizer_config["lr"],
+                **optimizer_config[f"{opt}_config"],
+            )
+        elif opt in optim_dict.keys():
             optimizer = optim_dict[opt](
                 parameters,
                 lr=optimizer_config["lr"],

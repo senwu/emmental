@@ -205,9 +205,11 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         "--adagrad_eps", type=float, default=0.0000000001, help="Adagrad eps"
     )
 
-    # TODO: add adam/adamax/bert_adam betas
-
     # Adam config
+    optimizer_config.add_argument(
+        "--adam_betas", nargs="+", type=float, default=(0.9, 0.999), help="Adam betas"
+    )
+
     optimizer_config.add_argument(
         "--adam_eps", type=float, default=1e-8, help="Adam eps"
     )
@@ -221,6 +223,10 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
 
     # AdamW config
     optimizer_config.add_argument(
+        "--adamw_betas", nargs="+", type=float, default=(0.9, 0.999), help="AdamW betas"
+    )
+
+    optimizer_config.add_argument(
         "--adamw_eps", type=float, default=1e-8, help="AdamW eps"
     )
 
@@ -232,6 +238,14 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     # Adamax config
+    optimizer_config.add_argument(
+        "--adamax_betas",
+        nargs="+",
+        type=float,
+        default=(0.9, 0.999),
+        help="Adamax betas",
+    )
+
     optimizer_config.add_argument(
         "--adamax_eps", type=float, default=1e-8, help="Adamax eps"
     )
@@ -284,6 +298,19 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         "--rms_prop_centered", type=str2bool, default=False, help="RMSprop centered"
     )
 
+    # Rprop config
+    optimizer_config.add_argument(
+        "--r_prop_etas", nargs="+", type=float, default=(0.5, 1.2), help="Rprop etas"
+    )
+
+    optimizer_config.add_argument(
+        "--r_prop_step_sizes",
+        nargs="+",
+        type=float,
+        default=(1e-06, 50),
+        help="Rprop step sizes",
+    )
+
     # SGD config
     optimizer_config.add_argument(
         "--sgd_momentum", type=float, default=0.9, help="SGD momentum"
@@ -302,10 +329,26 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
 
     # SparseAdam config
     optimizer_config.add_argument(
+        "--sparse_adam_betas",
+        nargs="+",
+        type=float,
+        default=(0.9, 0.999),
+        help="SparseAdam betas",
+    )
+
+    optimizer_config.add_argument(
         "--sparse_adam_eps", type=float, default=1e-08, help="SparseAdam eps"
     )
 
     # BertAdam config
+    optimizer_config.add_argument(
+        "--bert_adam_betas",
+        nargs="+",
+        type=float,
+        default=(0.9, 0.999),
+        help="BertAdam betas",
+    )
+
     optimizer_config.add_argument(
         "--bert_adam_eps", type=float, default=1e-08, help="BertAdam eps"
     )
@@ -589,16 +632,16 @@ def parse_arg_to_config(args: Namespace) -> Dict[str, Any]:
                     "eps": args.adagrad_eps,
                 },
                 "adam_config": {
-                    "betas": (0.9, 0.999),
+                    "betas": args.adam_betas,
                     "amsgrad": args.adam_amsgrad,
                     "eps": args.adam_eps,
                 },
                 "adamw_config": {
-                    "betas": (0.9, 0.999),
+                    "betas": args.adamw_betas,
                     "amsgrad": args.adamw_amsgrad,
                     "eps": args.adamw_eps,
                 },
-                "adamax_config": {"betas": (0.9, 0.999), "eps": args.adamax_eps},
+                "adamax_config": {"betas": args.adamax_betas, "eps": args.adamax_eps},
                 "lbfgs_config": {
                     "max_iter": args.lbfgs_max_iter,
                     "max_eval": args.lbfgs_max_eval,
@@ -613,17 +656,23 @@ def parse_arg_to_config(args: Namespace) -> Dict[str, Any]:
                     "momentum": args.rms_prop_momentum,
                     "centered": args.rms_prop_centered,
                 },
-                "r_prop": {"etas": (0.5, 1.2), "step_sizes": (1e-06, 50)},
+                "r_prop_config": {
+                    "etas": args.r_prop_etas,
+                    "step_sizes": args.r_prop_step_sizes,
+                },
                 "sgd_config": {
                     "momentum": args.sgd_momentum,
                     "dampening": args.sgd_dampening,
                     "nesterov": args.sgd_nesterov,
                 },
                 "sparse_adam_config": {
-                    "betas": (0.9, 0.999),
+                    "betas": args.sparse_adam_betas,
                     "eps": args.sparse_adam_eps,
                 },
-                "bert_adam_config": {"betas": (0.9, 0.999), "eps": args.bert_adam_eps},
+                "bert_adam_config": {
+                    "betas": args.bert_adam_betas,
+                    "eps": args.bert_adam_eps,
+                },
             },
             "lr_scheduler_config": {
                 "lr_scheduler": args.lr_scheduler,
