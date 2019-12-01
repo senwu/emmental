@@ -52,41 +52,43 @@ class EmmentalLearner(object):
           model(EmmentalModel): The model to set up the optimizer.
 
         """
-
-        # TODO: add more optimizer support and fp16
         optimizer_config = Meta.config["learner_config"]["optimizer_config"]
         opt = optimizer_config["optimizer"]
 
         parameters = filter(lambda p: p.requires_grad, model.parameters())
 
-        if opt == "sgd":
-            optimizer = optim.SGD(
+        optim_dict = {
+            # PyTorch optimizer
+            "asgd": optim.ASGD,
+            "adadelta": optim.Adadelta,
+            "adagrad": optim.Adagrad,
+            "adam": optim.Adam,
+            "adamw": optim.AdamW,
+            "adamax": optim.Adamax,
+            "lbfgs": optim.LBFGS,
+            "rms_prop": optim.RMSprop,
+            "r_prop": optim.Rprop,
+            "sgd": optim.SGD,
+            "sparse_adam": optim.SparseAdam,
+            # Customize optimizer
+            "bert_adam": BertAdam,
+        }
+
+        if opt in ["lbfgs", "r_prop", "sparse_adam"]:
+            optimizer = optim_dict[opt](
+                parameters,
+                lr=optimizer_config["lr"],
+                **optimizer_config[f"{opt}_config"],
+            )
+        elif opt in optim_dict.keys():
+            optimizer = optim_dict[opt](
                 parameters,
                 lr=optimizer_config["lr"],
                 weight_decay=optimizer_config["l2"],
-                **optimizer_config["sgd_config"],
+                **optimizer_config[f"{opt}_config"],
             )
-        elif opt == "adam":
-            optimizer = optim.Adam(
-                parameters,
-                lr=optimizer_config["lr"],
-                weight_decay=optimizer_config["l2"],
-                **optimizer_config["adam_config"],
-            )
-        elif opt == "adamax":
-            optimizer = optim.Adamax(
-                parameters,
-                lr=optimizer_config["lr"],
-                weight_decay=optimizer_config["l2"],
-                **optimizer_config["adamax_config"],
-            )
-        elif opt == "bert_adam":
-            optimizer = BertAdam(
-                parameters,
-                lr=optimizer_config["lr"],
-                weight_decay=optimizer_config["l2"],
-                **optimizer_config["bert_adam_config"],
-            )
+        elif isinstance(opt, optim.Optimizer):
+            optimizer = opt(parameters)
         else:
             raise ValueError(f"Unrecognized optimizer option '{opt}'")
 

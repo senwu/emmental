@@ -25,7 +25,7 @@ The logging parameters of Emmental are described below::
     # Logging configuration
     logging_config:
         counter_unit: epoch # [epoch, batch]
-        evaluation_freq: 2
+        evaluation_freq: 1
         writer_config:
             writer: tensorboard # [json, tensorboard]
             verbose: True
