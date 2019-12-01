@@ -11,7 +11,7 @@ from emmental.utils.utils import (
 )
 
 
-def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
+def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     r"""Parse the configuration from command line.
 
     Args:
@@ -583,7 +583,7 @@ def parse_arg(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     return parser
 
 
-def parse_arg_to_config(args: Namespace) -> Dict[str, Any]:
+def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
     r"""Parse the arguments to config dict
 
     Args:
