@@ -1,4 +1,3 @@
-import argparse
 import logging
 
 from emmental.utils.parse_args import parse_args, parse_args_to_config
@@ -11,11 +10,7 @@ def test_parse_args(caplog):
 
     caplog.set_level(logging.INFO)
 
-    parser = argparse.ArgumentParser(
-        "Paser test", formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
-
-    parser = parse_args(parser=parser)
+    parser = parse_args()
     args = parser.parse_args(["--seed", "0"])
     assert args.seed == 0
 
