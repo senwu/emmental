@@ -27,7 +27,7 @@ def test_embedding_module(caplog):
         ]
     )
 
-    emb_layer = EmbeddingModule(word_counter=word_counter, word_dim=10)
+    emb_layer = EmbeddingModule(word_counter=word_counter, word_dim=10, max_size=10)
 
     assert emb_layer.dim == 10
     # <unk> and <pad> are default tokens
@@ -50,3 +50,12 @@ def test_embedding_module(caplog):
         )
         < 1e-4
     )
+
+    # With threshold
+    word_counter = {"1": 3, "2": 1, "3": 1}
+    emb_layer = EmbeddingModule(word_counter=word_counter, word_dim=10, threshold=2)
+    assert emb_layer.embeddings.weight.size() == (3, 10)
+
+    # No word counter
+    emb_layer = EmbeddingModule(embedding_file="tests/modules/embeddings.vec")
+    assert emb_layer.embeddings.weight.size() == (5, 5)
