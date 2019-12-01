@@ -105,12 +105,15 @@ class RNN(nn.Module):
             """
             Mean pooling
             """
+            if x_mask is None:
+                x_mask = x.new_full(x.size()[:2], fill_value=0, dtype=torch.uint8)
             x_lens = x_mask.data.eq(0).long().sum(dim=1)
-            weights = torch.ones(x.size()) / x_lens.unsqueeze(1).float()
+            weights = (
+                output_word.new_ones(output_word.size())
+                / x_lens.view(x_lens.size()[0], 1, 1).float()
+            )
             weights.data.masked_fill_(x_mask.data.unsqueeze(dim=2), 0.0)
-            word_vectors = torch.bmm(
-                output_word.transpose(1, 2), weights.unsqueeze(2)
-            ).squeeze(2)
+            word_vectors = torch.sum(output_word * weights, dim=1)
             output = self.linear(word_vectors) if self.final_linear else word_vectors
 
         return output
