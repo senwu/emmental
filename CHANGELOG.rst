@@ -3,6 +3,8 @@ Unreleased_
 
 Added
 ^^^^^
+* `@senwu`_: Support more unit tests.
+* `@senwu`_: Support all pytorch optimizers.
 * `@senwu`_: Support accuracy@k metric.
 * `@senwu`_: Support cosine annealing lr scheduler.
 
