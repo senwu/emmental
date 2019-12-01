@@ -19,6 +19,7 @@ def test_rnn_module(caplog):
     batch_size = 3
     seq_len = 4
 
+    # Single direction RNN
     rnn = RNN(
         num_classes=n_class,
         emb_size=emb_size,
@@ -27,11 +28,17 @@ def test_rnn_module(caplog):
         dropout=0.2,
         bidirectional=False,
     )
+    _, input_mask = pad_batch(torch.randn(batch_size, seq_len))
 
     assert rnn(torch.randn(batch_size, seq_len, emb_size)).size() == (3, n_class)
+    assert rnn(torch.randn(batch_size, seq_len, emb_size), input_mask).size() == (
+        3,
+        n_class,
+    )
 
+    # Bi-direction RNN
     rnn = RNN(
-        num_classes=n_class,
+        num_classes=0,
         emb_size=emb_size,
         lstm_hidden=lstm_hidden,
         attention=False,
@@ -41,8 +48,11 @@ def test_rnn_module(caplog):
 
     _, input_mask = pad_batch(torch.randn(batch_size, seq_len))
 
-    assert rnn(torch.randn(batch_size, seq_len, emb_size)).size() == (3, n_class)
+    assert rnn(torch.randn(batch_size, seq_len, emb_size)).size() == (
+        3,
+        2 * lstm_hidden,
+    )
     assert rnn(torch.randn(batch_size, seq_len, emb_size), input_mask).size() == (
         3,
-        n_class,
+        2 * lstm_hidden,
     )
