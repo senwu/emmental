@@ -45,9 +45,10 @@ class slicing_function:
                 )
                 in_slice = f(example)
                 inds.append(1 if in_slice else 0)
-            inds = torch.from_numpy(np.array(inds)).view(-1)
+            inds = torch.from_numpy(np.array(inds)).view(-1)  # type: ignore
             logger.info(
-                f"Total {int((inds == 1).sum())} / {len(dataset)} examples are "
+                f"Total {int((inds == 1).sum())} / {len(dataset)} "  # type: ignore
+                f" examples are "
                 f"in slice {f.__name__}"
             )
             return inds

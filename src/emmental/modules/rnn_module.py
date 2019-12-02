@@ -68,7 +68,9 @@ class RNN(nn.Module):
         if self.final_linear:
             self.linear = nn.Linear(b * lstm_hidden, num_classes)
 
-    def forward(self, x: Tensor, x_mask: Optional[Tensor] = None) -> Tensor:
+    def forward(  # type: ignore
+        self, x: Tensor, x_mask: Optional[Tensor] = None
+    ) -> Tensor:
         r"""Forward function.
 
         Args:

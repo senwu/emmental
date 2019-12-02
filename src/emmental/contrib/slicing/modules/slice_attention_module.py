@@ -30,7 +30,9 @@ class SliceAttentionModule(nn.Module):
         self.slice_pred_key = slice_pred_key
         self.slice_pred_feat_key = slice_pred_feat_key
 
-    def forward(self, intermediate_output_dict: Dict[str, Any]) -> Tensor:
+    def forward(  # type: ignore
+        self, intermediate_output_dict: Dict[str, Any]
+    ) -> Tensor:
         r"""Forward function.
 
         Args:

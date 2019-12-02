@@ -40,9 +40,11 @@ install:
 - make check
 - make docs
 - pip install -q coveralls
+- pip install -q mypy
 
 script:
 - travis_wait 50 coverage run --source=emmental -m pytest tests
+- mypy src
 
 after_success:
 - coveralls

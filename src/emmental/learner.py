@@ -59,17 +59,17 @@ class EmmentalLearner(object):
 
         optim_dict = {
             # PyTorch optimizer
-            "asgd": optim.ASGD,
-            "adadelta": optim.Adadelta,
-            "adagrad": optim.Adagrad,
-            "adam": optim.Adam,
-            "adamw": optim.AdamW,
-            "adamax": optim.Adamax,
-            "lbfgs": optim.LBFGS,
-            "rms_prop": optim.RMSprop,
-            "r_prop": optim.Rprop,
-            "sgd": optim.SGD,
-            "sparse_adam": optim.SparseAdam,
+            "asgd": optim.ASGD,  # type: ignore
+            "adadelta": optim.Adadelta,  # type: ignore
+            "adagrad": optim.Adagrad,  # type: ignore
+            "adam": optim.Adam,  # type: ignore
+            "adamw": optim.AdamW,  # type: ignore
+            "adamax": optim.Adamax,  # type: ignore
+            "lbfgs": optim.LBFGS,  # type: ignore
+            "rms_prop": optim.RMSprop,  # type: ignore
+            "r_prop": optim.Rprop,  # type: ignore
+            "sgd": optim.SGD,  # type: ignore
+            "sparse_adam": optim.SparseAdam,  # type: ignore
             # Customize optimizer
             "bert_adam": BertAdam,
         }
@@ -87,7 +87,7 @@ class EmmentalLearner(object):
                 weight_decay=optimizer_config["l2"],
                 **optimizer_config[f"{opt}_config"],
             )
-        elif isinstance(opt, optim.Optimizer):
+        elif isinstance(opt, optim.Optimizer):  # type: ignore
             optimizer = opt(parameters)
         else:
             raise ValueError(f"Unrecognized optimizer option '{opt}'")
@@ -122,25 +122,25 @@ class EmmentalLearner(object):
                 total_steps - self.warmup_steps
             )
             lr_scheduler = optim.lr_scheduler.LambdaLR(
-                self.optimizer, linear_decay_func
+                self.optimizer, linear_decay_func  # type: ignore
             )
         elif opt == "exponential":
-            lr_scheduler = optim.lr_scheduler.ExponentialLR(
+            lr_scheduler = optim.lr_scheduler.ExponentialLR(  # type: ignore
                 self.optimizer, **lr_scheduler_config["exponential_config"]
             )
         elif opt == "step":
-            lr_scheduler = optim.lr_scheduler.StepLR(
+            lr_scheduler = optim.lr_scheduler.StepLR(  # type: ignore
                 self.optimizer, **lr_scheduler_config["step_config"]
             )
         elif opt == "multi_step":
-            lr_scheduler = optim.lr_scheduler.MultiStepLR(
+            lr_scheduler = optim.lr_scheduler.MultiStepLR(  # type: ignore
                 self.optimizer, **lr_scheduler_config["multi_step_config"]
             )
         elif opt == "cosine_annealing":
             total_steps = (
                 self.n_batches_per_epoch * Meta.config["learner_config"]["n_epochs"]
             )
-            lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(
+            lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(  # type: ignore
                 self.optimizer,
                 total_steps,
                 eta_min=lr_scheduler_config["min_lr"],
@@ -185,7 +185,7 @@ class EmmentalLearner(object):
                 )
             linear_warmup_func = lambda x: x / self.warmup_steps
             warmup_scheduler = optim.lr_scheduler.LambdaLR(
-                self.optimizer, linear_warmup_func
+                self.optimizer, linear_warmup_func  # type: ignore
             )
             logger.info(f"Warmup {self.warmup_steps} batchs.")
         elif Meta.config["learner_config"]["lr_scheduler_config"]["warmup_percentage"]:
@@ -199,7 +199,7 @@ class EmmentalLearner(object):
             )
             linear_warmup_func = lambda x: x / self.warmup_steps
             warmup_scheduler = optim.lr_scheduler.LambdaLR(
-                self.optimizer, linear_warmup_func
+                self.optimizer, linear_warmup_func  # type: ignore
             )
             logger.info(f"Warmup {self.warmup_steps} batchs.")
         else:
@@ -217,17 +217,17 @@ class EmmentalLearner(object):
         """
 
         if self.warmup_scheduler and step < self.warmup_steps:
-            self.warmup_scheduler.step()
+            self.warmup_scheduler.step()  # type: ignore
         elif self.lr_scheduler is not None:
             opt = Meta.config["learner_config"]["lr_scheduler_config"]["lr_scheduler"]
             if opt in ["linear", "exponential", "cosine_annealing"]:
-                self.lr_scheduler.step()
+                self.lr_scheduler.step()  # type: ignore
             elif (
                 opt in ["step", "multi_step"]
                 and step > 0
                 and (step + 1) % self.n_batches_per_epoch == 0
             ):
-                self.lr_scheduler.step()
+                self.lr_scheduler.step()  # type: ignore
             min_lr = Meta.config["learner_config"]["lr_scheduler_config"]["min_lr"]
             if min_lr and self.optimizer.param_groups[0]["lr"] < min_lr:
                 self.optimizer.param_groups[0]["lr"] = min_lr
@@ -238,7 +238,7 @@ class EmmentalLearner(object):
         opt = Meta.config["learner_config"]["task_scheduler_config"]["task_scheduler"]
 
         if opt in ["sequential", "round_robin", "mixed"]:
-            self.task_scheduler = SCHEDULERS[opt](
+            self.task_scheduler = SCHEDULERS[opt](  # type: ignore
                 **Meta.config["learner_config"]["task_scheduler_config"][
                     f"{opt}_scheduler_config"
                 ]
@@ -516,7 +516,7 @@ class EmmentalLearner(object):
                     )
 
                     # Perform backward pass to calculate gradients
-                    loss.backward()
+                    loss.backward()  # type: ignore
 
                 # Clip gradient norm
                 if Meta.config["learner_config"]["optimizer_config"]["grad_clip"]:

@@ -231,7 +231,7 @@ class EmmentalModel(nn.Module):
 
         return output_dict
 
-    def forward(
+    def forward(  # type: ignore
         self,
         uids: List[str],
         X_dict: Dict[str, Any],
@@ -274,7 +274,7 @@ class EmmentalModel(nn.Module):
                         dim=1,
                     )
             else:
-                active = torch.BoolTensor([True] * Y.size()[0])
+                active = torch.BoolTensor([True] * Y.size()[0])  # type: ignore
 
             # Only calculate the loss when active example exists
             if active.any():
@@ -527,13 +527,13 @@ class EmmentalModel(nn.Module):
 
         for module_name, module in self.module_pool.items():
             if Meta.config["model_config"]["dataparallel"]:
-                state_dict[module_name] = module.module.state_dict()
+                state_dict[module_name] = module.module.state_dict()  # type: ignore
             else:
                 state_dict[module_name] = module.state_dict()
 
         return state_dict
 
-    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:  # type: ignore
         r"""Load the state dict.
 
         Args:

@@ -28,10 +28,10 @@ class Scorer(object):
         self.metrics: Dict[str, Callable] = dict()
         for metric in metrics:
             if metric in METRICS:
-                self.metrics[metric] = METRICS[metric]
+                self.metrics[metric] = METRICS[metric]  # type: ignore
             elif metric.startswith("accuracy@"):
                 self.metrics[metric] = partial(
-                    METRICS["accuracy"], topk=int(metric.split("@")[1])
+                    METRICS["accuracy"], topk=int(metric.split("@")[1])  # type: ignore
                 )
             else:
                 raise ValueError(f"Unrecognized metric: {metric}")
