@@ -24,5 +24,14 @@ def test_meta(caplog):
     assert isinstance(Meta.config, dict) is True
     assert Meta.config["meta_config"] == {"seed": 0, "verbose": True, "log_path": None}
 
+    emmental.Meta.update_config(
+        path="tests/shared/", filename="emmental-test-config.yaml"
+    )
+    assert Meta.config["meta_config"] == {
+        "seed": 1,
+        "verbose": False,
+        "log_path": "tests",
+    }
+
     # Remove the temp folder
     shutil.rmtree(dirpath)

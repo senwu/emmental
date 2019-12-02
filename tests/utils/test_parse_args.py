@@ -22,7 +22,7 @@ def test_parse_args(caplog):
         "model_config": {"model_path": None, "device": 0, "dataparallel": True},
         "learner_config": {
             "fp16": False,
-            "n_epochs": 3,
+            "n_epochs": 1,
             "train_split": ["train"],
             "valid_split": ["valid"],
             "test_split": ["test"],

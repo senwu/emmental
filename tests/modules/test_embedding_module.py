@@ -36,7 +36,7 @@ def test_embedding_module(caplog):
     emb_layer = EmbeddingModule(
         word_counter=word_counter,
         word_dim=10,
-        embedding_file="tests/modules/embeddings.vec",
+        embedding_file="tests/shared/embeddings.vec",
         fix_emb=True,
     )
 
@@ -57,5 +57,5 @@ def test_embedding_module(caplog):
     assert emb_layer.embeddings.weight.size() == (3, 10)
 
     # No word counter
-    emb_layer = EmbeddingModule(embedding_file="tests/modules/embeddings.vec")
+    emb_layer = EmbeddingModule(embedding_file="tests/shared/embeddings.vec")
     assert emb_layer.embeddings.weight.size() == (5, 5)

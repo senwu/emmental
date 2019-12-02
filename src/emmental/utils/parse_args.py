@@ -98,7 +98,7 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     learner_config.add_argument(
-        "--n_epochs", type=int, default=3, help="Total number of learning epochs"
+        "--n_epochs", type=int, default=1, help="Total number of learning epochs"
     )
 
     learner_config.add_argument(

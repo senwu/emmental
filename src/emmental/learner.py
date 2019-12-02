@@ -224,7 +224,6 @@ class EmmentalLearner(object):
                 self.lr_scheduler.step()  # type: ignore
             elif (
                 opt in ["step", "multi_step"]
-                and step > 0
                 and (step + 1) % self.n_batches_per_epoch == 0
             ):
                 self.lr_scheduler.step()  # type: ignore

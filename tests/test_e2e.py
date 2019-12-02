@@ -217,7 +217,12 @@ def test_e2e(caplog):
 
     # Update learning config
     Meta.update_config(
-        config={"learner_config": {"n_epochs": 10, "optimizer_config": {"lr": 0.01}}}
+        config={
+            "learner_config": {
+                "n_epochs": 10,
+                "optimizer_config": {"lr": 0.01, "grad_clip": 100},
+            }
+        }
     )
 
     # Learning

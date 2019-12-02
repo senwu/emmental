@@ -46,14 +46,7 @@ def test_model(caplog):
         scorer=Scorer(metrics=["accuracy"]),
     )
 
-    model = EmmentalModel(name="test", tasks=task1)
-
-    assert model.name == "test"
-    assert model.task_names == set(["task_1"])
-    assert model.module_pool["m1"].module.weight.data.size() == (10, 10)
-    assert model.module_pool["m2"].module.weight.data.size() == (2, 10)
-
-    task1 = EmmentalTask(
+    new_task1 = EmmentalTask(
         name="task_1",
         module_pool=nn.ModuleDict(
             {"m1": nn.Linear(10, 5, bias=False), "m2": nn.Linear(5, 2, bias=False)}
@@ -66,11 +59,6 @@ def test_model(caplog):
         output_func=partial(output, "m2"),
         scorer=Scorer(metrics=["accuracy"]),
     )
-
-    model.update_task(task1)
-
-    assert model.module_pool["m1"].module.weight.data.size() == (5, 10)
-    assert model.module_pool["m2"].module.weight.data.size() == (2, 5)
 
     task2 = EmmentalTask(
         name="task_2",
@@ -86,9 +74,65 @@ def test_model(caplog):
         scorer=Scorer(metrics=["accuracy"]),
     )
 
+    # Test w/ dataparallel
+    model = EmmentalModel(name="test", tasks=task1)
+
+    assert model.name == "test"
+    assert model.task_names == set(["task_1"])
+    assert model.module_pool["m1"].module.weight.data.size() == (10, 10)
+    assert model.module_pool["m2"].module.weight.data.size() == (2, 10)
+
+    model.update_task(new_task1)
+
+    assert model.module_pool["m1"].module.weight.data.size() == (5, 10)
+    assert model.module_pool["m2"].module.weight.data.size() == (2, 5)
+
+    model.update_task(task2)
+
+    assert model.task_names == set(["task_1"])
+
     model.add_task(task2)
 
     assert model.task_names == set(["task_1", "task_2"])
+
+    model.remove_task("task_1")
+    assert model.task_names == set(["task_2"])
+
+    model.save(f"{dirpath}/saved_model.pth")
+
+    model.load(f"{dirpath}/saved_model.pth")
+
+    # Test w/o dataparallel
+
+    Meta.reset()
+    emmental.init(dirpath)
+
+    config = {"model_config": {"dataparallel": False}}
+    emmental.Meta.update_config(config)
+
+    model = EmmentalModel(name="test", tasks=task1)
+
+    assert repr(model) == "EmmentalModel(name=test)"
+    assert model.name == "test"
+    assert model.task_names == set(["task_1"])
+    assert model.module_pool["m1"].weight.data.size() == (10, 10)
+    assert model.module_pool["m2"].weight.data.size() == (2, 10)
+
+    model.update_task(new_task1)
+
+    assert model.module_pool["m1"].weight.data.size() == (5, 10)
+    assert model.module_pool["m2"].weight.data.size() == (2, 5)
+
+    model.update_task(task2)
+
+    assert model.task_names == set(["task_1"])
+
+    model.add_task(task2)
+
+    assert model.task_names == set(["task_1", "task_2"])
+
+    model.remove_task("task_1")
+    assert model.task_names == set(["task_2"])
 
     model.remove_task("task_1")
     assert model.task_names == set(["task_2"])
