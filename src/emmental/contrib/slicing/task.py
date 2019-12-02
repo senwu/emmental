@@ -55,7 +55,9 @@ def build_slice_tasks(
 
     # Collect task predictor module info
     base_task_predictor_action = task.task_flow[-1]
-    base_task_predictor_module = task.module_pool[base_task_predictor_action["module"]]
+    base_task_predictor_module = task.module_pool[  # type: ignore
+        base_task_predictor_action["module"]
+    ]
     if isinstance(base_task_predictor_module, nn.DataParallel):
         base_task_predictor_module = base_task_predictor_module.module
 
@@ -64,7 +66,7 @@ def build_slice_tasks(
 
     # Remove the predictor head module and action
     base_task_module_pool = task.module_pool
-    del base_task_module_pool[base_task_predictor_action["module"]]
+    del base_task_module_pool[base_task_predictor_action["module"]]  # type: ignore
 
     base_task_task_flow = task.task_flow[:-1]
 
@@ -290,7 +292,7 @@ def build_slice_tasks(
         {
             "name": master_attention_module_name,
             "module": master_attention_module_name,
-            "inputs": [],
+            "inputs": [],  # type: ignore
         },
         {
             "name": master_head_module_name,

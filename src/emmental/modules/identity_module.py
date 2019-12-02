@@ -8,7 +8,7 @@ class IdentityModule(nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-    def forward(self, input: Tensor) -> Tensor:
+    def forward(self, input: Tensor) -> Tensor:  # type: ignore
         r"""Forward function.
 
         Args:

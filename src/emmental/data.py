@@ -234,7 +234,7 @@ class EmmentalDataLoader(DataLoader):
 
         for task_name, label_names in task_to_label_dict.items():
             if not isinstance(label_names, list):
-                label_names = [label_names]
+                label_names = [label_names]  # type: ignore
             unrecognized_labels = set(label_names) - set(dataset.Y_dict.keys())
             if len(unrecognized_labels) > 0:
                 msg = (
