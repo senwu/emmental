@@ -22,7 +22,7 @@ def test_step_scheduler(caplog):
     Meta.reset()
     emmental.init(dirpath)
 
-    # Test default Adam setting
+    # Test warmup steps
     config = {
         "learner_config": {
             "n_epochs": 4,
@@ -30,7 +30,7 @@ def test_step_scheduler(caplog):
             "lr_scheduler_config": {
                 "lr_scheduler": None,
                 "warmup_steps": 2,
-                "warmup_unit": "epoch",
+                "warmup_unit": "batch",
             },
         }
     }
@@ -56,6 +56,7 @@ def test_step_scheduler(caplog):
     Meta.reset()
     emmental.init(dirpath)
 
+    # Test warmup percentage
     config = {
         "learner_config": {
             "n_epochs": 4,
