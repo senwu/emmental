@@ -112,6 +112,7 @@ def test_model(caplog):
 
     model = EmmentalModel(name="test", tasks=task1)
 
+    assert repr(model) == "EmmentalModel(name=test)"
     assert model.name == "test"
     assert model.task_names == set(["task_1"])
     assert model.module_pool["m1"].weight.data.size() == (10, 10)
@@ -129,6 +130,9 @@ def test_model(caplog):
     model.add_task(task2)
 
     assert model.task_names == set(["task_1", "task_2"])
+
+    model.remove_task("task_1")
+    assert model.task_names == set(["task_2"])
 
     model.remove_task("task_1")
     assert model.task_names == set(["task_2"])
