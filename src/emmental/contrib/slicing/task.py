@@ -55,8 +55,8 @@ def build_slice_tasks(
 
     # Collect task predictor module info
     base_task_predictor_action = task.task_flow[-1]
-    base_task_predictor_module = task.module_pool[  # type: ignore
-        base_task_predictor_action["module"]
+    base_task_predictor_module = task.module_pool[
+        base_task_predictor_action["module"]  # type: ignore
     ]
     if isinstance(base_task_predictor_module, nn.DataParallel):
         base_task_predictor_module = base_task_predictor_module.module
