@@ -691,6 +691,8 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
             },
             "lr_scheduler_config": {
                 "lr_scheduler": args.lr_scheduler,
+                "lr_scheduler_step_unit": args.lr_scheduler_step_unit,
+                "lr_scheduler_step_freq": args.lr_scheduler_step_freq,
                 "warmup_steps": args.warmup_steps,
                 "warmup_unit": args.warmup_unit,
                 "warmup_percentage": args.warmup_percentage,
