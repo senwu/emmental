@@ -166,7 +166,7 @@ class Meta(object):
                 potential_path = os.path.join(current_dir, filename)
                 if os.path.exists(potential_path):
                     with open(potential_path, "r") as f:
-                        Meta.config = merge(Meta.config, yaml.safe_load(f))
+                        Meta.config = merge(Meta.config, yaml.load(f))
                     logger.info(f"Updating Emmental config from {potential_path}.")
                     break
 
