@@ -365,6 +365,21 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     scheduler_config.add_argument(
+        "--lr_scheduler_step_unit",
+        type=str,
+        default="batch",
+        choices=["batch", "epoch"],
+        help="Learning rate scheduler step unit",
+    )
+
+    scheduler_config.add_argument(
+        "--lr_scheduler_step_freq",
+        type=int,
+        default=1,
+        help="Learning rate scheduler step freq",
+    )
+
+    scheduler_config.add_argument(
         "--warmup_steps", type=float, default=None, help="Warm up steps"
     )
 
@@ -372,7 +387,7 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         "--warmup_unit",
         type=str,
         default="batch",
-        choices=["epoch", "batch"],
+        choices=["batch", "epoch"],
         help="Warm up unit",
     )
 

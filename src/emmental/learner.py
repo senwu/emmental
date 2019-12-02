@@ -92,9 +92,9 @@ class EmmentalLearner(object):
         else:
             raise ValueError(f"Unrecognized optimizer option '{opt}'")
 
-        logger.info(f"Using optimizer {optimizer}")
-
         self.optimizer = optimizer
+
+        logger.info(f"Using optimizer {self.optimizer}")
 
     def _set_lr_scheduler(self, model: EmmentalModel) -> None:
         r"""Set learning rate scheduler for learning process.
@@ -156,6 +156,17 @@ class EmmentalLearner(object):
             raise ValueError(f"Unrecognized lr scheduler option '{opt}'")
 
         self.lr_scheduler = lr_scheduler
+        self.lr_scheduler_step_unit = Meta.config["learner_config"][
+            "lr_scheduler_config"
+        ]["lr_scheduler_step_unit"]
+        self.lr_scheduler_step_freq = Meta.config["learner_config"][
+            "lr_scheduler_config"
+        ]["lr_scheduler_step_freq"]
+
+        logger.info(
+            f"Using lr_scheduler {repr(self.lr_scheduler)} with step every "
+            f"{self.lr_scheduler_step_freq} {self.lr_scheduler_step_unit}."
+        )
 
     def _set_warmup_scheduler(self, model: EmmentalModel) -> None:
         r"""Set warmup learning rate scheduler for learning process.
@@ -219,14 +230,15 @@ class EmmentalLearner(object):
         if self.warmup_scheduler and step < self.warmup_steps:
             self.warmup_scheduler.step()  # type: ignore
         elif self.lr_scheduler is not None:
-            opt = Meta.config["learner_config"]["lr_scheduler_config"]["lr_scheduler"]
-            if opt in ["linear", "exponential", "cosine_annealing"]:
+            lr_step_cnt = (
+                self.lr_scheduler_step_freq
+                if self.lr_scheduler_step_unit == "batch"
+                else self.lr_scheduler_step_freq * self.n_batches_per_epoch
+            )
+
+            if (step + 1) % lr_step_cnt == 0:
                 self.lr_scheduler.step()  # type: ignore
-            elif (
-                opt in ["step", "multi_step"]
-                and (step + 1) % self.n_batches_per_epoch == 0
-            ):
-                self.lr_scheduler.step()  # type: ignore
+
             min_lr = Meta.config["learner_config"]["lr_scheduler_config"]["min_lr"]
             if min_lr and self.optimizer.param_groups[0]["lr"] < min_lr:
                 self.optimizer.param_groups[0]["lr"] = min_lr

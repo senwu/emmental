@@ -63,6 +63,8 @@ def test_parse_args(caplog):
             },
             "lr_scheduler_config": {
                 "lr_scheduler": None,
+                "lr_scheduler_step_unit": "batch",
+                "lr_scheduler_step_freq": 1,
                 "warmup_steps": None,
                 "warmup_unit": "batch",
                 "warmup_percentage": None,

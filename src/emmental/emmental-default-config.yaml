@@ -77,6 +77,8 @@ learner_config:
             eps: 0.00000001
     lr_scheduler_config:
         lr_scheduler: # [linear, exponential, reduce_on_plateau, cosine_annealing]
+        lr_scheduler_step_unit: batch # [batch, epoch]
+        lr_scheduler_step_freq: 1
         warmup_steps: # warm up steps
         warmup_unit: batch # [epoch, batch]
         warmup_percentage: # warm up percentage

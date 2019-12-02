@@ -37,20 +37,24 @@ def test_cosine_annealing_scheduler(caplog):
 
     assert emmental_learner.optimizer.param_groups[0]["lr"] == 10
 
+    emmental_learner.optimizer.step()
     emmental_learner._update_lr_scheduler(model, 0)
     assert (
         abs(emmental_learner.optimizer.param_groups[0]["lr"] - 8.535533905932738) < 1e-5
     )
 
+    emmental_learner.optimizer.step()
     emmental_learner._update_lr_scheduler(model, 1)
     assert abs(emmental_learner.optimizer.param_groups[0]["lr"] - 5) < 1e-5
 
+    emmental_learner.optimizer.step()
     emmental_learner._update_lr_scheduler(model, 2)
     assert (
         abs(emmental_learner.optimizer.param_groups[0]["lr"] - 1.4644660940672627)
         < 1e-5
     )
 
+    emmental_learner.optimizer.step()
     emmental_learner._update_lr_scheduler(model, 3)
     assert abs(emmental_learner.optimizer.param_groups[0]["lr"]) < 1e-5
 
