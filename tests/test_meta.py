@@ -22,15 +22,30 @@ def test_meta(caplog):
 
     # Check the config is created
     assert isinstance(Meta.config, dict) is True
-    assert Meta.config["meta_config"] == {"seed": 0, "verbose": True, "log_path": None}
+    assert Meta.config["meta_config"] == {
+        "seed": None,
+        "verbose": True,
+        "log_path": "logs",
+    }
 
     emmental.Meta.update_config(
-        path="tests/shared/", filename="emmental-test-config.yaml"
+        path="tests/shared", filename="emmental-test-config.yaml"
     )
     assert Meta.config["meta_config"] == {
         "seed": 1,
         "verbose": False,
         "log_path": "tests",
+    }
+
+    # Test unable to find config file
+    Meta.reset()
+    emmental.init(dirpath)
+
+    emmental.Meta.update_config(path=os.path.dirname(__file__))
+    assert Meta.config["meta_config"] == {
+        "seed": None,
+        "verbose": True,
+        "log_path": "logs",
     }
 
     # Remove the temp folder

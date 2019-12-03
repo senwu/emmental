@@ -39,19 +39,19 @@ def test_linear_scheduler(caplog):
     assert emmental_learner.optimizer.param_groups[0]["lr"] == 10
 
     emmental_learner.optimizer.step()
-    emmental_learner._update_lr_scheduler(model, 0)
+    emmental_learner._update_lr_scheduler(model, 0, {})
     assert abs(emmental_learner.optimizer.param_groups[0]["lr"] - 7.5) < 1e-5
 
     emmental_learner.optimizer.step()
-    emmental_learner._update_lr_scheduler(model, 1)
+    emmental_learner._update_lr_scheduler(model, 1, {})
     assert abs(emmental_learner.optimizer.param_groups[0]["lr"] - 5) < 1e-5
 
     emmental_learner.optimizer.step()
-    emmental_learner._update_lr_scheduler(model, 2)
+    emmental_learner._update_lr_scheduler(model, 2, {})
     assert abs(emmental_learner.optimizer.param_groups[0]["lr"] - 2.5) < 1e-5
 
     emmental_learner.optimizer.step()
-    emmental_learner._update_lr_scheduler(model, 3)
+    emmental_learner._update_lr_scheduler(model, 3, {})
     assert abs(emmental_learner.optimizer.param_groups[0]["lr"]) < 1e-5
 
     # Test every 2 batches
@@ -73,19 +73,19 @@ def test_linear_scheduler(caplog):
     assert emmental_learner.optimizer.param_groups[0]["lr"] == 10
 
     emmental_learner.optimizer.step()
-    emmental_learner._update_lr_scheduler(model, 0)
+    emmental_learner._update_lr_scheduler(model, 0, {})
     assert abs(emmental_learner.optimizer.param_groups[0]["lr"] - 10) < 1e-5
 
     emmental_learner.optimizer.step()
-    emmental_learner._update_lr_scheduler(model, 1)
+    emmental_learner._update_lr_scheduler(model, 1, {})
     assert abs(emmental_learner.optimizer.param_groups[0]["lr"] - 7.5) < 1e-5
 
     emmental_learner.optimizer.step()
-    emmental_learner._update_lr_scheduler(model, 2)
+    emmental_learner._update_lr_scheduler(model, 2, {})
     assert abs(emmental_learner.optimizer.param_groups[0]["lr"] - 7.5) < 1e-5
 
     emmental_learner.optimizer.step()
-    emmental_learner._update_lr_scheduler(model, 3)
+    emmental_learner._update_lr_scheduler(model, 3, {})
     assert abs(emmental_learner.optimizer.param_groups[0]["lr"] - 5.0) < 1e-5
 
     shutil.rmtree(dirpath)

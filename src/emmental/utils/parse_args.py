@@ -313,7 +313,7 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
 
     # SGD config
     optimizer_config.add_argument(
-        "--sgd_momentum", type=float, default=0.0, help="SGD momentum"
+        "--sgd_momentum", type=float, default=0, help="SGD momentum"
     )
 
     optimizer_config.add_argument(
@@ -323,9 +323,6 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     optimizer_config.add_argument(
         "--sgd_nesterov", type=str2bool, default=False, help="SGD nesterov"
     )
-
-    # TODO: support etas and step_sizes in Rprop
-    # Rprop config
 
     # SparseAdam config
     optimizer_config.add_argument(
@@ -360,7 +357,16 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         "--lr_scheduler",
         type=nullable_string,
         default=None,
-        choices=["linear", "exponential", "step", "multi_step", "cosine_annealing"],
+        choices=[
+            "linear",
+            "exponential",
+            "plateau",
+            "step",
+            "multi_step",
+            "cyclic",
+            "one_cycle",
+            "cosine_annealing",
+        ],
         help="Learning rate scheduler",
     )
 
@@ -400,24 +406,33 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     scheduler_config.add_argument(
-        "--linear_lr_scheduler_min_lr",
-        type=float,
-        default=0.0,
-        help="Minimum learning rate for linear lr scheduler",
-    )
-
-    scheduler_config.add_argument(
         "--exponential_lr_scheduler_gamma",
         type=float,
         default=0.9,
         help="Gamma for exponential lr scheduler",
     )
 
+    # ReduceLROnPlateau lr scheduler config
+    scheduler_config.add_argument(
+        "--plateau_lr_scheduler_metric",
+        type=str,
+        default="model/train/all/loss",
+        help="Metric of plateau lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--plateau_lr_scheduler_mode",
+        type=str,
+        default="min",
+        choices=["min", "max"],
+        help="Mode of plateau lr scheduler",
+    )
+
     scheduler_config.add_argument(
         "--plateau_lr_scheduler_factor",
         type=float,
-        default=0.5,
-        help="factor for plateau lr scheduler",
+        default=0.1,
+        help="Factor of plateau lr scheduler",
     )
 
     scheduler_config.add_argument(
@@ -431,9 +446,32 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         "--plateau_lr_scheduler_threshold",
         type=float,
         default=0.0001,
-        help="Threshold for plateau lr scheduler",
+        help="Threshold of plateau lr scheduler",
     )
 
+    scheduler_config.add_argument(
+        "--plateau_lr_scheduler_threshold_mode",
+        type=str,
+        default="rel",
+        choices=["rel", "abs"],
+        help="Threshold mode of plateau lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--plateau_lr_scheduler_cooldown",
+        type=int,
+        default=0,
+        help="Cooldown of plateau lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--plateau_lr_scheduler_eps",
+        type=float,
+        default=0.00000001,
+        help="Eps of plateau lr scheduler",
+    )
+
+    # Step lr scheduler config
     scheduler_config.add_argument(
         "--step_lr_scheduler_step_size",
         type=int,
@@ -444,7 +482,7 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     scheduler_config.add_argument(
         "--step_lr_scheduler_gamma",
         type=float,
-        default=0.01,
+        default=0.1,
         help="Multiplicative factor of learning rate decay",
     )
 
@@ -459,14 +497,14 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         "--multi_step_lr_scheduler_milestones",
         nargs="+",
         type=int,
-        default=[10000],
+        default=[1000],
         help="List of epoch indices. Must be increasing.",
     )
 
     scheduler_config.add_argument(
         "--multi_step_lr_scheduler_gamma",
         type=float,
-        default=0.01,
+        default=0.1,
         help="Multiplicative factor of learning rate decay",
     )
 
@@ -475,6 +513,159 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         type=int,
         default=-1,
         help="The index of last epoch",
+    )
+
+    # Cyclic lr scheduler config
+    scheduler_config.add_argument(
+        "--cyclic_lr_scheduler_base_lr",
+        nargs="+",
+        type=float,
+        default=0.001,
+        help="Base lr of cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--cyclic_lr_scheduler_max_lr",
+        nargs="+",
+        type=float,
+        default=0.1,
+        help="Max lr of cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--cyclic_lr_scheduler_step_size_up",
+        type=int,
+        default=2000,
+        help="Step size up of cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--cyclic_lr_scheduler_step_size_down",
+        type=nullable_int,
+        default=None,
+        help="Step size down of cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--cyclic_lr_scheduler_mode",
+        type=nullable_string,
+        default="triangular",
+        help="Mode of cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--cyclic_lr_scheduler_gamma",
+        type=float,
+        default=1.0,
+        help="Gamma of cyclic lr scheduler",
+    )
+
+    # TODO: support cyclic_lr_scheduler_scale_fn
+
+    scheduler_config.add_argument(
+        "--cyclic_lr_scheduler_scale_mode",
+        type=str,
+        default="cycle",
+        choices=["cycle", "iterations"],
+        help="Scale mode of cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--cyclic_lr_scheduler_cycle_momentum",
+        type=str2bool,
+        default=True,
+        help="Cycle momentum of cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--cyclic_lr_scheduler_base_momentum",
+        nargs="+",
+        type=float,
+        default=0.8,
+        help="Base momentum of cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--cyclic_lr_scheduler_max_momentum",
+        nargs="+",
+        type=float,
+        default=0.9,
+        help="Max momentum of cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--cyclic_lr_scheduler_last_epoch",
+        type=int,
+        default=-1,
+        help="Last epoch of cyclic lr scheduler",
+    )
+
+    # One cycle lr scheduler config
+    scheduler_config.add_argument(
+        "--one_cycle_lr_scheduler_max_lr",
+        nargs="+",
+        type=float,
+        default=0.1,
+        help="Max lr of one cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--one_cycle_lr_scheduler_pct_start",
+        type=float,
+        default=0.3,
+        help="Percentage start of one cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--one_cycle_lr_scheduler_anneal_strategy",
+        type=str,
+        default="cos",
+        choices=["cos", "linear"],
+        help="Anneal strategyr of one cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--one_cycle_lr_scheduler_cycle_momentum",
+        type=str2bool,
+        default=True,
+        help="Cycle momentum of one cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--one_cycle_lr_scheduler_base_momentum",
+        nargs="+",
+        type=float,
+        default=0.85,
+        help="Base momentum of one cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--one_cycle_lr_scheduler_max_momentum",
+        nargs="+",
+        type=float,
+        default=0.95,
+        help="Max momentum of one cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--one_cycle_lr_scheduler_div_factor",
+        type=float,
+        default=25,
+        help="Div factor of one cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--one_cycle_lr_scheduler_final_div_factor",
+        type=float,
+        default=1e4,
+        help="Final div factor of one cyclic lr scheduler",
+    )
+
+    scheduler_config.add_argument(
+        "--one_cycle_lr_scheduler_last_epoch",
+        type=int,
+        default=-1,
+        help="Last epoch of one cyclic lr scheduler",
     )
 
     scheduler_config.add_argument(
@@ -697,12 +888,16 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
                 "warmup_unit": args.warmup_unit,
                 "warmup_percentage": args.warmup_percentage,
                 "min_lr": args.min_lr,
-                "linear_config": {"min_lr": args.linear_lr_scheduler_min_lr},
                 "exponential_config": {"gamma": args.exponential_lr_scheduler_gamma},
                 "plateau_config": {
+                    "metric": args.plateau_lr_scheduler_metric,
+                    "mode": args.plateau_lr_scheduler_mode,
                     "factor": args.plateau_lr_scheduler_factor,
                     "patience": args.plateau_lr_scheduler_patience,
                     "threshold": args.plateau_lr_scheduler_threshold,
+                    "threshold_mode": args.plateau_lr_scheduler_threshold_mode,
+                    "cooldown": args.plateau_lr_scheduler_cooldown,
+                    "eps": args.plateau_lr_scheduler_eps,
                 },
                 "step_config": {
                     "step_size": args.step_lr_scheduler_step_size,
@@ -713,6 +908,31 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
                     "milestones": args.multi_step_lr_scheduler_milestones,
                     "gamma": args.multi_step_lr_scheduler_gamma,
                     "last_epoch": args.multi_step_lr_scheduler_last_epoch,
+                },
+                "cyclic_config": {
+                    "base_lr": args.cyclic_lr_scheduler_base_lr,
+                    "max_lr": args.cyclic_lr_scheduler_max_lr,
+                    "step_size_up": args.cyclic_lr_scheduler_step_size_up,
+                    "step_size_down": args.cyclic_lr_scheduler_step_size_down,
+                    "mode": args.cyclic_lr_scheduler_mode,
+                    "gamma": args.cyclic_lr_scheduler_gamma,
+                    "scale_fn": None,
+                    "scale_mode": args.cyclic_lr_scheduler_scale_mode,
+                    "cycle_momentum": args.cyclic_lr_scheduler_cycle_momentum,
+                    "base_momentum": args.cyclic_lr_scheduler_base_momentum,
+                    "max_momentum": args.cyclic_lr_scheduler_max_momentum,
+                    "last_epoch": args.cyclic_lr_scheduler_last_epoch,
+                },
+                "one_cycle_config": {
+                    "max_lr": args.one_cycle_lr_scheduler_max_lr,
+                    "pct_start": args.one_cycle_lr_scheduler_pct_start,
+                    "anneal_strategy": args.one_cycle_lr_scheduler_anneal_strategy,
+                    "cycle_momentum": args.one_cycle_lr_scheduler_cycle_momentum,
+                    "base_momentum": args.one_cycle_lr_scheduler_base_momentum,
+                    "max_momentum": args.one_cycle_lr_scheduler_max_momentum,
+                    "div_factor": args.one_cycle_lr_scheduler_div_factor,
+                    "final_div_factor": args.one_cycle_lr_scheduler_final_div_factor,
+                    "last_epoch": args.one_cycle_lr_scheduler_last_epoch,
                 },
                 "cosine_annealing_config": {
                     "last_epoch": args.cosine_annealing_lr_scheduler_last_epoch

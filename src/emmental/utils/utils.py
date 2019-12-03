@@ -217,6 +217,11 @@ def merge(x: Dict[str, Any], y: Dict[str, Any]) -> Dict[str, Any]:
 
     """
 
+    if x is None:
+        return y
+    if y is None:
+        return x
+
     merged = {**x, **y}
 
     xkeys = x.keys()

@@ -1,3 +1,4 @@
+import copy
 import logging
 from collections import defaultdict
 from typing import Dict, List, Optional, Union
@@ -6,6 +7,7 @@ import numpy as np
 import torch
 import torch.optim as optim
 from numpy import ndarray
+from torch.optim.lr_scheduler import _LRScheduler
 
 from emmental import Meta
 from emmental.data import EmmentalDataLoader
@@ -108,7 +110,17 @@ class EmmentalLearner(object):
         self._set_warmup_scheduler(model)
 
         # Set lr scheduler
-        # TODO: add more lr scheduler support
+
+        lr_scheduler_dict = {
+            "exponential": optim.lr_scheduler.ExponentialLR,
+            "plateau": optim.lr_scheduler.ReduceLROnPlateau,
+            "step": optim.lr_scheduler.StepLR,
+            "multi_step": optim.lr_scheduler.MultiStepLR,
+            "cyclic": optim.lr_scheduler.CyclicLR,
+            "one_cycle": optim.lr_scheduler.OneCycleLR,  # type: ignore
+            "cosine_annealing": optim.lr_scheduler.CosineAnnealingLR,
+        }
+
         opt = Meta.config["learner_config"]["lr_scheduler_config"]["lr_scheduler"]
         lr_scheduler_config = Meta.config["learner_config"]["lr_scheduler_config"]
 
@@ -124,34 +136,42 @@ class EmmentalLearner(object):
             lr_scheduler = optim.lr_scheduler.LambdaLR(
                 self.optimizer, linear_decay_func  # type: ignore
             )
-        elif opt == "exponential":
-            lr_scheduler = optim.lr_scheduler.ExponentialLR(  # type: ignore
-                self.optimizer, **lr_scheduler_config["exponential_config"]
+        elif opt in ["exponential", "step", "multi_step", "cyclic"]:
+            lr_scheduler = lr_scheduler_dict[opt](  # type: ignore
+                self.optimizer, **lr_scheduler_config[f"{opt}_config"]
             )
-        elif opt == "step":
-            lr_scheduler = optim.lr_scheduler.StepLR(  # type: ignore
-                self.optimizer, **lr_scheduler_config["step_config"]
+        elif opt == "one_cycle":
+            total_steps = (
+                self.n_batches_per_epoch * Meta.config["learner_config"]["n_epochs"]
             )
-        elif opt == "multi_step":
-            lr_scheduler = optim.lr_scheduler.MultiStepLR(  # type: ignore
-                self.optimizer, **lr_scheduler_config["multi_step_config"]
+            lr_scheduler = lr_scheduler_dict[opt](  # type: ignore
+                self.optimizer,
+                total_steps=total_steps,
+                epochs=Meta.config["learner_config"]["n_epochs"],
+                steps_per_epoch=self.n_batches_per_epoch,
+                **lr_scheduler_config[f"{opt}_config"],
             )
         elif opt == "cosine_annealing":
             total_steps = (
                 self.n_batches_per_epoch * Meta.config["learner_config"]["n_epochs"]
             )
-            lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(  # type: ignore
+            lr_scheduler = lr_scheduler_dict[opt](  # type: ignore
                 self.optimizer,
                 total_steps,
                 eta_min=lr_scheduler_config["min_lr"],
-                **lr_scheduler_config["cosine_annealing_config"],
+                **lr_scheduler_config[f"{opt}_config"],
             )
-        # elif opt == "reduce_on_plateau":
-        #     lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        #         self.optimizer,
-        #         min_lr=lr_scheduler_config["min_lr"],
-        #         **lr_scheduler_config["plateau_config"],
-        #     )
+        elif opt == "plateau":
+            plateau_config = copy.deepcopy(lr_scheduler_config["plateau_config"])
+            del plateau_config["metric"]
+            lr_scheduler = lr_scheduler_dict[opt](
+                self.optimizer,
+                verbose=Meta.config["meta_config"]["verbose"],
+                min_lr=lr_scheduler_config["min_lr"],
+                **plateau_config,
+            )
+        elif isinstance(opt, _LRScheduler):
+            lr_scheduler = opt(self.optimizer)  # type: ignore
         else:
             raise ValueError(f"Unrecognized lr scheduler option '{opt}'")
 
@@ -218,7 +238,9 @@ class EmmentalLearner(object):
 
         self.warmup_scheduler = warmup_scheduler
 
-    def _update_lr_scheduler(self, model: EmmentalModel, step: int) -> None:
+    def _update_lr_scheduler(
+        self, model: EmmentalModel, step: int, metric_dict: Dict[str, float]
+    ) -> None:
         r"""Update the lr using lr_scheduler with each batch.
 
         Args:
@@ -237,7 +259,24 @@ class EmmentalLearner(object):
             )
 
             if (step + 1) % lr_step_cnt == 0:
-                self.lr_scheduler.step()  # type: ignore
+                if (
+                    Meta.config["learner_config"]["lr_scheduler_config"]["lr_scheduler"]
+                    != "plateau"
+                ):
+                    self.lr_scheduler.step()  # type: ignore
+                elif (
+                    Meta.config["learner_config"]["lr_scheduler_config"][
+                        "plateau_config"
+                    ]["metric"]
+                    in metric_dict
+                ):
+                    self.lr_scheduler.step(
+                        metric_dict[  # type: ignore
+                            Meta.config["learner_config"]["lr_scheduler_config"][
+                                "plateau_config"
+                            ]["metric"]
+                        ]
+                    )
 
             min_lr = Meta.config["learner_config"]["lr_scheduler_config"]["min_lr"]
             if min_lr and self.optimizer.param_groups[0]["lr"] < min_lr:
@@ -544,6 +583,6 @@ class EmmentalLearner(object):
                 batches.set_postfix(self.metrics)
 
                 # Update lr using lr scheduler
-                self._update_lr_scheduler(model, total_batch_num)
+                self._update_lr_scheduler(model, total_batch_num, self.metrics)
 
         model = self.logging_manager.close(model)
