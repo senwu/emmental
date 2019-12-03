@@ -233,6 +233,6 @@ def test_e2e(caplog):
         test1_score["model/all/test/macro_average"]
         == test1_score["task1/synthetic/test/accuracy"]
     )
-    assert test2_score["task2/synthetic/test/accuracy"] >= 0.5
+    assert test2_score["task2/synthetic/test/accuracy"] >= 0.4
 
     shutil.rmtree(dirpath)
