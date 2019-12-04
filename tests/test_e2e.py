@@ -28,6 +28,11 @@ def test_e2e(caplog):
     emmental.init(dirpath)
 
     config = {
+        "meta_config": {"seed": 0},
+        "learner_config": {
+            "n_epochs": 3,
+            "optimizer_config": {"lr": 0.01, "grad_clip": 100},
+        },
         "logging_config": {
             "counter_unit": "epoch",
             "evaluation_freq": 1,
@@ -42,45 +47,34 @@ def test_e2e(caplog):
                 "clear_intermediate_checkpoints": True,
                 "clear_all_checkpoints": False,
             },
-        }
+        },
     }
     emmental.Meta.update_config(config)
 
     # Generate synthetic data
-    N = 50
+    N = 500
     X = np.random.random((N, 2)) * 2 - 1
     Y1 = (X[:, 0] > X[:, 1] + 0.25).astype(int)
-    Y2 = (-X[:, 0] > X[:, 1] + 0.25).astype(int)
+    Y2 = (X[:, 0] > X[:, 1] + 0.2).astype(int)
 
+    X = [torch.Tensor(X[i]) for i in range(N)]
     # Create dataset and dataloader
 
-    splits = [0.8, 0.1, 0.1]
-
-    X_train, X_dev, X_test = [], [], []
-    Y1_train, Y1_dev, Y1_test = [], [], []
-    Y2_train, Y2_dev, Y2_test = [], [], []
-
-    for i in range(N):
-        if i <= N * splits[0]:
-            X_train.append(torch.Tensor(X[i]))
-            Y1_train.append(Y1[i])
-            Y2_train.append(Y2[i])
-        elif i < N * (splits[0] + splits[1]):
-            X_dev.append(torch.Tensor(X[i]))
-            Y1_dev.append(Y1[i])
-            Y2_dev.append(Y2[i])
-        else:
-            X_test.append(torch.Tensor(X[i]))
-            Y1_test.append(Y1[i])
-            Y2_test.append(Y2[i])
-
-    Y1_train = torch.from_numpy(np.array(Y1_train))
-    Y1_dev = torch.from_numpy(np.array(Y1_dev))
-    Y1_test = torch.from_numpy(np.array(Y1_test))
-
-    Y2_train = torch.from_numpy(np.array(Y1_train))
-    Y2_dev = torch.from_numpy(np.array(Y2_dev))
-    Y2_test = torch.from_numpy(np.array(Y2_test))
+    X_train, X_dev, X_test = (
+        X[: int(0.8 * N)],
+        X[int(0.8 * N) : int(0.9 * N)],
+        X[int(0.9 * N) :],
+    )
+    Y1_train, Y1_dev, Y1_test = (
+        torch.tensor(Y1[: int(0.8 * N)]),
+        torch.tensor(Y1[int(0.8 * N) : int(0.9 * N)]),
+        torch.tensor(Y1[int(0.9 * N) :]),
+    )
+    Y2_train, Y2_dev, Y2_test = (
+        torch.tensor(Y2[: int(0.8 * N)]),
+        torch.tensor(Y2[int(0.8 * N) : int(0.9 * N)]),
+        torch.tensor(Y2[int(0.9 * N) :]),
+    )
 
     train_dataset1 = EmmentalDataset(
         name="synthetic", X_dict={"data": X_train}, Y_dict={"label1": Y1_train}
@@ -99,7 +93,7 @@ def test_e2e(caplog):
     )
 
     test_dataset1 = EmmentalDataset(
-        name="synthetic", X_dict={"data": X_test}, Y_dict={"label1": Y2_test}
+        name="synthetic", X_dict={"data": X_test}, Y_dict={"label1": Y1_test}
     )
 
     test_dataset2 = EmmentalDataset(
@@ -159,71 +153,42 @@ def test_e2e(caplog):
         module_name = f"{task_name}_pred_head"
         return F.softmax(immediate_ouput_dict[module_name][0], dim=1)
 
-    task_name = "task1"
+    task_metrics = {"task1": ["accuracy"], "task2": ["accuracy", "roc_auc"]}
 
-    task1 = EmmentalTask(
-        name=task_name,
-        module_pool=nn.ModuleDict(
-            {"input_module": nn.Linear(2, 8), f"{task_name}_pred_head": nn.Linear(8, 2)}
-        ),
-        task_flow=[
-            {
-                "name": "input",
-                "module": "input_module",
-                "inputs": [("_input_", "data")],
-            },
-            {
-                "name": f"{task_name}_pred_head",
-                "module": f"{task_name}_pred_head",
-                "inputs": [("input", 0)],
-            },
-        ],
-        loss_func=partial(ce_loss, task_name),
-        output_func=partial(output, task_name),
-        scorer=Scorer(metrics=["accuracy"]),
-    )
-
-    task_name = "task2"
-
-    task2 = EmmentalTask(
-        name=task_name,
-        module_pool=nn.ModuleDict(
-            {"input_module": nn.Linear(2, 8), f"{task_name}_pred_head": nn.Linear(8, 2)}
-        ),
-        task_flow=[
-            {
-                "name": "input",
-                "module": "input_module",
-                "inputs": [("_input_", "data")],
-            },
-            {
-                "name": f"{task_name}_pred_head",
-                "module": f"{task_name}_pred_head",
-                "inputs": [("input", 0)],
-            },
-        ],
-        loss_func=partial(ce_loss, task_name),
-        output_func=partial(output, task_name),
-        scorer=Scorer(metrics=["accuracy", "roc_auc"]),
-    )
+    tasks = [
+        EmmentalTask(
+            name=task_name,
+            module_pool=nn.ModuleDict(
+                {
+                    "input_module": nn.Linear(2, 8),
+                    f"{task_name}_pred_head": nn.Linear(8, 2),
+                }
+            ),
+            task_flow=[
+                {
+                    "name": "input",
+                    "module": "input_module",
+                    "inputs": [("_input_", "data")],
+                },
+                {
+                    "name": f"{task_name}_pred_head",
+                    "module": f"{task_name}_pred_head",
+                    "inputs": [("input", 0)],
+                },
+            ],
+            loss_func=partial(ce_loss, task_name),
+            output_func=partial(output, task_name),
+            scorer=Scorer(metrics=task_metrics[task_name]),
+        )
+        for task_name in ["task1", "task2"]
+    ]
 
     # Build model
 
-    mtl_model = EmmentalModel(name="all", tasks=[task1, task2])
+    mtl_model = EmmentalModel(name="all", tasks=tasks)
 
     # Create learner
-
     emmental_learner = EmmentalLearner()
-
-    # Update learning config
-    Meta.update_config(
-        config={
-            "learner_config": {
-                "n_epochs": 10,
-                "optimizer_config": {"lr": 0.01, "grad_clip": 100},
-            }
-        }
-    )
 
     # Learning
     emmental_learner.learn(
@@ -234,13 +199,12 @@ def test_e2e(caplog):
     test1_score = mtl_model.score(test_dataloader1)
     test2_score = mtl_model.score(test_dataloader2)
 
-    assert test1_score["task1/synthetic/test/accuracy"] >= 0.5
+    assert test1_score["task1/synthetic/test/accuracy"] >= 0.7
     assert (
         test1_score["model/all/test/macro_average"]
         == test1_score["task1/synthetic/test/accuracy"]
     )
-    assert test2_score["task2/synthetic/test/accuracy"] >= 0.5
-    assert test2_score["task2/synthetic/test/roc_auc"] >= 0.6
-    assert test2_score["model/all/test/macro_average"] >= 0.6
+    assert test2_score["task2/synthetic/test/accuracy"] >= 0.7
+    assert test2_score["task2/synthetic/test/roc_auc"] >= 0.7
 
     shutil.rmtree(dirpath)

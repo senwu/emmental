@@ -10,12 +10,12 @@ from emmental.learner import EmmentalLearner
 logger = logging.getLogger(__name__)
 
 
-def test_cosine_annealing_scheduler(caplog):
-    """Unit test of cosine annealing scheduler"""
+def test_cyclic_scheduler(caplog):
+    """Unit test of cyclic scheduler"""
 
     caplog.set_level(logging.INFO)
 
-    lr_scheduler = "cosine_annealing"
+    lr_scheduler = "cyclic"
     dirpath = "temp_test_scheduler"
     model = nn.Linear(1, 1)
     emmental_learner = EmmentalLearner()
@@ -27,7 +27,23 @@ def test_cosine_annealing_scheduler(caplog):
         "learner_config": {
             "n_epochs": 4,
             "optimizer_config": {"optimizer": "sgd", "lr": 10},
-            "lr_scheduler_config": {"lr_scheduler": lr_scheduler},
+            "lr_scheduler_config": {
+                "lr_scheduler": lr_scheduler,
+                "cyclic_config": {
+                    "base_lr": 10,
+                    "base_momentum": 0.8,
+                    "cycle_momentum": True,
+                    "gamma": 1.0,
+                    "last_epoch": -1,
+                    "max_lr": 0.1,
+                    "max_momentum": 0.9,
+                    "mode": "triangular",
+                    "scale_fn": None,
+                    "scale_mode": "cycle",
+                    "step_size_down": None,
+                    "step_size_up": 2000,
+                },
+            },
         }
     }
     emmental.Meta.update_config(config)
@@ -40,22 +56,25 @@ def test_cosine_annealing_scheduler(caplog):
     emmental_learner.optimizer.step()
     emmental_learner._update_lr_scheduler(model, 0, {})
     assert (
-        abs(emmental_learner.optimizer.param_groups[0]["lr"] - 8.535533905932738) < 1e-5
+        abs(emmental_learner.optimizer.param_groups[0]["lr"] - 9.995049999999999) < 1e-5
     )
 
     emmental_learner.optimizer.step()
     emmental_learner._update_lr_scheduler(model, 1, {})
-    assert abs(emmental_learner.optimizer.param_groups[0]["lr"] - 5) < 1e-5
+    assert (
+        abs(emmental_learner.optimizer.param_groups[0]["lr"] - 9.990100000000002) < 1e-5
+    )
 
     emmental_learner.optimizer.step()
     emmental_learner._update_lr_scheduler(model, 2, {})
     assert (
-        abs(emmental_learner.optimizer.param_groups[0]["lr"] - 1.4644660940672627)
-        < 1e-5
+        abs(emmental_learner.optimizer.param_groups[0]["lr"] - 9.985149999999999) < 1e-5
     )
 
     emmental_learner.optimizer.step()
     emmental_learner._update_lr_scheduler(model, 3, {})
-    assert abs(emmental_learner.optimizer.param_groups[0]["lr"]) < 1e-5
+    assert (
+        abs(emmental_learner.optimizer.param_groups[0]["lr"] - 9.980200000000002) < 1e-5
+    )
 
     shutil.rmtree(dirpath)

@@ -10,12 +10,12 @@ from emmental.learner import EmmentalLearner
 logger = logging.getLogger(__name__)
 
 
-def test_step_scheduler(caplog):
-    """Unit test of step scheduler"""
+def test_plateau_scheduler(caplog):
+    """Unit test of plateau scheduler"""
 
     caplog.set_level(logging.INFO)
 
-    lr_scheduler = "step"
+    lr_scheduler = "plateau"
     dirpath = "temp_test_scheduler"
     model = nn.Linear(1, 1)
     emmental_learner = EmmentalLearner()
@@ -29,7 +29,16 @@ def test_step_scheduler(caplog):
             "optimizer_config": {"optimizer": "sgd", "lr": 10},
             "lr_scheduler_config": {
                 "lr_scheduler": lr_scheduler,
-                "step_config": {"step_size": 2, "gamma": 0.1, "last_epoch": -1},
+                "plateau_config": {
+                    "metric": "model/train/all/loss",
+                    "mode": "min",
+                    "factor": 0.1,
+                    "patience": 1,
+                    "threshold": 0.0001,
+                    "threshold_mode": "rel",
+                    "cooldown": 0,
+                    "eps": 1e-08,
+                },
             },
         }
     }
@@ -41,19 +50,19 @@ def test_step_scheduler(caplog):
     assert emmental_learner.optimizer.param_groups[0]["lr"] == 10
 
     emmental_learner.optimizer.step()
-    emmental_learner._update_lr_scheduler(model, 0, {})
+    emmental_learner._update_lr_scheduler(model, 0, {"model/train/all/loss": 1})
     assert abs(emmental_learner.optimizer.param_groups[0]["lr"] - 10) < 1e-5
 
     emmental_learner.optimizer.step()
-    emmental_learner._update_lr_scheduler(model, 1, {})
+    emmental_learner._update_lr_scheduler(model, 1, {"model/train/all/loss": 1})
+    assert abs(emmental_learner.optimizer.param_groups[0]["lr"] - 10) < 1e-5
+
+    emmental_learner.optimizer.step()
+    emmental_learner._update_lr_scheduler(model, 2, {"model/train/all/loss": 1})
     assert abs(emmental_learner.optimizer.param_groups[0]["lr"] - 1) < 1e-5
 
     emmental_learner.optimizer.step()
-    emmental_learner._update_lr_scheduler(model, 2, {})
+    emmental_learner._update_lr_scheduler(model, 3, {"model/train/all/loss": 0.1})
     assert abs(emmental_learner.optimizer.param_groups[0]["lr"] - 1) < 1e-5
-
-    emmental_learner.optimizer.step()
-    emmental_learner._update_lr_scheduler(model, 3, {})
-    assert abs(emmental_learner.optimizer.param_groups[0]["lr"] - 0.1) < 1e-5
 
     shutil.rmtree(dirpath)

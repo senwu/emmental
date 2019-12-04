@@ -1,8 +1,8 @@
 # Meta configuration
 meta_config:
-    seed: 0  # random seed for all numpy/torch/cuda operations in model and learning
+    seed: # random seed for all numpy/torch/cuda operations in model and learning
     verbose: True # whether to print the log information
-    log_path: # log directory
+    log_path: logs # log directory
 
 # Data configuration
 data_config:
@@ -19,9 +19,12 @@ model_config:
 learner_config:
     fp16: False # whether to use half precision
     n_epochs: 1 # total number of learning epochs
-    train_split: train # the split for training, accepts str or list of strs
-    valid_split: valid # the split for validation, accepts str or list of strs
-    test_split: test # the split for testing, accepts str or list of strs
+    train_split: # the split for training, accepts str or list of strs
+        - train
+    valid_split: # the split for validation, accepts str or list of strs
+        - valid
+    test_split: # the split for testing, accepts str or list of strs
+        - test
     ignore_index: # the ignore index, uses for masking samples
     optimizer_config:
         optimizer: adam # [sgd, adam, adamax, bert_adam]
@@ -77,18 +80,23 @@ learner_config:
             eps: 0.00000001
     lr_scheduler_config:
         lr_scheduler: # [linear, exponential, reduce_on_plateau, cosine_annealing]
+        lr_scheduler_step_unit: batch # [batch, epoch]
+        lr_scheduler_step_freq: 1
         warmup_steps: # warm up steps
         warmup_unit: batch # [epoch, batch]
         warmup_percentage: # warm up percentage
         min_lr: 0.0 # minimum learning rate
-        linear_config:
-            min_lr: 0.0
         exponential_config:
             gamma: 0.9
         plateau_config:
-            factor: 0.5
+            metric: model/train/all/loss
+            mode: min
+            factor: 0.1
             patience: 10
             threshold: 0.0001
+            threshold_mode: rel
+            cooldown: 0
+            eps: 0.00000001
         step_config:
             step_size: 1
             gamma: 0.1
@@ -97,6 +105,29 @@ learner_config:
             milestones:
                 - 1000
             gamma: 0.1
+            last_epoch: -1
+        cyclic_config:
+            base_lr: 0.001
+            max_lr: 0.1
+            step_size_up: 2000
+            step_size_down:
+            mode: triangular
+            gamma: 1.0
+            scale_fn:
+            scale_mode: cycle
+            cycle_momentum: True
+            base_momentum: 0.8
+            max_momentum: 0.9
+            last_epoch: -1
+        one_cycle_config:
+            max_lr: 0.1
+            pct_start: 0.3
+            anneal_strategy: cos
+            cycle_momentum: True
+            base_momentum: 0.85
+            max_momentum: 0.95
+            div_factor: 25.0
+            final_div_factor: 10000.0
             last_epoch: -1
         cosine_annealing_config:
             last_epoch: -1
@@ -121,8 +152,8 @@ logging_config:
     checkpointer_config:
         checkpoint_path:
         checkpoint_freq: 1
-        checkpoint_metric: # metric_name: mode, where mode in [min, max]
-            # model/train/all/loss: min
+        checkpoint_metric:
+            model/train/all/loss: min # metric_name: mode, where mode in [min, max]
         checkpoint_task_metrics: # task_metric_name: mode
         checkpoint_runway: 0 # checkpointing runway (no checkpointing before k unit)
         clear_intermediate_checkpoints: True # whether to clear intermediate checkpoints
