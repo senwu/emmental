@@ -3,6 +3,8 @@ Unreleased_
 
 Added
 ^^^^^
+* `@senwu`_: Support `CosineAnnealingLR`, `CyclicLR`, `OneCycleLR`, `ReduceLROnPlateau`
+  lr scheduler.
 * `@senwu`_: Support more unit tests.
 * `@senwu`_: Support all pytorch optimizers.
 * `@senwu`_: Support accuracy@k metric.

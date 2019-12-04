@@ -33,8 +33,8 @@ The logging parameters of Emmental are described below::
         checkpointer_config:
             checkpoint_path:
             checkpoint_freq: 1
-            checkpoint_metric: # metric_name: mode, where mode in [min, max]
-                # model/train/all/loss: min
+            checkpoint_metric:
+                model/train/all/loss: min # metric_name: mode, where mode in [min, max]
             checkpoint_task_metrics: # task_metric_name: mode
             checkpoint_runway: 0 # checkpointing runway (no checkpointing before k unit)
             clear_intermediate_checkpoints: True # whether to clear intermediate checkpoints
