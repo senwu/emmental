@@ -200,7 +200,7 @@ def array_to_numpy(
         raise ValueError(f"Unrecognized type {type(array)} to convert to ndarray")
 
     if flatten:
-        array = array.reshpae(-1)
+        array = array.reshape(-1)
 
     return array
 
