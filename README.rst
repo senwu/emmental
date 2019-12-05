@@ -1,5 +1,5 @@
-Emmental
-========
+|Emmental|
+==========
 
 |Travis| |CodeClimate| |Coveralls| |ReadTheDocs| |PyPI| |PyPIVersion| |GitHubStars| |License| |CodeStyle|
 
@@ -32,6 +32,8 @@ Reference
     }
 
 
+.. |Emmental| image:: docs/static/img/emmental-logo.png
+   :target: https://github.com/SenWu/emmental
 .. |CodeClimate| image:: https://img.shields.io/codeclimate/maintainability/SenWu/emmental.svg
    :alt: Code Climate
    :target: https://codeclimate.com/github/SenWu/emmental
