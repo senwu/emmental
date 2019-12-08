@@ -447,11 +447,17 @@ class EmmentalModel(nn.Module):
 
             # Collect overall micro/macro average score/loss
             identifier = construct_identifier("model", "all", "all", "micro_average")
-            metric_score_dict[identifier] = np.mean(list(micro_score_dict.values()))
+            metric_score_dict[identifier] = np.mean(
+                list(itertools.chain.from_iterable(micro_score_dict.values()))
+            )
             identifier = construct_identifier("model", "all", "all", "macro_average")
-            metric_score_dict[identifier] = np.mean(list(macro_score_dict.values()))
+            metric_score_dict[identifier] = np.mean(
+                list(itertools.chain.from_iterable(macro_score_dict.values()))
+            )
             identifier = construct_identifier("model", "all", "all", "loss")
-            metric_score_dict[identifier] = np.mean(list(macro_loss_dict.values()))
+            metric_score_dict[identifier] = np.mean(
+                list(itertools.chain.from_iterable(macro_loss_dict.values()))
+            )
 
         # TODO: have a better to handle global evaluation metric
         if Meta.config["learner_config"]["global_evaluation_metric_dict"]:
