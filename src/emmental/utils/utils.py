@@ -205,12 +205,16 @@ def array_to_numpy(
     return array
 
 
-def merge(x: Dict[str, Any], y: Dict[str, Any]) -> Dict[str, Any]:
+def merge(
+    x: Dict[str, Any], y: Dict[str, Any], specical_keys: Union[str, List[str]] = None
+) -> Dict[str, Any]:
     r"""Merge two nested dictionaries. Overwrite values in x with values in y.
 
     Args:
       x(dict): The original dict.
       y(dict): The new dict.
+      specical_keys(str or list of str): The specical keys to replace
+        instead of merging, defaults to None.
 
     Returns:
       dict: The updated dic.
@@ -222,13 +226,18 @@ def merge(x: Dict[str, Any], y: Dict[str, Any]) -> Dict[str, Any]:
     if y is None:
         return x
 
+    if isinstance(specical_keys, str):
+        specical_keys = [specical_keys]
+
     merged = {**x, **y}
 
     xkeys = x.keys()
 
     for key in xkeys:
-        if isinstance(x[key], dict) and key in y:
-            merged[key] = merge(x[key], y[key])
+        if specical_keys is not None and key in specical_keys and key in y:
+            merged[key] = y[key]
+        elif isinstance(x[key], dict) and key in y:
+            merged[key] = merge(x[key], y[key], specical_keys)
 
     return merged
 

@@ -156,7 +156,7 @@ class Meta(object):
         """
 
         if config != {}:
-            Meta.config = merge(Meta.config, config)
+            Meta.config = merge(Meta.config, config, specical_keys="checkpoint_metric")
             logger.info("Updating Emmental config from user provided config.")
 
         if path is not None:
@@ -166,7 +166,9 @@ class Meta(object):
                 potential_path = os.path.join(current_dir, filename)
                 if os.path.exists(potential_path):
                     with open(potential_path, "r") as f:
-                        Meta.config = merge(Meta.config, yaml.load(f))
+                        Meta.config = merge(
+                            Meta.config, yaml.load(f), specical_keys="checkpoint_metric"
+                        )
                     logger.info(f"Updating Emmental config from {potential_path}.")
                     break
 
