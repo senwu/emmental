@@ -10,6 +10,10 @@ Added
 * `@senwu`_: Support accuracy@k metric.
 * `@senwu`_: Support cosine annealing lr scheduler.
 
+Fixed
+^^^^^
+* `@senwu`_: Fix multiple checkpoint_metric issue.
+
 0.0.4_ - 2019-11-11
 -------------------
 
