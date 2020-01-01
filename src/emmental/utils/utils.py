@@ -8,17 +8,15 @@ from numpy import ndarray
 from torch import Tensor
 
 
-def set_random_seed(seed: int) -> None:
+def set_random_seed(seed: int = None) -> None:
     r"""Set random seed for random, numpy, and pytorch.
 
     Args:
-      seed(int): The random seed.
+      seed(int): The random seed, defaults to none.
 
     """
-    if seed is None:
-        return
-
-    seed = int(seed)
+    if seed is not None:
+        seed = int(seed)
 
     # Set random seed for random
     random.seed(seed)
@@ -26,7 +24,8 @@ def set_random_seed(seed: int) -> None:
     np.random.seed(seed=seed)
 
     # Set random seed for PyTorch
-    torch.manual_seed(seed)
+    if isinstance(seed, int):
+        torch.manual_seed(seed)
 
 
 def list_to_tensor(

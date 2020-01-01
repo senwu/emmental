@@ -108,7 +108,7 @@ class RNN(nn.Module):
             Mean pooling
             """
             if x_mask is None:
-                x_mask = x.new_full(x.size()[:2], fill_value=0, dtype=torch.uint8)
+                x_mask = x.new_full(x.size()[:2], fill_value=0, dtype=torch.bool)
             x_lens = x_mask.data.eq(0).long().sum(dim=1)
             weights = (
                 output_word.new_ones(output_word.size())
