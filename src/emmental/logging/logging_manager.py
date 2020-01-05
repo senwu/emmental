@@ -34,7 +34,8 @@ class LoggingManager(object):
 
         # Set up evaluation frequency
         self.evaluation_freq = Meta.config["logging_config"]["evaluation_freq"]
-        logger.info(f"Evaluating every {self.evaluation_freq} {self.counter_unit}.")
+        if Meta.config["meta_config"]["verbose"]:
+            logger.info(f"Evaluating every {self.evaluation_freq} {self.counter_unit}.")
 
         if Meta.config["logging_config"]["checkpointing"]:
             self.checkpointing = True
@@ -43,16 +44,19 @@ class LoggingManager(object):
             self.checkpointing_freq = int(
                 Meta.config["logging_config"]["checkpointer_config"]["checkpoint_freq"]
             )
-            logger.info(
-                f"Checkpointing every "
-                f"{self.checkpointing_freq * self.evaluation_freq} {self.counter_unit}."
-            )
+            if Meta.config["meta_config"]["verbose"]:
+                logger.info(
+                    f"Checkpointing every "
+                    f"{self.checkpointing_freq * self.evaluation_freq} "
+                    f"{self.counter_unit}."
+                )
 
             # Set up checkpointer
             self.checkpointer = Checkpointer()
         else:
             self.checkpointing = False
-            logger.info("No checkpointing.")
+            if Meta.config["meta_config"]["verbose"]:
+                logger.info("No checkpointing.")
 
         # Set up number of samples passed since last evaluation/checkpointing and
         # total number of samples passed since learning process
@@ -155,7 +159,7 @@ class LoggingManager(object):
 
         """
         for metric_name, metric_value in metric_dict.items():
-            self.writer.add_scalar(metric_name, metric_value, self.batch_total)
+            self.writer.add_scalar(metric_name, metric_value, self.unit_total)
 
     def checkpoint_model(
         self,

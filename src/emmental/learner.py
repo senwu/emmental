@@ -96,7 +96,8 @@ class EmmentalLearner(object):
 
         self.optimizer = optimizer
 
-        logger.info(f"Using optimizer {self.optimizer}")
+        if Meta.config["meta_config"]["verbose"]:
+            logger.info(f"Using optimizer {self.optimizer}")
 
     def _set_lr_scheduler(self, model: EmmentalModel) -> None:
         r"""Set learning rate scheduler for learning process.
@@ -183,10 +184,11 @@ class EmmentalLearner(object):
             "lr_scheduler_config"
         ]["lr_scheduler_step_freq"]
 
-        logger.info(
-            f"Using lr_scheduler {repr(self.lr_scheduler)} with step every "
-            f"{self.lr_scheduler_step_freq} {self.lr_scheduler_step_unit}."
-        )
+        if Meta.config["meta_config"]["verbose"]:
+            logger.info(
+                f"Using lr_scheduler {repr(self.lr_scheduler)} with step every "
+                f"{self.lr_scheduler_step_freq} {self.lr_scheduler_step_unit}."
+            )
 
     def _set_warmup_scheduler(self, model: EmmentalModel) -> None:
         r"""Set warmup learning rate scheduler for learning process.
@@ -218,7 +220,8 @@ class EmmentalLearner(object):
             warmup_scheduler = optim.lr_scheduler.LambdaLR(
                 self.optimizer, linear_warmup_func  # type: ignore
             )
-            logger.info(f"Warmup {self.warmup_steps} batchs.")
+            if Meta.config["meta_config"]["verbose"]:
+                logger.info(f"Warmup {self.warmup_steps} batchs.")
         elif Meta.config["learner_config"]["lr_scheduler_config"]["warmup_percentage"]:
             warmup_percentage = Meta.config["learner_config"]["lr_scheduler_config"][
                 "warmup_percentage"
@@ -232,7 +235,8 @@ class EmmentalLearner(object):
             warmup_scheduler = optim.lr_scheduler.LambdaLR(
                 self.optimizer, linear_warmup_func  # type: ignore
             )
-            logger.info(f"Warmup {self.warmup_steps} batchs.")
+            if Meta.config["meta_config"]["verbose"]:
+                logger.info(f"Warmup {self.warmup_steps} batchs.")
         else:
             warmup_scheduler = None
 
@@ -370,8 +374,9 @@ class EmmentalLearner(object):
             self._reset_losses()
 
         # Log metric dict every trigger evaluation time or full epoch
-        if trigger_evaluation or self.logging_manager.epoch_total == int(
-            self.logging_manager.epoch_total
+        if Meta.config["meta_config"]["verbose"] and (
+            trigger_evaluation
+            or self.logging_manager.epoch_total == int(self.logging_manager.epoch_total)
         ):
             logger.info(
                 f"{self.logging_manager.counter_unit.capitalize()}: "
@@ -510,7 +515,8 @@ class EmmentalLearner(object):
         # Set to training mode
         model.train()
 
-        logger.info(f"Start learning...")
+        if Meta.config["meta_config"]["verbose"]:
+            logger.info(f"Start learning...")
 
         self.metrics: Dict[str, float] = dict()
         self._reset_losses()

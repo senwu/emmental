@@ -49,7 +49,10 @@ class EmmentalDataset(Dataset):
             uids = [f"{self.name}_{idx}" for idx in range(self.__len__())]
             self.add_features({f"{self.uid}": uids})
 
-            logger.info(f"Auto generate uids for dataset {self.name} under {self.uid}.")
+            if Meta.config["meta_config"]["verbose"]:
+                logger.info(
+                    f"Auto generate uids for dataset {self.name} under {self.uid}."
+                )
 
         for name, label in self.Y_dict.items():
             if not isinstance(label, Tensor):
