@@ -4,6 +4,7 @@ from typing import Callable, Dict, List, Tuple, Union
 from torch import nn
 from torch.nn.modules.container import ModuleDict
 
+from emmental.meta import Meta
 from emmental.scorer import Scorer
 
 logger = logging.getLogger(__name__)
@@ -45,7 +46,8 @@ class EmmentalTask(object):
         self.scorer = scorer
         self.weight = weight
 
-        logger.info(f"Created task: {self.name}")
+        if Meta.config["meta_config"]["verbose"]:
+            logger.info(f"Created task: {self.name}")
 
     def __repr__(self) -> str:
         cls_name = type(self).__name__
