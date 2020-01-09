@@ -44,6 +44,7 @@ def test_e2e(caplog):
                 "checkpoint_metric": {"model/all/train/loss": "min"},
                 "checkpoint_task_metrics": None,
                 "checkpoint_runway": 0,
+                "checkpoint_all": False,
                 "clear_intermediate_checkpoints": True,
                 "clear_all_checkpoints": False,
             },

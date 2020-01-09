@@ -773,6 +773,13 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     logging_config.add_argument(
+        "--checkpoint_all",
+        type=str2bool,
+        default=False,
+        help="Whether to checkpoint all checkpoints",
+    )
+
+    logging_config.add_argument(
         "--clear_intermediate_checkpoints",
         type=str2bool,
         default=True,
@@ -960,6 +967,7 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
                 "checkpoint_metric": args.checkpoint_metric,
                 "checkpoint_task_metrics": args.checkpoint_task_metrics,
                 "checkpoint_runway": args.checkpoint_runway,
+                "checkpoint_all": args.checkpoint_all,
                 "clear_intermediate_checkpoints": args.clear_intermediate_checkpoints,
                 "clear_all_checkpoints": args.clear_all_checkpoints,
             },
