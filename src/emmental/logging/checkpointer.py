@@ -2,7 +2,7 @@ import glob
 import logging
 import os
 from shutil import copyfile
-from typing import Any, Dict, Set, Union
+from typing import Any, Dict, List, Set, Union
 
 import torch
 from torch.optim.lr_scheduler import _LRScheduler
@@ -84,6 +84,13 @@ class Checkpointer(object):
             f"{self.checkpoint_unit}."
         )
 
+        self.checkpoint_all = Meta.config["logging_config"]["checkpointer_config"][
+            "checkpoint_all"
+        ]
+        logger.info(f"Checkpointing all checkpoints: {self.checkpoint_all}.")
+
+        self.checkpoint_paths: List[str] = []
+
         # Set up checkpoint clear
         self.clear_intermediate_checkpoints = Meta.config["logging_config"][
             "checkpointer_config"
@@ -134,6 +141,13 @@ class Checkpointer(object):
             f"Save checkpoint of {iteration} {self.checkpoint_unit} "
             f"at {checkpoint_path}."
         )
+
+        if self.checkpoint_all is False:
+            for path in self.checkpoint_paths:
+                if os.path.exists(path):
+                    os.remove(path)
+
+        self.checkpoint_paths.append(checkpoint_path)
 
         if not set(self.checkpoint_all_metrics.keys()).isdisjoint(
             set(metric_dict.keys())

@@ -14,7 +14,7 @@ def test_parse_args(caplog):
     caplog.set_level(logging.INFO)
 
     parser = parse_args()
-    args = parser.parse_args(["--seed", "0"])
+    args = parser.parse_args(["--seed", "0", "--checkpoint_all", "True"])
     assert args.seed == 0
 
     config = parse_args_to_config(args)
@@ -134,6 +134,7 @@ def test_parse_args(caplog):
                 "checkpoint_metric": {"model/train/all/loss": "min"},
                 "checkpoint_task_metrics": None,
                 "checkpoint_runway": 0,
+                "checkpoint_all": True,
                 "clear_intermediate_checkpoints": True,
                 "clear_all_checkpoints": False,
             },
@@ -291,6 +292,7 @@ def test_checkpoint_metric(caplog):
                 "checkpoint_metric": {"model/valid/all/accuracy": "max"},
                 "checkpoint_task_metrics": None,
                 "checkpoint_runway": 0,
+                "checkpoint_all": False,
                 "clear_intermediate_checkpoints": True,
                 "clear_all_checkpoints": False,
             },

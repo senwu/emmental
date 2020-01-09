@@ -3,6 +3,7 @@ Unreleased_
 
 Added
 ^^^^^
+* `@senwu`_: Add `checkpoint_all` to controll whether to save all checkpoints.
 * `@senwu`_: Support `CosineAnnealingLR`, `CyclicLR`, `OneCycleLR`, `ReduceLROnPlateau`
   lr scheduler.
 * `@senwu`_: Support more unit tests.
