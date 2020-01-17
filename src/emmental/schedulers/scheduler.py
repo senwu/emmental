@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Iterator, List
 
 from emmental.data import EmmentalDataLoader
+from emmental.model import EmmentalModel
 
 
 class Scheduler(ABC):
@@ -28,12 +29,15 @@ class Scheduler(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_batches(self, dataloaders: List[EmmentalDataLoader]) -> Iterator[Any]:
+    def get_batches(
+        self, dataloaders: List[EmmentalDataLoader], model: EmmentalModel = None
+    ) -> Iterator[Any]:
         r"""Generate batch generator from all dataloaders in designed order for
         one epoch.
 
         Args:
           dataloaders(list): List of dataloaders.
+          model(EmmentalModel): The training model, defaults to None.
 
         Returns:
           genertor: A generator of all batches.

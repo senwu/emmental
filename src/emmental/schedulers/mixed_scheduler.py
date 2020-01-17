@@ -3,6 +3,7 @@ from typing import Dict, Iterator, List, Tuple, Union
 from torch import Tensor
 
 from emmental.data import EmmentalDataLoader
+from emmental.model import EmmentalModel
 from emmental.schedulers.scheduler import Scheduler
 
 
@@ -36,7 +37,7 @@ class MixedScheduler(Scheduler):
         return num_batch
 
     def get_batches(
-        self, dataloaders: List[EmmentalDataLoader]
+        self, dataloaders: List[EmmentalDataLoader], model: EmmentalModel = None
     ) -> Iterator[
         List[
             Tuple[
@@ -53,6 +54,7 @@ class MixedScheduler(Scheduler):
 
         Args:
           dataloaders(list): List of dataloaders.
+          model(EmmentalModel): The training model, defaults to None.
 
         Returns:
           genertor: A generator of all batches.
