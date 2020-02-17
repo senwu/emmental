@@ -406,6 +406,13 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     scheduler_config.add_argument(
+        "--reset_state",
+        type=str2bool,
+        default=False,
+        help="Whether reset the state of the optimizer when lr changes",
+    )
+
+    scheduler_config.add_argument(
         "--exponential_lr_scheduler_gamma",
         type=float,
         default=0.9,
@@ -895,6 +902,7 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
                 "warmup_unit": args.warmup_unit,
                 "warmup_percentage": args.warmup_percentage,
                 "min_lr": args.min_lr,
+                "reset_state": args.reset_state,
                 "exponential_config": {"gamma": args.exponential_lr_scheduler_gamma},
                 "plateau_config": {
                     "metric": args.plateau_lr_scheduler_metric,

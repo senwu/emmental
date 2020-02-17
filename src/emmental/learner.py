@@ -1,3 +1,4 @@
+import collections
 import copy
 import logging
 from collections import defaultdict
@@ -252,6 +253,7 @@ class EmmentalLearner(object):
           step(int): The current step.
 
         """
+        cur_lr = self.optimizer.param_groups[0]["lr"]
 
         if self.warmup_scheduler and step < self.warmup_steps:
             self.warmup_scheduler.step()  # type: ignore
@@ -285,6 +287,13 @@ class EmmentalLearner(object):
             min_lr = Meta.config["learner_config"]["lr_scheduler_config"]["min_lr"]
             if min_lr and self.optimizer.param_groups[0]["lr"] < min_lr:
                 self.optimizer.param_groups[0]["lr"] = min_lr
+
+        if (
+            Meta.config["learner_config"]["lr_scheduler_config"]["reset_state"]
+            and cur_lr != self.optimizer.param_groups[0]["lr"]
+        ):
+            logger.info("Reset the state of the optimizer.")
+            self.optimizer.state = collections.defaultdict(dict)  # Reset state
 
     def _set_task_scheduler(self) -> None:
         r"""Set task scheduler for learning process"""
