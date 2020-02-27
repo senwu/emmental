@@ -217,3 +217,11 @@ def test_accuracy_f1(caplog):
     metric_dict = accuracy_f1_scorer(golds, None, preds)
 
     assert isequal(metric_dict, {"accuracy_f1": 0.5833333333333333})
+
+    metric_dict = accuracy_f1_scorer(golds, None, preds, pos_label=1)
+
+    assert isequal(metric_dict, {"accuracy_f1": 0.5833333333333333})
+
+    metric_dict = accuracy_f1_scorer(golds, None, preds, pos_label=0)
+
+    assert isequal(metric_dict, {"accuracy_f1": 0.7083333333333333})

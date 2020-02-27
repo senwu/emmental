@@ -14,7 +14,9 @@ def test_parse_args(caplog):
     caplog.set_level(logging.INFO)
 
     parser = parse_args()
-    args = parser.parse_args(["--seed", "0", "--checkpoint_all", "True"])
+    args = parser.parse_args(
+        ["--seed", "0", "--checkpoint_all", "True", "--reset_state", "True"]
+    )
     assert args.seed == 0
 
     config = parse_args_to_config(args)
@@ -72,6 +74,7 @@ def test_parse_args(caplog):
                 "warmup_unit": "batch",
                 "warmup_percentage": None,
                 "min_lr": 0.0,
+                "reset_state": True,
                 "exponential_config": {"gamma": 0.9},
                 "plateau_config": {
                     "metric": "model/train/all/loss",
@@ -230,6 +233,7 @@ def test_checkpoint_metric(caplog):
                 "warmup_unit": "batch",
                 "warmup_percentage": None,
                 "min_lr": 0.0,
+                "reset_state": False,
                 "exponential_config": {"gamma": 0.9},
                 "plateau_config": {
                     "metric": "model/train/all/loss",

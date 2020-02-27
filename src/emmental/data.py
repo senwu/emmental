@@ -164,15 +164,20 @@ def emmental_collate_fn(
       Tuple[Dict[str, Any], Dict[str, Tensor]]: The collated batch.
 
     """
-
     X_batch: defaultdict = defaultdict(list)
     Y_batch: defaultdict = defaultdict(list)
 
     for x_dict, y_dict in batch:
         for field_name, value in x_dict.items():
-            X_batch[field_name].append(value)
+            if isinstance(value, list):
+                X_batch[field_name] += value
+            else:
+                X_batch[field_name].append(value)
         for label_name, value in y_dict.items():
-            Y_batch[label_name].append(value)
+            if isinstance(value, list):
+                Y_batch[label_name] += value
+            else:
+                Y_batch[label_name].append(value)
 
     field_names = copy.deepcopy(list(X_batch.keys()))
 

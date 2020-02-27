@@ -86,6 +86,7 @@ learner_config:
         warmup_unit: batch # [epoch, batch]
         warmup_percentage: # warm up percentage
         min_lr: 0.0 # minimum learning rate
+        reset_state: False # reset the state of the optimizer
         exponential_config:
             gamma: 0.9
         plateau_config:

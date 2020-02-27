@@ -322,7 +322,8 @@ class EmmentalModel(nn.Module):
         gold_dict: Dict[str, List[Union[ndarray, int, float]]] = defaultdict(list)
         prob_dict: Dict[str, List[Union[ndarray, int, float]]] = defaultdict(list)
         pred_dict: Dict[str, List[ndarray]] = defaultdict(list)
-        loss_dict: Dict[str, Union[ndarray, float]] = defaultdict(float)
+        # Fix it later
+        loss_dict: Dict[str, Union[ndarray, float]] = defaultdict(list)  # type: ignore
 
         # Collect dataloader information
         task_to_label_dict = dataloader.task_to_label_dict
@@ -336,13 +337,21 @@ class EmmentalModel(nn.Module):
                 uid_dict[task_name].extend(uid_bdict[task_name])
                 prob_dict[task_name].extend(prob_bdict[task_name])
                 gold_dict[task_name].extend(gold_bdict[task_name])
-                loss_dict[task_name] += loss_bdict[task_name].item() * len(
-                    uid_bdict[task_name]
-                )
+                if len(loss_bdict[task_name].size()) == 0:
+                    if loss_dict[task_name] == []:
+                        loss_dict[task_name] = 0
+                    loss_dict[task_name] += loss_bdict[task_name].item() * len(
+                        uid_bdict[task_name]
+                    )
+                else:
+                    loss_dict[task_name].extend(  # type: ignore
+                        loss_bdict[task_name].cpu().numpy()
+                    )
 
         # Calculate average loss
         for task_name in uid_dict.keys():
-            loss_dict[task_name] /= len(uid_dict[task_name])
+            if not isinstance(loss_dict[task_name], list):
+                loss_dict[task_name] /= len(uid_dict[task_name])
 
         res = {
             "uids": uid_dict,
@@ -407,7 +416,9 @@ class EmmentalModel(nn.Module):
                 identifier = construct_identifier(
                     task_name, dataloader.data_name, dataloader.split, "loss"
                 )
-                metric_score_dict[identifier] = predictions["losses"][task_name]
+                metric_score_dict[identifier] = np.mean(
+                    predictions["losses"][task_name]
+                )
 
                 if return_average:
                     # Collect average score

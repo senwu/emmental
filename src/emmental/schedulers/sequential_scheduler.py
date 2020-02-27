@@ -3,6 +3,7 @@ from typing import Dict, Iterator, List, Tuple, Union
 from torch import Tensor
 
 from emmental.data import EmmentalDataLoader
+from emmental.model import EmmentalModel
 from emmental.schedulers.scheduler import Scheduler
 
 
@@ -42,7 +43,7 @@ class SequentialScheduler(Scheduler):
         return sum(batch_counts)
 
     def get_batches(
-        self, dataloaders: List[EmmentalDataLoader]
+        self, dataloaders: List[EmmentalDataLoader], model: EmmentalModel = None
     ) -> Iterator[
         Tuple[
             List[str],
@@ -58,6 +59,7 @@ class SequentialScheduler(Scheduler):
 
         Args:
           dataloaders(list): List of dataloaders.
+          model(EmmentalModel): The training model, defaults to None.
 
         Returns:
           genertor: A generator of all batches.

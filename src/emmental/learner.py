@@ -1,3 +1,4 @@
+import collections
 import copy
 import logging
 from collections import defaultdict
@@ -252,6 +253,7 @@ class EmmentalLearner(object):
           step(int): The current step.
 
         """
+        cur_lr = self.optimizer.param_groups[0]["lr"]
 
         if self.warmup_scheduler and step < self.warmup_steps:
             self.warmup_scheduler.step()  # type: ignore
@@ -285,6 +287,13 @@ class EmmentalLearner(object):
             min_lr = Meta.config["learner_config"]["lr_scheduler_config"]["min_lr"]
             if min_lr and self.optimizer.param_groups[0]["lr"] < min_lr:
                 self.optimizer.param_groups[0]["lr"] = min_lr
+
+        if (
+            Meta.config["learner_config"]["lr_scheduler_config"]["reset_state"]
+            and cur_lr != self.optimizer.param_groups[0]["lr"]
+        ):
+            logger.info("Reset the state of the optimizer.")
+            self.optimizer.state = collections.defaultdict(dict)  # Reset state
 
     def _set_task_scheduler(self) -> None:
         r"""Set task scheduler for learning process"""
@@ -523,7 +532,7 @@ class EmmentalLearner(object):
 
         for epoch_num in range(Meta.config["learner_config"]["n_epochs"]):
             batches = tqdm(
-                enumerate(self.task_scheduler.get_batches(train_dataloaders)),
+                enumerate(self.task_scheduler.get_batches(train_dataloaders, model)),
                 total=self.n_batches_per_epoch,
                 disable=(not Meta.config["meta_config"]["verbose"]),
                 desc=f"Epoch {epoch_num}:",
@@ -553,9 +562,11 @@ class EmmentalLearner(object):
                     for task_name in uid_dict.keys():
                         identifier = f"{task_name}/{data_name}/{split}"
                         self.running_uids[identifier].extend(uid_dict[task_name])
-                        self.running_losses[identifier] += loss_dict[
-                            task_name
-                        ].item() * len(uid_dict[task_name])
+                        self.running_losses[identifier] += (
+                            loss_dict[task_name].item() * len(uid_dict[task_name])
+                            if len(loss_dict[task_name].size()) == 0
+                            else torch.sum(loss_dict[task_name]).item()
+                        )
                         self.running_probs[identifier].extend(prob_dict[task_name])
                         self.running_golds[identifier].extend(gold_dict[task_name])
 
@@ -567,6 +578,8 @@ class EmmentalLearner(object):
                     loss = sum(
                         [
                             model.weights[task_name] * task_loss
+                            if len(task_loss.size()) == 0
+                            else torch.mean(model.weights[task_name] * task_loss)
                             for task_name, task_loss in loss_dict.items()
                         ]
                     )
