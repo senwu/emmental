@@ -56,7 +56,7 @@ def init_config() -> None:
         os.path.dirname(os.path.realpath(__file__)), "emmental-default-config.yaml"
     )
     with open(default_config_path, "r") as f:
-        config = yaml.load(f)
+        config = yaml.load(f, Loader=yaml.FullLoader)
     logger.info(f"Loading Emmental default config from {default_config_path}.")
 
     Meta.config = config
@@ -167,7 +167,9 @@ class Meta(object):
                 if os.path.exists(potential_path):
                     with open(potential_path, "r") as f:
                         Meta.config = merge(
-                            Meta.config, yaml.load(f), specical_keys="checkpoint_metric"
+                            Meta.config,
+                            yaml.load(f, Loader=yaml.FullLoader),
+                            specical_keys="checkpoint_metric",
                         )
                     logger.info(f"Updating Emmental config from {potential_path}.")
                     break
