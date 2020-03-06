@@ -1,6 +1,9 @@
 Unreleased_
 -----------
 
+0.0.5_ - 2020-03-01
+-------------------
+
 Added
 ^^^^^
 * `@senwu`_: Add `checkpoint_all` to controll whether to save all checkpoints.
@@ -73,8 +76,9 @@ Removed
 ^^^^^^^
 * `@senwu`_: Remove `checkpoint_clear` argument.
 
-.. _Unreleased: https://github.com/senwu/emmental/compare/v0.0.4...master
+.. _Unreleased: https://github.com/senwu/emmental/compare/v0.0.5...master
 .. _0.0.4: https://github.com/senwu/emmental/compare/v0.0.3...v0.0.4
+.. _0.0.5: https://github.com/senwu/emmental/compare/v0.0.4...v0.0.5
 
 ..
   For convenience, all username links for contributors can be listed here
