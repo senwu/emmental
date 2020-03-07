@@ -1,6 +1,10 @@
 Unreleased_
 -----------
 
+dded
+^^^^^
+* `@senwu`_: Support probabilistic gold label in scorer.
+
 0.0.5_ - 2020-03-01
 -------------------
 
