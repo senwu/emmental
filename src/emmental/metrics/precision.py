@@ -26,8 +26,11 @@ def precision_scorer(
       dict: Precision.
 
     """
-    if len(golds.shape) > 1:
+
+    # Convert probabilistic label to hard label
+    if len(golds.shape) == 2:
         golds = prob_to_pred(golds)
+
     pred_pos = np.where(preds == pos_label, True, False)
     gt_pos = np.where(golds == pos_label, True, False)
     TP = np.sum(pred_pos * gt_pos)

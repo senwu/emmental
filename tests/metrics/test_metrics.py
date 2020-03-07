@@ -24,6 +24,9 @@ def test_accuracy(caplog):
     caplog.set_level(logging.INFO)
 
     golds = np.array([0, 1, 0, 1, 0, 1])
+    gold_probs = np.array(
+        [[0.6, 0.4], [0.1, 0.9], [0.7, 0.3], [0.2, 0.8], [0.9, 0.1], [0.4, 0.6]]
+    )
     probs = np.array(
         [[0.9, 0.1], [0.6, 0.4], [1.0, 0.0], [0.8, 0.2], [0.6, 0.4], [0.05, 0.95]]
     )
@@ -41,6 +44,14 @@ def test_accuracy(caplog):
 
     assert isequal(metric_dict, {"accuracy@2": 1.0})
 
+    metric_dict = accuracy_scorer(gold_probs, None, preds)
+
+    assert isequal(metric_dict, {"accuracy": 0.6666666666666666})
+
+    metric_dict = accuracy_scorer(gold_probs, probs, preds, topk=2)
+
+    assert isequal(metric_dict, {"accuracy@2": 1.0})
+
 
 def test_precision(caplog):
     """Unit test of precision_scorer"""
@@ -48,12 +59,21 @@ def test_precision(caplog):
     caplog.set_level(logging.INFO)
 
     golds = np.array([0, 1, 0, 1, 0, 1])
+    gold_probs = np.array(
+        [[0.6, 0.4], [0.1, 0.9], [0.7, 0.3], [0.2, 0.8], [0.9, 0.1], [0.4, 0.6]]
+    )
     preds = np.array([0, 0, 0, 0, 0, 1])
 
     metric_dict = precision_scorer(golds, None, preds, pos_label=1)
     assert isequal(metric_dict, {"precision": 1})
 
     metric_dict = precision_scorer(golds, None, preds, pos_label=0)
+    assert isequal(metric_dict, {"precision": 0.6})
+
+    metric_dict = precision_scorer(gold_probs, None, preds, pos_label=1)
+    assert isequal(metric_dict, {"precision": 1})
+
+    metric_dict = precision_scorer(gold_probs, None, preds, pos_label=0)
     assert isequal(metric_dict, {"precision": 0.6})
 
 
@@ -63,12 +83,21 @@ def test_recall(caplog):
     caplog.set_level(logging.INFO)
 
     golds = np.array([0, 1, 0, 1, 0, 1])
+    gold_probs = np.array(
+        [[0.6, 0.4], [0.1, 0.9], [0.7, 0.3], [0.2, 0.8], [0.9, 0.1], [0.4, 0.6]]
+    )
     preds = np.array([0, 0, 0, 0, 0, 1])
 
     metric_dict = recall_scorer(golds, None, preds, pos_label=1)
     assert isequal(metric_dict, {"recall": 0.3333333333333333})
 
     metric_dict = recall_scorer(golds, None, preds, pos_label=0)
+    assert isequal(metric_dict, {"recall": 1})
+
+    metric_dict = recall_scorer(gold_probs, None, preds, pos_label=1)
+    assert isequal(metric_dict, {"recall": 0.3333333333333333})
+
+    metric_dict = recall_scorer(gold_probs, None, preds, pos_label=0)
     assert isequal(metric_dict, {"recall": 1})
 
 
@@ -78,12 +107,21 @@ def test_f1(caplog):
     caplog.set_level(logging.INFO)
 
     golds = np.array([0, 1, 0, 1, 0, 1])
+    gold_probs = np.array(
+        [[0.6, 0.4], [0.1, 0.9], [0.7, 0.3], [0.2, 0.8], [0.9, 0.1], [0.4, 0.6]]
+    )
     preds = np.array([0, 0, 0, 0, 0, 1])
 
     metric_dict = f1_scorer(golds, None, preds, pos_label=1)
     assert isequal(metric_dict, {"f1": 0.5})
 
     metric_dict = f1_scorer(golds, None, preds, pos_label=0)
+    assert isequal(metric_dict, {"f1": 0.7499999999999999})
+
+    metric_dict = f1_scorer(gold_probs, None, preds, pos_label=1)
+    assert isequal(metric_dict, {"f1": 0.5})
+
+    metric_dict = f1_scorer(gold_probs, None, preds, pos_label=0)
     assert isequal(metric_dict, {"f1": 0.7499999999999999})
 
 
@@ -93,12 +131,21 @@ def test_fbeta(caplog):
     caplog.set_level(logging.INFO)
 
     golds = np.array([0, 1, 0, 1, 0, 1])
+    gold_probs = np.array(
+        [[0.6, 0.4], [0.1, 0.9], [0.7, 0.3], [0.2, 0.8], [0.9, 0.1], [0.4, 0.6]]
+    )
     preds = np.array([0, 0, 0, 0, 0, 1])
 
     metric_dict = fbeta_scorer(golds, None, preds, pos_label=1, beta=2)
     assert isequal(metric_dict, {"f2": 0.3846153846153846})
 
     metric_dict = fbeta_scorer(golds, None, preds, pos_label=0, beta=2)
+    assert isequal(metric_dict, {"f2": 0.8823529411764706})
+
+    metric_dict = fbeta_scorer(gold_probs, None, preds, pos_label=1, beta=2)
+    assert isequal(metric_dict, {"f2": 0.3846153846153846})
+
+    metric_dict = fbeta_scorer(gold_probs, None, preds, pos_label=0, beta=2)
     assert isequal(metric_dict, {"f2": 0.8823529411764706})
 
 
@@ -192,6 +239,9 @@ def test_roc_auc(caplog):
     caplog.set_level(logging.INFO)
 
     golds = np.array([1, 0, 1, 0, 1, 0])
+    gold_probs = np.array(
+        [[0.4, 0.6], [0.9, 0.1], [0.3, 0.7], [0.8, 0.2], [0.1, 0.9], [0.6, 0.4]]
+    )
     probs = np.array(
         [[0.2, 0.8], [0.4, 0.6], [0.1, 0.9], [0.3, 0.7], [0.3, 0.7], [0.8, 0.2]]
     )
@@ -205,6 +255,10 @@ def test_roc_auc(caplog):
     metric_dict = roc_auc_scorer(golds, probs, None)
     assert isequal(metric_dict, {"roc_auc": float("nan")})
 
+    metric_dict = roc_auc_scorer(gold_probs, probs, None)
+
+    assert isequal(metric_dict, {"roc_auc": 0.9444444444444444})
+
 
 def test_accuracy_f1(caplog):
     """Unit test of accuracy_f1_scorer"""
@@ -212,6 +266,9 @@ def test_accuracy_f1(caplog):
     caplog.set_level(logging.INFO)
 
     golds = np.array([0, 1, 0, 1, 0, 1])
+    gold_probs = np.array(
+        [[0.6, 0.4], [0.1, 0.9], [0.7, 0.3], [0.2, 0.8], [0.9, 0.1], [0.4, 0.6]]
+    )
     preds = np.array([0, 0, 0, 0, 0, 1])
 
     metric_dict = accuracy_f1_scorer(golds, None, preds)
@@ -225,3 +282,7 @@ def test_accuracy_f1(caplog):
     metric_dict = accuracy_f1_scorer(golds, None, preds, pos_label=0)
 
     assert isequal(metric_dict, {"accuracy_f1": 0.7083333333333333})
+
+    metric_dict = accuracy_f1_scorer(gold_probs, None, preds)
+
+    assert isequal(metric_dict, {"accuracy_f1": 0.5833333333333333})

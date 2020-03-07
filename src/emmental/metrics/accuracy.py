@@ -31,6 +31,7 @@ def accuracy_scorer(
 
     """
 
+    # Convert probabilistic label to hard label
     if len(golds.shape) == 2:
         golds = prob_to_pred(golds)
 

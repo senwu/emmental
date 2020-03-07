@@ -4,6 +4,7 @@ from numpy import ndarray
 
 from emmental.metrics.precision import precision_scorer
 from emmental.metrics.recall import recall_scorer
+from emmental.utils.utils import prob_to_pred
 
 
 def fbeta_scorer(
@@ -28,6 +29,10 @@ def fbeta_scorer(
       dict: F-beta score.
 
     """
+
+    # Convert probabilistic label to hard label
+    if len(golds.shape) == 2:
+        golds = prob_to_pred(golds)
 
     precision = precision_scorer(golds, probs, preds, uids, pos_label)["precision"]
     recall = recall_scorer(golds, probs, preds, uids, pos_label)["recall"]
