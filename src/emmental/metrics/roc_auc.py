@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 from numpy import ndarray
 from sklearn.metrics import roc_auc_score
 
-from emmental.utils.utils import pred_to_prob
+from emmental.utils.utils import pred_to_prob, prob_to_pred
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +29,13 @@ def roc_auc_scorer(
 
     """
 
-    gold_probs = pred_to_prob(golds, n_classes=probs.shape[1])
+    if len(golds.shape) == 1:
+        golds = pred_to_prob(golds, n_classes=probs.shape[1])
+    else:
+        golds = pred_to_prob(prob_to_pred(golds), n_classes=probs.shape[1])
 
     try:
-        roc_auc = roc_auc_score(gold_probs, probs)
+        roc_auc = roc_auc_score(golds, probs)
     except ValueError:
         logger.warning(
             "Only one class present in golds."
