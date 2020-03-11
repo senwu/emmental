@@ -1,9 +1,15 @@
 Unreleased_
 -----------
 
-dded
+added
 ^^^^^
 * `@senwu`_: Support probabilistic gold label in scorer.
+* `@senwu`_: Add `add_tasks` to support adding one task or mulitple tasks into model.
+
+Changed
+^^^^^^^
+* `@senwu`_: Change running evaluation only when evaluation is triggered.
+
 
 0.0.5_ - 2020-03-01
 -------------------
