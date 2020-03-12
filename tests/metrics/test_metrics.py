@@ -245,8 +245,21 @@ def test_roc_auc(caplog):
     probs = np.array(
         [[0.2, 0.8], [0.4, 0.6], [0.1, 0.9], [0.3, 0.7], [0.3, 0.7], [0.8, 0.2]]
     )
+    preds = np.array([0.8, 0.6, 0.9, 0.7, 0.7, 0.2])
 
     metric_dict = roc_auc_scorer(golds, probs, None)
+
+    assert isequal(metric_dict, {"roc_auc": 0.9444444444444444})
+
+    metric_dict = roc_auc_scorer(gold_probs, probs, None)
+
+    assert isequal(metric_dict, {"roc_auc": 0.9444444444444444})
+
+    metric_dict = roc_auc_scorer(golds, preds, None)
+
+    assert isequal(metric_dict, {"roc_auc": 0.9444444444444444})
+
+    metric_dict = roc_auc_scorer(gold_probs, preds, None)
 
     assert isequal(metric_dict, {"roc_auc": 0.9444444444444444})
 
@@ -254,10 +267,6 @@ def test_roc_auc(caplog):
 
     metric_dict = roc_auc_scorer(golds, probs, None)
     assert isequal(metric_dict, {"roc_auc": float("nan")})
-
-    metric_dict = roc_auc_scorer(gold_probs, probs, None)
-
-    assert isequal(metric_dict, {"roc_auc": 0.9444444444444444})
 
 
 def test_accuracy_f1(caplog):

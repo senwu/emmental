@@ -29,10 +29,20 @@ def roc_auc_scorer(
 
     """
 
-    if len(golds.shape) == 1:
-        golds = pred_to_prob(golds, n_classes=probs.shape[1])
+    if probs.shape == 2 and probs.shape[1] == 1:
+        probs = probs.reshape(probs.shape[0])
+
+    if golds.shape == 2 and golds.shape[1] == 1:
+        golds = golds.reshape(golds.shape[0])
+
+    if len(probs.shape) > 1:
+        if len(golds.shape) > 1:
+            golds = pred_to_prob(prob_to_pred(golds), n_classes=probs.shape[1])
+        else:
+            golds = pred_to_prob(golds, n_classes=probs.shape[1])
     else:
-        golds = pred_to_prob(prob_to_pred(golds), n_classes=probs.shape[1])
+        if len(golds.shape) > 1:
+            golds = prob_to_pred(golds)
 
     try:
         roc_auc = roc_auc_score(golds, probs)
