@@ -49,7 +49,7 @@ class EmmentalModel(nn.Module):
 
         # Build network with given tasks
         if tasks is not None:
-            self._build_network(tasks)
+            self.add_tasks(tasks)
 
         if Meta.config["meta_config"]["verbose"]:
             logger.info(
@@ -75,7 +75,7 @@ class EmmentalModel(nn.Module):
                 if Meta.config["meta_config"]["verbose"]:
                     logger.info("No cuda device available. Switch to cpu instead.")
 
-    def _build_network(self, tasks: Union[EmmentalTask, List[EmmentalTask]]) -> None:
+    def add_tasks(self, tasks: Union[EmmentalTask, List[EmmentalTask]]) -> None:
         r"""Build the MTL network using all tasks.
 
         Args:
@@ -86,13 +86,6 @@ class EmmentalModel(nn.Module):
         if not isinstance(tasks, Iterable):
             tasks = [tasks]
         for task in tasks:
-            if task.name in self.task_names:
-                raise ValueError(
-                    f"Found duplicate task {task.name}, different task should use "
-                    f"different task name."
-                )
-            if not isinstance(task, EmmentalTask):
-                raise ValueError(f"Unrecognized task type {task}.")
             self.add_task(task)
 
     def add_task(self, task: EmmentalTask) -> None:
@@ -102,6 +95,14 @@ class EmmentalModel(nn.Module):
           task(EmmentalTask): A task to add.
 
         """
+        if not isinstance(task, EmmentalTask):
+            raise ValueError(f"Unrecognized task type {task}.")
+
+        if task.name in self.task_names:
+            raise ValueError(
+                f"Found duplicate task {task.name}, different task should use "
+                f"different task name."
+            )
 
         # Combine module_pool from all tasks
         for key in task.module_pool.keys():

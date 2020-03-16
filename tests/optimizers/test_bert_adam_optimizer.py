@@ -1,6 +1,7 @@
 import logging
 import shutil
 
+import pytest
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -63,5 +64,65 @@ def test_bert_adam_optimizer(caplog):
     torch.Tensor(1)
     F.mse_loss(model(torch.randn(1, 1)), torch.randn(1, 1)).backward()
     emmental_learner.optimizer.step()
+
+    # Test wrong lr
+    with pytest.raises(ValueError):
+        config = {
+            "learner_config": {
+                "optimizer_config": {
+                    "optimizer": optimizer,
+                    "lr": -0.1,
+                    "l2": 0.05,
+                    f"{optimizer}_config": {"betas": (0.8, 0.9), "eps": 1e-05},
+                }
+            }
+        }
+        emmental.Meta.update_config(config)
+        emmental_learner._set_optimizer(model)
+
+    # Test wrong eps
+    with pytest.raises(ValueError):
+        config = {
+            "learner_config": {
+                "optimizer_config": {
+                    "optimizer": optimizer,
+                    "lr": 0.1,
+                    "l2": 0.05,
+                    f"{optimizer}_config": {"betas": (0.8, 0.9), "eps": -1e-05},
+                }
+            }
+        }
+        emmental.Meta.update_config(config)
+        emmental_learner._set_optimizer(model)
+
+    # Test wrong betas
+    with pytest.raises(ValueError):
+        config = {
+            "learner_config": {
+                "optimizer_config": {
+                    "optimizer": optimizer,
+                    "lr": 0.1,
+                    "l2": 0.05,
+                    f"{optimizer}_config": {"betas": (-0.8, 0.9), "eps": 1e-05},
+                }
+            }
+        }
+        emmental.Meta.update_config(config)
+        emmental_learner._set_optimizer(model)
+
+    # Test wrong betas
+    with pytest.raises(ValueError):
+        config = {
+            "learner_config": {
+                "optimizer_config": {
+                    "optimizer": optimizer,
+                    "lr": 0.1,
+                    "l2": 0.05,
+                    f"{optimizer}_config": {"betas": (0.8, -0.9), "eps": 1e-05},
+                }
+            }
+        }
+        emmental.Meta.update_config(config)
+        emmental_learner._set_optimizer(model)
 
     shutil.rmtree(dirpath)

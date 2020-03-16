@@ -28,9 +28,6 @@ def pearson_correlation_scorer(
 
     probs = np.vstack(probs).squeeze()
     correlation, pvalue = pearsonr(golds, probs)
-    if np.isnan(correlation):
-        correlation = 0.0
-        pvalue = 0.0
 
     if return_pvalue:
         return {"pearson_correlation": correlation, "pearson_pvalue": pvalue}

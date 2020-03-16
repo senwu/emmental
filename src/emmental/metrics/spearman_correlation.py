@@ -29,9 +29,6 @@ def spearman_correlation_scorer(
 
     probs = np.vstack(probs).squeeze()
     correlation, pvalue = spearmanr(golds, probs)
-    if np.isnan(correlation):
-        correlation = 0.0
-        pvalue = 0.0
 
     if return_pvalue:
         return {"spearman_correlation": correlation, "spearman_pvalue": pvalue}

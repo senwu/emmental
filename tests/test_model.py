@@ -141,4 +141,10 @@ def test_model(caplog):
 
     model.load(f"{dirpath}/saved_model.pth")
 
+    # Test add_tasks
+    model = EmmentalModel(name="test")
+
+    model.add_tasks([task1, task2])
+    assert model.task_names == set(["task_1", "task_2"])
+
     shutil.rmtree(dirpath)

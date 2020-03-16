@@ -364,11 +364,12 @@ class EmmentalLearner(object):
 
         self.logging_manager.update(batch_size)
 
+        trigger_evaluation = self.logging_manager.trigger_evaluation()
+
         # Log the loss and lr
-        metric_dict.update(self._aggregate_running_metrics(model))
+        metric_dict.update(self._aggregate_running_metrics(model, trigger_evaluation))
 
         # Evaluate the model and log the metric
-        trigger_evaluation = self.logging_manager.trigger_evaluation()
         if trigger_evaluation:
 
             # Log task specific metric
@@ -407,11 +408,14 @@ class EmmentalLearner(object):
 
         return metric_dict
 
-    def _aggregate_running_metrics(self, model: EmmentalModel) -> Dict[str, float]:
+    def _aggregate_running_metrics(
+        self, model: EmmentalModel, calc_running_scores: bool = False
+    ) -> Dict[str, float]:
         r"""Calculate the running overall and task specific metrics.
 
         Args:
           model(EmmentalModel): The model to evaluate.
+          calc_running_scores(bool): Whether to calc running scores
 
         Returns:
           dict: The score dict.
@@ -435,36 +439,43 @@ class EmmentalLearner(object):
             total_loss = sum(self.running_losses.values())
             metric_dict["model/all/train/loss"] = total_loss / total_count
 
-        micro_score_dict: Dict[str, List[ndarray]] = defaultdict(list)
-        macro_score_dict: Dict[str, List[ndarray]] = defaultdict(list)
+        if calc_running_scores:
+            micro_score_dict: Dict[str, List[ndarray]] = defaultdict(list)
+            macro_score_dict: Dict[str, List[ndarray]] = defaultdict(list)
 
-        # Calculate training metric
-        for identifier in self.running_uids.keys():
-            task_name, data_name, split = identifier.split("/")
+            # Calculate training metric
+            for identifier in self.running_uids.keys():
+                task_name, data_name, split = identifier.split("/")
 
-            metric_score = model.scorers[task_name].score(
-                self.running_golds[identifier],
-                self.running_probs[identifier],
-                prob_to_pred(self.running_probs[identifier]),
-                self.running_uids[identifier],
-            )
-            for metric_name, metric_value in metric_score.items():
-                metric_dict[f"{identifier}/{metric_name}"] = metric_value
+                metric_score = model.scorers[task_name].score(
+                    self.running_golds[identifier],
+                    self.running_probs[identifier],
+                    prob_to_pred(self.running_probs[identifier]),
+                    self.running_uids[identifier],
+                )
+                for metric_name, metric_value in metric_score.items():
+                    metric_dict[f"{identifier}/{metric_name}"] = metric_value
 
-            # Collect average score
-            identifier = construct_identifier(task_name, data_name, split, "average")
+                # Collect average score
+                identifier = construct_identifier(
+                    task_name, data_name, split, "average"
+                )
 
-            metric_dict[identifier] = np.mean(list(metric_score.values()))
+                metric_dict[identifier] = np.mean(list(metric_score.values()))
 
-            micro_score_dict[split].extend(list(metric_score.values()))
-            macro_score_dict[split].append(metric_dict[identifier])
+                micro_score_dict[split].extend(list(metric_score.values()))
+                macro_score_dict[split].append(metric_dict[identifier])
 
-        # Collect split-wise micro/macro average score
-        for split in micro_score_dict.keys():
-            identifier = construct_identifier("model", "all", split, "micro_average")
-            metric_dict[identifier] = np.mean(micro_score_dict[split])
-            identifier = construct_identifier("model", "all", split, "macro_average")
-            metric_dict[identifier] = np.mean(macro_score_dict[split])
+            # Collect split-wise micro/macro average score
+            for split in micro_score_dict.keys():
+                identifier = construct_identifier(
+                    "model", "all", split, "micro_average"
+                )
+                metric_dict[identifier] = np.mean(micro_score_dict[split])
+                identifier = construct_identifier(
+                    "model", "all", split, "macro_average"
+                )
+                metric_dict[identifier] = np.mean(macro_score_dict[split])
 
         # Log the learning rate
         metric_dict["model/all/train/lr"] = self.optimizer.param_groups[0]["lr"]
@@ -539,7 +550,6 @@ class EmmentalLearner(object):
             )
 
             for batch_num, batch in batches:
-
                 # Covert single batch into a batch list
                 if not isinstance(batch, list):
                     batch = [batch]
