@@ -103,7 +103,7 @@ def test_bert_adam_optimizer(caplog):
                     "optimizer": optimizer,
                     "lr": 0.1,
                     "l2": 0.05,
-                    f"{optimizer}_config": {"betas": (-0.8, 0.9), "eps": -1e-05},
+                    f"{optimizer}_config": {"betas": (-0.8, 0.9), "eps": 1e-05},
                 }
             }
         }
@@ -118,7 +118,7 @@ def test_bert_adam_optimizer(caplog):
                     "optimizer": optimizer,
                     "lr": 0.1,
                     "l2": 0.05,
-                    f"{optimizer}_config": {"betas": (0.8, -0.9), "eps": -1e-05},
+                    f"{optimizer}_config": {"betas": (0.8, -0.9), "eps": 1e-05},
                 }
             }
         }
