@@ -29,10 +29,10 @@ def roc_auc_scorer(
 
     """
 
-    if probs.shape == 2 and probs.shape[1] == 1:
+    if len(probs.shape) == 2 and probs.shape[1] == 1:
         probs = probs.reshape(probs.shape[0])
 
-    if golds.shape == 2 and golds.shape[1] == 1:
+    if len(golds.shape) == 2 and golds.shape[1] == 1:
         golds = golds.reshape(golds.shape[0])
 
     if len(probs.shape) > 1:
