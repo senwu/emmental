@@ -1,5 +1,6 @@
 import logging
 
+import pytest
 import torch
 
 from emmental.data import EmmentalDataLoader, EmmentalDataset
@@ -38,12 +39,20 @@ def test_emmental_dataset(caplog):
 
     dataset.add_features(X_dict={"data2": x2})
 
+    dataset.remove_feature("data2")
+    assert "data2" not in dataset.X_dict
+
+    dataset.add_features(X_dict={"data2": x2})
+
     # Check add one more feature to dataset
     assert torch.equal(dataset[0][0]["data2"], x2[0])
 
     y2 = torch.Tensor([1, 1, 1, 1, 1])
 
     dataset.add_labels(Y_dict={"label2": y2})
+
+    with pytest.raises(ValueError):
+        dataset.add_labels(Y_dict={"label2": x2})
 
     # Check add one more label to dataset
     assert torch.equal(dataset[0][1]["label2"], y2[0])
@@ -52,6 +61,25 @@ def test_emmental_dataset(caplog):
 
     # Check remove one more label to dataset
     assert "label1" not in dataset.Y_dict
+
+    with pytest.raises(ValueError):
+        dataset = EmmentalDataset(
+            X_dict={"data1": x1}, Y_dict={"label1": y1}, name="new_data", uid="ids"
+        )
+
+    dataset = EmmentalDataset(
+        X_dict={"_uids_": x1}, Y_dict={"label1": y1}, name="new_data"
+    )
+
+    with pytest.raises(ValueError):
+        dataset = EmmentalDataset(
+            X_dict={"data1": x1}, Y_dict={"label1": x1}, name="new_data"
+        )
+
+    with pytest.raises(ValueError):
+        dataset = EmmentalDataset(
+            X_dict={"data1": x1}, Y_dict={"label1": x1}, name="new_data"
+        )
 
 
 def test_emmental_dataloader(caplog):
