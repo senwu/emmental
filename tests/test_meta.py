@@ -26,6 +26,7 @@ def test_meta(caplog):
         "seed": None,
         "verbose": True,
         "log_path": "logs",
+        "use_exact_log_path": False,
     }
 
     emmental.Meta.update_config(
@@ -35,6 +36,7 @@ def test_meta(caplog):
         "seed": 1,
         "verbose": False,
         "log_path": "tests",
+        "use_exact_log_path": False,
     }
 
     # Test unable to find config file
@@ -46,6 +48,7 @@ def test_meta(caplog):
         "seed": None,
         "verbose": True,
         "log_path": "logs",
+        "use_exact_log_path": False,
     }
 
     # Remove the temp folder

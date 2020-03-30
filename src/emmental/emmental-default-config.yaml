@@ -3,6 +3,7 @@ meta_config:
     seed: # random seed for all numpy/torch/cuda operations in model and learning
     verbose: True # whether to print the log information
     log_path: logs # log directory
+    use_exact_log_path: False # whether to use the exact log directory
 
 # Data configuration
 data_config:

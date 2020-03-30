@@ -49,6 +49,13 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         "--log_path", type=str, default="logs", help="Directory to save running log"
     )
 
+    meta_config.add_argument(
+        "--use_exact_log_path",
+        type=str2bool,
+        default=False,
+        help="Whether to use the exact log directory",
+    )
+
     # Load data configuration
     data_config = parser.add_argument_group("Data configuration")
 
@@ -818,6 +825,7 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
             "seed": args.seed,
             "verbose": args.verbose,
             "log_path": args.log_path,
+            "use_exact_log_path": args.use_exact_log_path,
         },
         "data_config": {
             "min_data_len": args.min_data_len,
