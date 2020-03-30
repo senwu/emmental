@@ -23,9 +23,9 @@ def test_e2e(caplog):
     caplog.set_level(logging.INFO)
 
     dirpath = "temp_test_e2e"
-
+    use_exact_log_path = False
     Meta.reset()
-    emmental.init(dirpath)
+    emmental.init(dirpath, use_exact_log_path=use_exact_log_path)
 
     config = {
         "meta_config": {"seed": 0},

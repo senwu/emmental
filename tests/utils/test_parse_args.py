@@ -22,7 +22,12 @@ def test_parse_args(caplog):
     config = parse_args_to_config(args)
 
     assert config == {
-        "meta_config": {"seed": 0, "verbose": True, "log_path": "logs"},
+        "meta_config": {
+            "seed": 0,
+            "verbose": True,
+            "log_path": "logs",
+            "use_exact_log_path": False,
+        },
         "data_config": {"min_data_len": 0, "max_data_len": 0},
         "model_config": {"model_path": None, "device": 0, "dataparallel": True},
         "learner_config": {
@@ -180,7 +185,12 @@ def test_checkpoint_metric(caplog):
     )
 
     assert emmental.Meta.config == {
-        "meta_config": {"seed": None, "verbose": True, "log_path": "logs"},
+        "meta_config": {
+            "seed": None,
+            "verbose": True,
+            "log_path": "logs",
+            "use_exact_log_path": False,
+        },
         "data_config": {"min_data_len": 0, "max_data_len": 0},
         "model_config": {"model_path": None, "device": 0, "dataparallel": True},
         "learner_config": {

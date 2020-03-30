@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 def init(
     log_dir: str = tempfile.gettempdir(),
     log_name: str = "emmental.log",
+    use_exact_log_path: bool = False,
     format: str = "[%(asctime)s][%(levelname)s] %(name)s:%(lineno)s - %(message)s",
     level: int = logging.INFO,
     config: Optional[Dict[Any, Any]] = {},
@@ -30,6 +31,8 @@ def init(
       log_dir(str, optional): The directory to store logs in,
         defaults to tempfile.gettempdir().
       log_name(str, optional): The log file name, defaults to "emmental.log".
+      use_exact_log_path(bool, optional): Whether to use the exact log directory,
+        defaults to False.
       format(str, optional): The logging format string to use,
         defaults to "[%(asctime)s][%(levelname)s] %(name)s:%(lineno)s - %(message)s".
       level(int, optional): The logging level to use, defaults to logging.INFO.
@@ -40,7 +43,7 @@ def init(
 
     """
 
-    init_logging(log_dir, log_name, format, level)
+    init_logging(log_dir, log_name, use_exact_log_path, format, level)
     init_config()
     if config or config_dir is not None:
         Meta.update_config(config, config_dir, config_name)
@@ -65,6 +68,7 @@ def init_config() -> None:
 def init_logging(
     log_dir: str = tempfile.gettempdir(),
     log_name: str = "emmental.log",
+    use_exact_log_path: bool = False,
     format: str = "[%(asctime)s][%(levelname)s] %(name)s:%(lineno)s - %(message)s",
     level: int = logging.INFO,
 ) -> None:
@@ -75,6 +79,8 @@ def init_logging(
       log_dir(str, optional): The directory to store logs in,
         defaults to tempfile.gettempdir().
       log_name(str, optional): The log file name, defaults to "emmental.log".
+      use_exact_log_path(bool, optional): Whether to use the exact log directory,
+        defaults to False.
       format(str, optional): The logging format string to use,
         defaults to "[%(asctime)s][%(levelname)s] %(name)s:%(lineno)s - %(message)s".
       level(int, optional): The logging level to use, defaults to logging.INFO.
@@ -82,15 +88,18 @@ def init_logging(
     """
 
     if not Meta.log_path:
-        # Generate a new directory using the log_dir, if it doesn't exist
-        date = datetime.now().strftime("%Y_%m_%d")
-        time = datetime.now().strftime("%H_%M_%S")
-        uid = str(uuid.uuid4())[:8]
-        log_path = os.path.join(log_dir, date, time, uid)
-        while os.path.exists(log_path):
+        if not use_exact_log_path:
+            # Generate a new directory using the log_dir, if it doesn't exist
+            date = datetime.now().strftime("%Y_%m_%d")
+            time = datetime.now().strftime("%H_%M_%S")
             uid = str(uuid.uuid4())[:8]
             log_path = os.path.join(log_dir, date, time, uid)
-        os.makedirs(log_path)
+            while os.path.exists(log_path):
+                uid = str(uuid.uuid4())[:8]
+                log_path = os.path.join(log_dir, date, time, uid)
+        else:
+            log_path = log_dir
+        os.makedirs(log_path, exist_ok=True)
 
         # Configure the logger using the provided path
         logging.basicConfig(

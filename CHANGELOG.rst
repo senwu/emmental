@@ -5,6 +5,16 @@ added
 ^^^^^
 * `@senwu`_: Support probabilistic gold label in scorer.
 * `@senwu`_: Add `add_tasks` to support adding one task or mulitple tasks into model.
+* `@senwu`_: Add `use_exact_log_path` to support using exact log path.
+
+.. note::
+
+    When init the emmental there is one extra argument `use_exact_log_path` to use
+    exact log path.
+
+    .. code:: python
+
+        emmental.init(dirpath, use_exact_log_path=use_exact_log_path)
 
 Changed
 ^^^^^^^
