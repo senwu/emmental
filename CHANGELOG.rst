@@ -14,7 +14,7 @@ added
 
     .. code:: python
 
-        emmental.init(dirpath, use_exact_log_path=use_exact_log_path)
+        emmental.init(dirpath, use_exact_log_path=True)
 
 Changed
 ^^^^^^^
