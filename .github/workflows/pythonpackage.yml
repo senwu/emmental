@@ -1,0 +1,110 @@
+name: ci
+on: [push, pull_request]
+env:
+  CI: true
+
+jobs:
+  ubuntu-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies for Ubuntu
+      run: |
+        sudo apt-get install neofetch
+        # Install PyTorch for Linux with no CUDA support
+        pip install torch==1.4.0+cpu torchvision==0.5.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+    - name: Print Version Info
+      run: |
+        neofetch
+        python --version
+        pip --version
+    - name: Install Emmental
+      run: |
+        make dev
+        pip install -q coveralls
+    - name: Run preliminary checks
+      run: |
+        make check
+        make docs
+    - name: Test with pytest
+      run: |
+        coverage run -m pytest tests
+    - name: Upload to coveralls.io
+      run: |
+          coveralls
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.coveralls_repo_token }}
+  macos-test:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: [3.6.10, 3.7.7]
+    steps:
+    - uses: actions/checkout@v2
+    # actions/setup-python@v1 cannot be used on macos (see #386)
+    - name: Install python version ${{ matrix.python-version }}
+      uses: gabrielfalcao/pyenv-action@v5
+      with:
+        default: "${{ matrix.python-version }}"
+        command: |
+          pip install -U pip  # upgrade pip after installing python
+          echo "::add-path::`pyenv root`/shims"
+    - name: Install dependencies for macOS
+      run: |
+        brew update
+        brew install neofetch
+    - name: Print Version Info
+      run: |
+        python --version
+        pip --version
+        neofetch
+    - name: Install Emmental
+      run: |
+        make dev
+        pip install coveralls
+    - name: Run preliminary checks
+      run: |
+        make check
+        make docs
+    - name: Test with pytest
+      run: |
+        coverage run -m pytest tests
+    - name: Upload to coveralls.io
+      run: |
+          coveralls
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.coveralls_repo_token }}
+  build-and-publish:
+    name: Build and Publish Emmental to PyPI
+    runs-on: ubuntu-latest
+    needs: [ubuntu-test, macos-test]
+    strategy:
+      matrix:
+        python-version: [3.7]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Build Emmental
+      run: |
+        pip install -U setuptools wheel pip
+        python setup.py sdist bdist_wheel
+    - name: Publish distribution to Test PyPi
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        password: ${{ secrets.test_pypi_password }}
+        repository_url: https://test.pypi.org/legacy/
+    - name: Publish distribution 📦 to PyPI
+      if: startsWith(github.event.ref, 'refs/tags')
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        password: ${{ secrets.pypi_password }}
