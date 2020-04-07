@@ -38,7 +38,6 @@ jobs:
         coverage run -m pytest tests
     - name: Upload to coveralls.io
       run: |
-          coverage combine
           coveralls
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.coveralls_repo_token }}
@@ -79,7 +78,6 @@ jobs:
         coverage run -m pytest tests
     - name: Upload to coveralls.io
       run: |
-          coverage combine
           coveralls
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.coveralls_repo_token }}
