@@ -1,7 +1,7 @@
 |Emmental|
 ==========
 
-|Travis| |CodeClimate| |Coveralls| |ReadTheDocs| |PyPI| |PyPIVersion| |GitHubStars| |License| |CodeStyle|
+|CI-CD| |CodeClimate| |Coveralls| |ReadTheDocs| |PyPI| |PyPIVersion| |GitHubStars| |License| |CodeStyle|
 
 Emmental is a framework for building multi-modal multi-task learning systems.
 
@@ -37,8 +37,8 @@ Reference
 .. |CodeClimate| image:: https://img.shields.io/codeclimate/maintainability/SenWu/emmental.svg
    :alt: Code Climate
    :target: https://codeclimate.com/github/SenWu/emmental
-.. |Travis| image:: https://img.shields.io/travis/com/SenWu/emmental/master
-    :target: https://travis-ci.com/SenWu/emmental
+.. |CI-CD| image:: https://img.shields.io/github/workflow/status/SenWu/emmental/ci.svg
+    :target: https://github.com/SenWu/emmental/actions
 .. |Coveralls| image:: https://img.shields.io/coveralls/github/SenWu/emmental.svg
    :target: https://coveralls.io/github/SenWu/emmental
 .. |ReadTheDocs| image:: https://img.shields.io/readthedocs/emmental.svg
