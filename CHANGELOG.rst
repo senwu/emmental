@@ -1,5 +1,5 @@
-Unreleased_
------------
+0.0.6_ - 2020-04-07
+-------------------
 
 added
 ^^^^^
@@ -96,9 +96,10 @@ Removed
 ^^^^^^^
 * `@senwu`_: Remove `checkpoint_clear` argument.
 
-.. _Unreleased: https://github.com/senwu/emmental/compare/v0.0.5...master
+.. _Unreleased: https://github.com/senwu/emmental/compare/v0.0.6...master
 .. _0.0.4: https://github.com/senwu/emmental/compare/v0.0.3...v0.0.4
 .. _0.0.5: https://github.com/senwu/emmental/compare/v0.0.4...v0.0.5
+.. _0.0.6: https://github.com/senwu/emmental/compare/v0.0.5...v0.0.6
 
 ..
   For convenience, all username links for contributors can be listed here
