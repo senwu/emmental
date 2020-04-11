@@ -255,6 +255,29 @@ def test_logging_manager_no_writer(caplog):
     assert logging_manager.writer is None
 
 
+def test_logging_manager_wrong_writer(caplog):
+    """Unit test of logging_manager (wrong writer)"""
+
+    caplog.set_level(logging.INFO)
+
+    emmental.init()
+    Meta.update_config(
+        config={
+            "logging_config": {
+                "counter_unit": "epoch",
+                "evaluation_freq": 1,
+                "checkpointing": False,
+                "checkpointer_config": {"checkpoint_freq": 2},
+                "writer_config": {"writer": "a"},
+            }
+        }
+    )
+
+    with pytest.raises(ValueError):
+        logging_manager = LoggingManager(n_batches_per_epoch=2)
+        logging_manager.update(5)
+
+
 def test_logging_manager_wrong_counter_unit(caplog):
     """Unit test of logging_manager (wrong counter_unit)"""
 
