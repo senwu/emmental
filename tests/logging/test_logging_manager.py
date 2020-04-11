@@ -1,5 +1,7 @@
 import logging
 
+import pytest
+
 import emmental
 from emmental.logging.logging_manager import LoggingManager
 from emmental.meta import Meta
@@ -131,3 +133,69 @@ def test_logging_manager_epoch(caplog):
     assert logging_manager.sample_total == 25
     assert logging_manager.batch_total == 4
     assert logging_manager.epoch_total == 2
+
+
+def test_logging_manager_no_checkpointing(caplog):
+    """Unit test of logging_manager (no checkpointing)"""
+
+    caplog.set_level(logging.INFO)
+
+    emmental.init()
+    Meta.update_config(
+        config={
+            "logging_config": {
+                "counter_unit": "epoch",
+                "evaluation_freq": 1,
+                "checkpointing": False,
+                "checkpointer_config": {"checkpoint_freq": 2},
+                "writer_config": None,
+            }
+        }
+    )
+
+    logging_manager = LoggingManager(n_batches_per_epoch=2)
+
+    logging_manager.update(5)
+    assert logging_manager.trigger_evaluation() is False
+    assert logging_manager.trigger_checkpointing() is False
+
+    logging_manager.update(5)
+    assert logging_manager.trigger_evaluation() is True
+    assert logging_manager.trigger_checkpointing() is False
+
+    logging_manager.update(10)
+    assert logging_manager.trigger_evaluation() is False
+    assert logging_manager.trigger_checkpointing() is False
+
+    logging_manager.update(5)
+    assert logging_manager.trigger_evaluation() is True
+    assert logging_manager.trigger_checkpointing() is False
+
+    assert logging_manager.epoch_count == 0
+
+    assert logging_manager.sample_total == 25
+    assert logging_manager.batch_total == 4
+    assert logging_manager.epoch_total == 2
+
+
+def test_logging_manager_wrong_counter_unit(caplog):
+    """Unit test of logging_manager (no checkpointing)"""
+
+    caplog.set_level(logging.INFO)
+
+    emmental.init()
+    Meta.update_config(
+        config={
+            "logging_config": {
+                "counter_unit": "epochs",
+                "evaluation_freq": 1,
+                "checkpointing": False,
+                "checkpointer_config": {"checkpoint_freq": 2},
+                "writer_config": None,
+            }
+        }
+    )
+
+    with pytest.raises(ValueError):
+        logging_manager = LoggingManager(n_batches_per_epoch=2)
+        logging_manager.update(5)
