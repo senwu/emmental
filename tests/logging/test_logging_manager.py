@@ -148,7 +148,7 @@ def test_logging_manager_no_checkpointing(caplog):
                 "evaluation_freq": 1,
                 "checkpointing": False,
                 "checkpointer_config": {"checkpoint_freq": 2},
-                "writer_config": None,
+                "writer_config": {"writer": None},
             }
         }
     )
@@ -191,7 +191,6 @@ def test_logging_manager_wrong_counter_unit(caplog):
                 "evaluation_freq": 1,
                 "checkpointing": False,
                 "checkpointer_config": {"checkpoint_freq": 2},
-                "writer_config": None,
             }
         }
     )
