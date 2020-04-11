@@ -83,4 +83,6 @@ def test_tensorboard_writer(caplog):
     assert config["logging_config"]["counter_unit"] == "epoch"
     assert config["logging_config"]["checkpointing"] is False
 
+    log_writer.write_log()
+
     log_writer.close()
