@@ -24,6 +24,6 @@ ignore_errors = True
 
 omit =
     # Omit anything in the test directory
-    test/*
+    tests/*
     # Omit anything in the contrib directory
     */contrib/*
