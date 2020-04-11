@@ -28,19 +28,21 @@ jobs:
     - name: Install Emmental
       run: |
         make dev
-        pip install -q coveralls
+        pip install -q pytest-cov
     - name: Run preliminary checks
       run: |
         make check
         make docs
     - name: Test with pytest
       run: |
-        coverage run -m pytest tests
-    - name: Upload to coveralls.io
-      run: |
-          coveralls
-      env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.coveralls_repo_token }}
+        pytest --cov=./ --cov-report=xml
+    - name: Upload to codecov.io
+      uses: codecov/codecov-action@v1
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
   macos-test:
     runs-on: macos-latest
     strategy:
@@ -68,19 +70,21 @@ jobs:
     - name: Install Emmental
       run: |
         make dev
-        pip install coveralls
+        pip install -q pytest-cov
     - name: Run preliminary checks
       run: |
         make check
         make docs
     - name: Test with pytest
       run: |
-        coverage run -m pytest tests
-    - name: Upload to coveralls.io
-      run: |
-          coveralls
-      env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.coveralls_repo_token }}
+        pytest --cov=./ --cov-report=xml
+    - name: Upload to codecov.io
+      uses: codecov/codecov-action@v1
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
   build-and-publish:
     name: Build and Publish Emmental to PyPI
     runs-on: ubuntu-latest
