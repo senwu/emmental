@@ -7,6 +7,7 @@ from emmental.logging.log_writer import LogWriter
 from emmental.logging.logging_manager import LoggingManager
 from emmental.logging.tensorboard_writer import TensorBoardWriter
 from emmental.meta import Meta
+from emmental.model import EmmentalModel
 
 
 def test_logging_manager_sample(caplog):
@@ -103,12 +104,13 @@ def test_logging_manager_epoch(caplog):
     emmental.init()
     Meta.update_config(
         config={
+            "meta_config": {"verbose": False},
             "logging_config": {
                 "counter_unit": "epoch",
                 "evaluation_freq": 1,
                 "checkpointing": True,
                 "checkpointer_config": {"checkpoint_freq": 2},
-            }
+            },
         }
     )
 
@@ -150,7 +152,7 @@ def test_logging_manager_no_checkpointing(caplog):
                 "evaluation_freq": 1,
                 "checkpointing": False,
                 "checkpointer_config": {"checkpoint_freq": 2},
-                "writer_config": {"writer": None},
+                "writer_config": {"writer": "json"},
             }
         }
     )
@@ -178,6 +180,10 @@ def test_logging_manager_no_checkpointing(caplog):
     assert logging_manager.sample_total == 25
     assert logging_manager.batch_total == 4
     assert logging_manager.epoch_total == 2
+
+    model = EmmentalModel()
+
+    logging_manager.close(model)
 
 
 def test_logging_manager_json(caplog):
