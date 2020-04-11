@@ -9,4 +9,4 @@ coverage:
         threshold: 2%
 
 comment:
-  layout: "header, diff, flags, files"
+  layout: "reach, diff, flags, files"
