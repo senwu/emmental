@@ -147,13 +147,14 @@ def test_logging_manager_no_checkpointing(caplog):
     emmental.init()
     Meta.update_config(
         config={
+            "meta_config": {"verbose": False},
             "logging_config": {
                 "counter_unit": "epoch",
                 "evaluation_freq": 1,
                 "checkpointing": False,
                 "checkpointer_config": {"checkpoint_freq": 2},
                 "writer_config": {"writer": "json"},
-            }
+            },
         }
     )
 
