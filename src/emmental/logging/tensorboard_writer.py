@@ -44,8 +44,13 @@ class TensorBoardWriter(LogWriter):
 
         super().write_config(config_filename)
 
-    def write_log(self) -> None:
-        r"""Dump the log to file."""
+    def write_log(self, log_filename: str = "log.json") -> None:
+        r"""Dump the log to file.
+
+        Args:
+          log_filename(str, optional): The log filename, defaults to "log.json".
+
+        """
 
         pass
 

@@ -46,7 +46,7 @@ def test_e2e(caplog):
                 "checkpoint_runway": 0,
                 "checkpoint_all": False,
                 "clear_intermediate_checkpoints": True,
-                "clear_all_checkpoints": False,
+                "clear_all_checkpoints": True,
             },
         },
     }
