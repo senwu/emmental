@@ -31,7 +31,7 @@ class TensorBoardWriter(LogWriter):
         self.writer.add_scalar(name, value, step)
 
     def write_config(self, config_filename: str = "config.yaml") -> None:
-        r"""Dump the config to file.
+        r"""Write the config to tensorboard and dump it to file.
 
         Args:
           config_filename(str, optional): The config filename,
@@ -43,6 +43,16 @@ class TensorBoardWriter(LogWriter):
         self.writer.add_text(tag="config", text_string=config)
 
         super().write_config(config_filename)
+
+    def write_log(self, log_filename: str = "log.json") -> None:
+        r"""Dump the log to file.
+
+        Args:
+          log_filename(str, optional): The log filename, defaults to "log.json".
+
+        """
+
+        pass
 
     def close(self) -> None:
         r"""Close the tensorboard writer."""
