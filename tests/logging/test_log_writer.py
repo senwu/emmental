@@ -54,6 +54,8 @@ def test_log_writer(caplog):
 
     assert log == {"step 1": [[1, 0.1]], "step 2": [[2, 0.2]]}
 
+    log_writer.close()
+
 
 def test_tensorboard_writer(caplog):
     """Unit test of log_writer"""
@@ -80,3 +82,7 @@ def test_tensorboard_writer(caplog):
     assert config["meta_config"]["verbose"] is True
     assert config["logging_config"]["counter_unit"] == "epoch"
     assert config["logging_config"]["checkpointing"] is False
+
+    log_writer.write_log()
+
+    log_writer.close()
