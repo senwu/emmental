@@ -173,3 +173,39 @@ def test_checkpointer_clear_condition(caplog):
 
     checkpointer = Checkpointer()
     checkpointer.clear()
+
+
+def test_checkpointer_metric(caplog):
+    """Unit test of checkpointer (metric)"""
+
+    caplog.set_level(logging.INFO)
+
+    checkpoint_path = "temp_test_checkpointer"
+
+    emmental.Meta.reset()
+
+    emmental.init()
+    emmental.Meta.update_config(
+        config={
+            "logging_config": {
+                "counter_unit": "sample",
+                "evaluation_freq": 10,
+                "checkpointing": True,
+                "checkpointer_config": {
+                    "checkpoint_metric": None,
+                    "checkpoint_task_metrics": {
+                        "model/all/train/loss": "min",
+                        "model/all/train/accuracy": "max",
+                    },
+                    "checkpoint_freq": 2,
+                    "checkpoint_path": checkpoint_path,
+                },
+            }
+        }
+    )
+
+    checkpointer = Checkpointer()
+    checkpointer.clear()
+
+    assert os.path.exists(checkpoint_path) is True
+    shutil.rmtree(checkpoint_path)
