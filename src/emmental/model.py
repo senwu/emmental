@@ -562,9 +562,9 @@ class EmmentalModel(nn.Module):
         for module_name, module_state_dict in state_dict.items():
             if module_name in self.module_pool:
                 if Meta.config["model_config"]["dataparallel"]:
-                    self.module_pool[module_name].module.load_state_dict(
-                        module_state_dict
-                    )
+                    self.module_pool[  # type: ignore
+                        module_name
+                    ].module.load_state_dict(module_state_dict)
                 else:
                     self.module_pool[module_name].load_state_dict(module_state_dict)
             else:
