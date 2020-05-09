@@ -26,6 +26,8 @@ def set_random_seed(seed: int = None) -> None:
     # Set random seed for PyTorch
     if isinstance(seed, int):
         torch.manual_seed(seed)
+        torch.backends.cudnn.deterministic = True  # type: ignore
+        torch.backends.cudnn.benchmark = False  # type: ignore
 
 
 def list_to_tensor(
