@@ -344,6 +344,7 @@ class EmmentalLearner(object):
         model: EmmentalModel,
         dataloaders: List[EmmentalDataLoader],
         batch_size: int,
+        trigger: int,
     ) -> Dict[str, float]:
         r"""Checking if it's time to evaluting or checkpointing.
 
@@ -364,7 +365,9 @@ class EmmentalLearner(object):
 
         self.logging_manager.update(batch_size)
 
-        trigger_evaluation = self.logging_manager.trigger_evaluation()
+        trigger_evaluation = self.logging_manager.trigger_evaluation(
+            trigger=trigger == 0
+        )
 
         # Log the loss and lr
         metric_dict.update(self._aggregate_running_metrics(model, trigger_evaluation))
@@ -543,17 +546,22 @@ class EmmentalLearner(object):
 
         for epoch_num in range(Meta.config["learner_config"]["n_epochs"]):
             batches = tqdm(
-                enumerate(self.task_scheduler.get_batches(train_dataloaders, model)),
-                total=self.n_batches_per_epoch,
+                enumerate(
+                    self.task_scheduler.get_batches(
+                        train_dataloaders, model, self.metrics
+                    )
+                ),
+                # total=self.n_batches_per_epoch,
+                total=self.task_scheduler.get_num_batches(train_dataloaders),
                 disable=(not Meta.config["meta_config"]["verbose"]),
                 desc=f"Epoch {epoch_num}:",
             )
-
+            batch_cnt = self.task_scheduler.get_num_batches(train_dataloaders)
             for batch_num, batch in batches:
                 # Covert single batch into a batch list
                 if not isinstance(batch, list):
                     batch = [batch]
-
+                batch_cnt -= 1
                 total_batch_num = epoch_num * self.n_batches_per_epoch + batch_num
                 batch_size = 0
 
@@ -607,7 +615,9 @@ class EmmentalLearner(object):
                 # Update the parameters
                 self.optimizer.step()
 
-                self.metrics.update(self._logging(model, dataloaders, batch_size))
+                self.metrics.update(
+                    self._logging(model, dataloaders, batch_size, batch_cnt)
+                )
 
                 batches.set_postfix(self.metrics)
 

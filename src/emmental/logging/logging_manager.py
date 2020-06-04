@@ -124,10 +124,12 @@ class LoggingManager(object):
             self.unit_count = self.epoch_count
             self.unit_total = self.epoch_total
 
-    def trigger_evaluation(self) -> bool:
+    def trigger_evaluation(self, trigger=False) -> bool:
         r"""Check if triggers the evaluation."""
 
         satisfied = self.unit_count >= self.evaluation_freq
+        if trigger:
+            satisfied = True
         if satisfied:
             self.trigger_count += 1
             self.reset()
