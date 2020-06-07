@@ -205,7 +205,7 @@ class EmmentalLearner(object):
                 "warmup_steps"
             ]
             if warmup_steps < 0:
-                raise ValueError(f"warmup_steps much greater or equal than 0.")
+                raise ValueError("warmup_steps much greater or equal than 0.")
             warmup_unit = Meta.config["learner_config"]["lr_scheduler_config"][
                 "warmup_unit"
             ]
@@ -536,7 +536,7 @@ class EmmentalLearner(object):
         model.train()
 
         if Meta.config["meta_config"]["verbose"]:
-            logger.info(f"Start learning...")
+            logger.info("Start learning...")
 
         self.metrics: Dict[str, float] = dict()
         self._reset_losses()

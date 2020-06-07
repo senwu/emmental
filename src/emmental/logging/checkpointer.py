@@ -128,9 +128,7 @@ class Checkpointer(object):
             return
         elif not self.checkpoint_condition_met and iteration >= self.checkpoint_runway:
             self.checkpoint_condition_met = True
-            logger.info(
-                f"checkpoint_runway condition has been met. Start checkpoining."
-            )
+            logger.info("checkpoint_runway condition has been met. Start checkpoining.")
 
         state_dict = self.collect_state_dict(
             iteration, model, optimizer, lr_scheduler, metric_dict
@@ -266,7 +264,7 @@ class Checkpointer(object):
         """
 
         if list(self.checkpoint_metric.keys())[0] not in self.best_metric_dict:
-            logger.info(f"No best model found, use the original model.")
+            logger.info("No best model found, use the original model.")
         else:
             # Load the best model of checkpoint_metric
             metric = list(self.checkpoint_metric.keys())[0]
