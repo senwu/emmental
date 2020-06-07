@@ -3,7 +3,7 @@
 
 |CI-CD| |CodeClimate| |Codecov| |ReadTheDocs| |PyPI| |PyPIVersion| |GitHubStars| |License| |CodeStyle|
 
-Emmental is a framework for building multi-modal multi-task learning systems.
+Emmental is a framework for building multimodal multi-task learning systems.
 
 Note that Emmental is still *actively under development*, so feedback and
 contributions are welcome. Submit bugs in the Issues_ section or feel free to
@@ -23,10 +23,10 @@ multi-modal multi-task learning systems.
 Reference
 ---------
 
-`Emmental: A framework for building multi-modal multi-task learning systems`::
+`Emmental: A framework for building multimodal multi-task learning systems`::
 
     @misc{wu2019emmental,
-      title={Emmental: A framework for building multi-modal multi-task learning systems},
+      title={Emmental: A framework for building multimodal multi-task learning systems},
       author={Wu, Sen},
       year={2019},
     }
