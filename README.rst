@@ -18,7 +18,7 @@ Learning how to use Emmental
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The `Emmental tutorials`_ cover the Emmental workflow, showing how to build
-multi-modal multi-task learning systems.
+multimodal multi-task learning systems.
 
 Reference
 ---------
