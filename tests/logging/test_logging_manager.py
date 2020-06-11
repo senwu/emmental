@@ -1,3 +1,4 @@
+"""Emmental logging manager unit tests."""
 import logging
 
 import pytest
@@ -11,8 +12,7 @@ from emmental.model import EmmentalModel
 
 
 def test_logging_manager_sample(caplog):
-    """Unit test of logging_manager (sample)"""
-
+    """Unit test of logging_manager (sample)."""
     caplog.set_level(logging.INFO)
 
     Meta.reset()
@@ -55,8 +55,7 @@ def test_logging_manager_sample(caplog):
 
 
 def test_logging_manager_batch(caplog):
-    """Unit test of logging_manager (batch)"""
-
+    """Unit test of logging_manager (batch)."""
     caplog.set_level(logging.INFO)
 
     emmental.init()
@@ -97,8 +96,7 @@ def test_logging_manager_batch(caplog):
 
 
 def test_logging_manager_epoch(caplog):
-    """Unit test of logging_manager (epoch)"""
-
+    """Unit test of logging_manager (epoch)."""
     caplog.set_level(logging.INFO)
 
     emmental.init()
@@ -140,8 +138,7 @@ def test_logging_manager_epoch(caplog):
 
 
 def test_logging_manager_no_checkpointing(caplog):
-    """Unit test of logging_manager (no checkpointing)"""
-
+    """Unit test of logging_manager (no checkpointing)."""
     caplog.set_level(logging.INFO)
 
     emmental.init()
@@ -188,8 +185,7 @@ def test_logging_manager_no_checkpointing(caplog):
 
 
 def test_logging_manager_json(caplog):
-    """Unit test of logging_manager (json)"""
-
+    """Unit test of logging_manager (json)."""
     caplog.set_level(logging.INFO)
 
     emmental.init()
@@ -213,8 +209,7 @@ def test_logging_manager_json(caplog):
 
 
 def test_logging_manager_tensorboard(caplog):
-    """Unit test of logging_manager (tensorboard)"""
-
+    """Unit test of logging_manager (tensorboard)."""
     caplog.set_level(logging.INFO)
 
     emmental.init()
@@ -238,8 +233,7 @@ def test_logging_manager_tensorboard(caplog):
 
 
 def test_logging_manager_no_writer(caplog):
-    """Unit test of logging_manager (no writer)"""
-
+    """Unit test of logging_manager (no writer)."""
     caplog.set_level(logging.INFO)
 
     emmental.init()
@@ -263,8 +257,7 @@ def test_logging_manager_no_writer(caplog):
 
 
 def test_logging_manager_wrong_writer(caplog):
-    """Unit test of logging_manager (wrong writer)"""
-
+    """Unit test of logging_manager (wrong writer)."""
     caplog.set_level(logging.INFO)
 
     emmental.init()
@@ -286,8 +279,7 @@ def test_logging_manager_wrong_writer(caplog):
 
 
 def test_logging_manager_wrong_counter_unit(caplog):
-    """Unit test of logging_manager (wrong counter_unit)"""
-
+    """Unit test of logging_manager (wrong counter_unit)."""
     caplog.set_level(logging.INFO)
 
     emmental.init()

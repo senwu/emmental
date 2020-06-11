@@ -1,3 +1,4 @@
+"""Emmental metric module."""
 from emmental.metrics.accuracy import accuracy_scorer
 from emmental.metrics.accuracy_f1 import accuracy_f1_scorer
 from emmental.metrics.fbeta import f1_scorer, fbeta_scorer

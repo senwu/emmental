@@ -1,3 +1,4 @@
+"""Emmental log writer unit tests."""
 import json
 import logging
 import os
@@ -10,8 +11,7 @@ from emmental.logging.tensorboard_writer import TensorBoardWriter
 
 
 def test_log_writer(caplog):
-    """Unit test of log_writer"""
-
+    """Unit test of log_writer."""
     caplog.set_level(logging.INFO)
 
     emmental.Meta.reset()
@@ -58,8 +58,7 @@ def test_log_writer(caplog):
 
 
 def test_tensorboard_writer(caplog):
-    """Unit test of log_writer"""
-
+    """Unit test of log_writer."""
     caplog.set_level(logging.INFO)
 
     emmental.Meta.reset()

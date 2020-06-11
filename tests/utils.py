@@ -1,7 +1,9 @@
+"""Emmental unit tests' utils."""
 import math
 
 
 def isequal(dict_a, dict_b, precision=1e-10):
+    """Check if two dicts are the same."""
     for key in dict_a:
         if (
             key not in dict_b

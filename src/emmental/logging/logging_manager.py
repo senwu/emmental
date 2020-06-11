@@ -1,3 +1,4 @@
+"""Emmental logging manager."""
 import logging
 from typing import Dict, Union
 
@@ -14,14 +15,14 @@ logger = logging.getLogger(__name__)
 
 
 class LoggingManager(object):
-    r"""A class to manage logging during training progress.
+    """A class to manage logging during training progress.
 
     Args:
-      n_batches_per_epoch(int): Total number batches per epoch.
-
+      n_batches_per_epoch: Total number batches per epoch.
     """
 
     def __init__(self, n_batches_per_epoch: int) -> None:
+        """Initialize LoggingManager."""
         self.n_batches_per_epoch = n_batches_per_epoch
 
         # Set up counter
@@ -94,13 +95,11 @@ class LoggingManager(object):
             raise ValueError(f"Unrecognized writer option '{writer_opt}'")
 
     def update(self, batch_size: int) -> None:
-        r"""Update the counter.
+        """Update the counter.
 
         Args:
-          batch_size(int): The number of the samples in the batch.
-
+          batch_size: The number of the samples in the batch.
         """
-
         # Update number of samples
         self.sample_count += batch_size
         self.sample_total += batch_size
@@ -125,8 +124,7 @@ class LoggingManager(object):
             self.unit_total = self.epoch_total
 
     def trigger_evaluation(self) -> bool:
-        r"""Check if triggers the evaluation."""
-
+        """Check if triggers the evaluation."""
         satisfied = self.unit_count >= self.evaluation_freq
         if satisfied:
             self.trigger_count += 1
@@ -134,8 +132,7 @@ class LoggingManager(object):
         return satisfied
 
     def trigger_checkpointing(self) -> bool:
-        r"""Check if triggers the checkpointing."""
-
+        """Check if triggers the checkpointing."""
         if not self.checkpointing:
             return False
         satisfied = self.trigger_count >= self.checkpointing_freq
@@ -144,19 +141,17 @@ class LoggingManager(object):
         return satisfied
 
     def reset(self) -> None:
-        r"""Reset the counter."""
-
+        """Reset the counter."""
         self.sample_count = 0
         self.batch_count = 0
         self.epoch_count = 0
         self.unit_count = 0
 
     def write_log(self, metric_dict: Dict[str, float]) -> None:
-        r"""Write the metrics to the log.
+        """Write the metrics to the log.
 
         Args:
-          metric_dict(dict): The metric dict.
-
+          metric_dict: The metric dict.
         """
         for metric_name, metric_value in metric_dict.items():
             self.writer.add_scalar(metric_name, metric_value, self.unit_total)
@@ -168,29 +163,26 @@ class LoggingManager(object):
         lr_scheduler: _LRScheduler,
         metric_dict: Dict[str, float],
     ) -> None:
-        r"""Checkpoint the model.
+        """Checkpoint the model.
 
         Args:
-          model(EmmentalModel): The model to checkpoint.
-          optimizer(Optimizer): The optimizer used during training process.
-          lr_scheduler(_LRScheduler): Learning rate scheduler.
-          metric_dict(dict): the metric dict.
-
+          model: The model to checkpoint.
+          optimizer: The optimizer used during training process.
+          lr_scheduler: Learning rate scheduler.
+          metric_dict: the metric dict.
         """
-
         self.checkpointer.checkpoint(
             self.unit_total, model, optimizer, lr_scheduler, metric_dict
         )
 
     def close(self, model: EmmentalModel) -> EmmentalModel:
-        r"""Close the checkpointer and reload the model if necessary.
+        """Close the checkpointer and reload the model if necessary.
 
         Args:
-          model(EmmentalModel): The trained model.
+          model: The trained model.
 
         Returns:
-          EmmentalModel: The reloaded model if necessary
-
+          The reloaded model if necessary
         """
         self.writer.close()
         if self.checkpointing:

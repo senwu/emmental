@@ -1,3 +1,4 @@
+"""Emmental RNN module."""
 from typing import Optional
 
 import torch
@@ -6,17 +7,16 @@ from torch import Tensor
 
 
 class RNN(nn.Module):
-    r"""A recurrent neural network module.
+    """A recurrent neural network module.
 
     Args:
-      num_classes(int): Number of classes.
-      emb_size(int): Dimension of embeddings.
-      lstm_hidden(int): Size of LSTM hidden layer size.
-      num_layers(int): Number of recurrent layers, defaults to 1.
-      dropout(float): Dropout parameter of LSTM, defaults to 0.0.
-      attention(bool): Use attention or not, defaults to True.
-      bidirectional(bool): Use bidirectional LSTM or not, defaults to True.
-
+      num_classes: Number of classes.
+      emb_size: Dimension of embeddings.
+      lstm_hidden: Size of LSTM hidden layer size.
+      num_layers: Number of recurrent layers, defaults to 1.
+      dropout: Dropout parameter of LSTM, defaults to 0.0.
+      attention: Use attention or not, defaults to True.
+      bidirectional: Use bidirectional LSTM or not, defaults to True.
     """
 
     def __init__(
@@ -29,7 +29,7 @@ class RNN(nn.Module):
         attention: bool = True,
         bidirectional: bool = True,
     ) -> None:
-
+        """Initialize RNN."""
         super().__init__()
 
         self.emb_size = emb_size
@@ -71,15 +71,14 @@ class RNN(nn.Module):
     def forward(  # type: ignore
         self, x: Tensor, x_mask: Optional[Tensor] = None
     ) -> Tensor:
-        r"""Forward function.
+        """Forward function.
 
         Args:
-          x(Tensor): Input tensor.
-          x_mask(Tensor, optional): Input mask tensor, defaults to None.
+          x: Input tensor.
+          x_mask: Input mask tensor, defaults to None.
 
         Returns:
-          Tensor: Output tensor.
-
+          Output tensor.
         """
         x_emb = self.drop(x)
         output_word, state_word = self.word_lstm(x_emb)

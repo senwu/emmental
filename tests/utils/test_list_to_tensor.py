@@ -1,3 +1,4 @@
+"""Emmental list to tensor unit tests."""
 import logging
 
 import torch
@@ -6,8 +7,7 @@ from emmental.utils.utils import list_to_tensor
 
 
 def test_list_to_tensor(caplog):
-    """Unit test of list to tensor"""
-
+    """Unit test of list to tensor."""
     caplog.set_level(logging.INFO)
 
     # list of 1-D tensor with the different length

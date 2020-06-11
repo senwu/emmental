@@ -1,3 +1,4 @@
+"""Emmental logging module."""
 from emmental.logging.checkpointer import Checkpointer
 from emmental.logging.log_writer import LogWriter
 from emmental.logging.logging_manager import LoggingManager

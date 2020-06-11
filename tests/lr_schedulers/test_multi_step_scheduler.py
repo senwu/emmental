@@ -1,3 +1,4 @@
+"""Emmental multi step scheduler unit tests."""
 import logging
 import shutil
 
@@ -11,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_multi_step_scheduler(caplog):
-    """Unit test of multi step scheduler"""
-
+    """Unit test of multi step scheduler."""
     caplog.set_level(logging.INFO)
 
     lr_scheduler = "multi_step"

@@ -1,3 +1,4 @@
+"""Emmental scorer unit tests."""
 import logging
 
 import numpy as np
@@ -6,8 +7,7 @@ from emmental.scorer import Scorer
 
 
 def test_scorer(caplog):
-    """Unit test of scorer"""
-
+    """Unit test of scorer."""
     caplog.set_level(logging.INFO)
 
     golds = np.array([1, 0, 1, 0, 1, 0])

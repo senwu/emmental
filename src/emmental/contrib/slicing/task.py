@@ -1,3 +1,4 @@
+"""Slicing task builder."""
 import copy
 import logging
 from functools import partial
@@ -24,7 +25,7 @@ def build_slice_tasks(
     slice_ind_head_module: Optional[nn.Module] = None,
     sep_slice_ind_feature: bool = False,
 ) -> List[EmmentalTask]:
-    r"""A function to build slice tasks based on slicing functions.
+    """Build slice tasks based on slicing functions.
 
       We assume the original task flow contains feature extractor and predictor head.
       - The predictor head action should be the last action
@@ -38,21 +39,19 @@ def build_slice_tasks(
       module will combine all slice task head to make the final predictions.
 
     Args:
-      task(EmmentalTask): Task to do slicing learning.
-      slice_func_dict(dict): Slicing functions.
-      slice_scorer(Scorer): Slice scorer, defaults to None.
-      slice_distribution(dict): Slice data class distribution, defaults to {}.
-      dropout(float): Dropout, defaults to 0.0.
-      slice_ind_head_module(nn.Module, optional): Slice indicator head module,
+      task: Task to do slicing learning.
+      slice_func_dict: Slicing functions.
+      slice_scorer: Slice scorer, defaults to None.
+      slice_distribution: Slice data class distribution, defaults to {}.
+      dropout: Dropout, defaults to 0.0.
+      slice_ind_head_module: Slice indicator head module,
         defaults to None.
-      sep_slice_ind_feature(bool): Whether to use sep slice ind feature,
+      sep_slice_ind_feature: Whether to use sep slice ind feature,
         defaults to False.
 
     Returns:
-      List[EmmentalTask]: list of tasks.
-
+      List of tasks.
     """
-
     # Collect task predictor module info
     base_task_predictor_action = task.task_flow[-1]
     base_task_predictor_module = task.module_pool[

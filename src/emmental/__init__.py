@@ -1,3 +1,4 @@
+"""Emmental package."""
 from emmental._version import __version__
 from emmental.meta import Meta, init
 

@@ -1,3 +1,4 @@
+"""Slicing label builder."""
 import logging
 from typing import Any, Callable, Dict, List
 
@@ -18,20 +19,17 @@ def add_slice_labels(
     slice_func_dict: Dict[str, Callable],
     split: str = "train",
 ) -> Dict[str, Tensor]:
-    r"""A function to extend dataloader by adding slice indicator and predictor
-    labels.
+    """Extend dataloader by adding slice indicator and predictor labels.
 
     Args:
-      task(EmmentalTask): Task to add slices.
-      dataloaders(List[EmmentalDataLoader]): List of dataloaders to train on the task.
-      slice_func_dict(dict): Slicing functions.
-      split(str): Split to use, defaults to "train".
+      task: Task to add slices.
+      dataloaders: List of dataloaders to train on the task.
+      slice_func_dict: Slicing functions.
+      split: Split to use, defaults to "train".
 
     Returns:
-      dict: slice data class distribution.
-
+      Slice data class distribution.
     """
-
     # Calculate class balance
     slice_distribution = {}
 
@@ -98,13 +96,12 @@ def add_slice_labels(
 
 @slicing_function()
 def base_slice(example: Any) -> bool:
-    r"""Base slice which always to return True.
+    """Slicing function which always to return True.
 
     Args:
-      example(Any): Sample to check if it's in the slice or not.
+      example: Sample to check if it's in the slice or not.
 
     Returns:
-      bool: True
-
+      True.
     """
     return True

@@ -1,3 +1,4 @@
+"""Emmental LBFGS optimizer unit tests."""
 import logging
 import shutil
 
@@ -11,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_lbfgs_optimizer(caplog):
-    """Unit test of LBFGS optimizer"""
-
+    """Unit test of LBFGS optimizer."""
     caplog.set_level(logging.INFO)
 
     optimizer = "lbfgs"

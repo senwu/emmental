@@ -1,3 +1,4 @@
+"""Emmental AdamW optimizer unit tests."""
 import logging
 import shutil
 
@@ -11,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_adamw_optimizer(caplog):
-    """Unit test of AdamW optimizer"""
-
+    """Unit test of AdamW optimizer."""
     caplog.set_level(logging.INFO)
 
     optimizer = "adamw"

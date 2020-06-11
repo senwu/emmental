@@ -1,3 +1,4 @@
+"""Emmental dataset and dataloader unit tests."""
 import logging
 
 import pytest
@@ -7,8 +8,7 @@ from emmental.data import EmmentalDataLoader, EmmentalDataset
 
 
 def test_emmental_dataset(caplog):
-    """Unit test of emmental dataset"""
-
+    """Unit test of emmental dataset."""
     caplog.set_level(logging.INFO)
 
     x1 = [
@@ -83,8 +83,7 @@ def test_emmental_dataset(caplog):
 
 
 def test_emmental_dataloader(caplog):
-    """Unit test of emmental dataloader"""
-
+    """Unit test of emmental dataloader."""
     caplog.set_level(logging.INFO)
 
     x1 = [

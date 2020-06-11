@@ -1,3 +1,4 @@
+"""Emmental sparse linear module unit tests."""
 import logging
 
 import numpy as np
@@ -9,8 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_sparse_linear_module(caplog):
-    """Unit test of Sparse Linear Module"""
-
+    """Unit test of Sparse Linear Module."""
     caplog.set_level(logging.INFO)
 
     # Test w/o bias

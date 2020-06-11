@@ -1,3 +1,4 @@
+"""Emmental recall scorer."""
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -16,17 +17,15 @@ def recall_scorer(
     """Recall.
 
     Args:
-      golds(ndarray): Ground truth values.
-      probs(ndarray or None): Predicted probabilities.
-      preds(ndarray): Predicted values.
-      uids(list, optional): Unique ids, defaults to None.
-      pos_label(int, optional): The positive class label, defaults to 1.
+      golds: Ground truth values.
+      probs: Predicted probabilities.
+      preds: Predicted values.
+      uids: Unique ids, defaults to None.
+      pos_label: The positive class label, defaults to 1.
 
     Returns:
-      dict: Recall.
-
+      Recall.
     """
-
     # Convert probabilistic label to hard label
     if len(golds.shape) == 2:
         golds = prob_to_pred(golds)

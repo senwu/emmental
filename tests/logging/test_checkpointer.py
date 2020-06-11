@@ -1,3 +1,4 @@
+"""Emmental checkpointer unit tests."""
 import logging
 import os
 import shutil
@@ -9,8 +10,7 @@ from emmental.logging.checkpointer import Checkpointer
 
 
 def test_checkpointer_specific_path(caplog):
-    """Unit test of checkpointer"""
-
+    """Unit test of checkpointer."""
     caplog.set_level(logging.INFO)
 
     checkpoint_path = "temp_test_checkpointer"
@@ -40,8 +40,7 @@ def test_checkpointer_specific_path(caplog):
 
 
 def test_checkpointer_wrong_freq(caplog):
-    """Unit test of checkpointer (wrong frequency)"""
-
+    """Unit test of checkpointer (wrong frequency)."""
     caplog.set_level(logging.INFO)
 
     emmental.Meta.reset()
@@ -64,8 +63,7 @@ def test_checkpointer_wrong_freq(caplog):
 
 
 def test_checkpointer_wrong_metric_mode(caplog):
-    """Unit test of checkpointer (wrong metric mode)"""
-
+    """Unit test of checkpointer (wrong metric mode)."""
     caplog.set_level(logging.INFO)
 
     emmental.Meta.reset()
@@ -90,8 +88,7 @@ def test_checkpointer_wrong_metric_mode(caplog):
 
 
 def test_checkpointer_clear_condition(caplog):
-    """Unit test of checkpointer (clear condition)"""
-
+    """Unit test of checkpointer (clear condition)."""
     caplog.set_level(logging.INFO)
 
     emmental.Meta.reset()
@@ -176,8 +173,7 @@ def test_checkpointer_clear_condition(caplog):
 
 
 def test_checkpointer_metric(caplog):
-    """Unit test of checkpointer (metric)"""
-
+    """Unit test of checkpointer (metric)."""
     caplog.set_level(logging.INFO)
 
     checkpoint_path = "temp_test_checkpointer"

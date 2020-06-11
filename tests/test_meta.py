@@ -1,3 +1,4 @@
+"""Emmental meta unit tests."""
 import logging
 import os
 import shutil
@@ -7,8 +8,7 @@ from emmental import Meta
 
 
 def test_meta(caplog):
-    """Unit test of meta"""
-
+    """Unit test of meta."""
     caplog.set_level(logging.INFO)
 
     dirpath = "temp_test_meta_log_folder"

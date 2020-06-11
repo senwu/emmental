@@ -1,3 +1,4 @@
+"""Emmental e2e test."""
 import logging
 import shutil
 from functools import partial
