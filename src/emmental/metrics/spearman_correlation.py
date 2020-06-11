@@ -1,3 +1,4 @@
+"""Emmental spearman correlation scorer."""
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -12,7 +13,7 @@ def spearman_correlation_scorer(
     uids: Optional[List[str]] = None,
     return_pvalue: bool = False,
 ) -> Dict[str, float]:
-    r"""Spearman rank-order correlation coefficient and the p-value.
+    """Spearman rank-order correlation coefficient and the p-value.
 
     Args:
       golds(ndarray): Ground truth values.
@@ -24,9 +25,7 @@ def spearman_correlation_scorer(
     Returns:
       dict: Spearman rank-order correlation coefficient (with pvalue if return_pvalue
       is True).
-
     """
-
     probs = np.vstack(probs).squeeze()
     correlation, pvalue = spearmanr(golds, probs)
 

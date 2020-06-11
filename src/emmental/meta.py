@@ -1,3 +1,4 @@
+"""Emmental meta."""
 import logging
 import os
 import tempfile
@@ -25,7 +26,7 @@ def init(
     config_dir: Optional[str] = None,
     config_name: Optional[str] = "emmental-config.yaml",
 ) -> None:
-    r"""Initialize the logging and configuration.
+    """Initialize the logging and configuration.
 
     Args:
       log_dir(str, optional): The directory to store logs in,
@@ -40,9 +41,7 @@ def init(
       config_dir(str, optional): The path to the config file, defaults to None.
       config_name(str, optional): The config file name,
         defaults to "emmental-config.yaml".
-
     """
-
     init_logging(log_dir, log_name, use_exact_log_path, format, level)
     init_config()
     if config or config_dir is not None:
@@ -52,8 +51,7 @@ def init(
 
 
 def init_config() -> None:
-    r"""Load the default configuration."""
-
+    """Load the default configuration."""
     # Load the default setting
     default_config_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "emmental-default-config.yaml"
@@ -72,8 +70,9 @@ def init_logging(
     format: str = "[%(asctime)s][%(levelname)s] %(name)s:%(lineno)s - %(message)s",
     level: int = logging.INFO,
 ) -> None:
-    r"""Configures logging to output to the provided log_dir.
-      Will use a nested directory whose name is the current timestamp.
+    """Config logging to output to the provided log_dir.
+
+    Will use a nested directory whose name is the current timestamp.
 
     Args:
       log_dir(str, optional): The directory to store logs in,
@@ -84,9 +83,7 @@ def init_logging(
       format(str, optional): The logging format string to use,
         defaults to "[%(asctime)s][%(levelname)s] %(name)s:%(lineno)s - %(message)s".
       level(int, optional): The logging level to use, defaults to logging.INFO.
-
     """
-
     if not Meta.log_path:
         if not use_exact_log_path:
             # Generate a new directory using the log_dir, if it doesn't exist
@@ -123,10 +120,10 @@ def init_logging(
 
 
 class Meta(object):
-    r"""Singleton-like metadata class for all global variables.
-      Adapted from the Unique Design Pattern:
-        https://stackoverflow.com/questions/1318406/why-is-the-borg-pattern-better-than-the-singleton-pattern-in-python
+    """Singleton-like metadata class for all global variables.
 
+    Adapted from the Unique Design Pattern:
+        https://stackoverflow.com/questions/1318406/why-is-the-borg-pattern-better-than-the-singleton-pattern-in-python
     """
 
     log_path: Optional[str] = None
@@ -134,7 +131,7 @@ class Meta(object):
 
     @classmethod
     def init(cls) -> Type["Meta"]:
-        """ """
+        """Initialize Meta."""
         if not Meta.log_path:
             init_logging()
 
@@ -149,8 +146,7 @@ class Meta(object):
         path: Optional[str] = None,
         filename: Optional[str] = "emmental-config.yaml",
     ) -> None:
-        r"""Update the configuration with the configs in root of project and
-          its parents.
+        """Update the config with the configs in root of project and its parents.
 
         Note: There are two ways to update the config:
             (1) uses a config dict to update to config
@@ -161,9 +157,7 @@ class Meta(object):
           path(str, optional): The path to the config file, defaults to os.getcwd().
           filename(str, optional): The config file name,
             defaults to "emmental-config.yaml".
-
         """
-
         if config != {}:
             Meta.config = merge(Meta.config, config, specical_keys="checkpoint_metric")
             logger.info("Updating Emmental config from user provided config.")
@@ -192,7 +186,6 @@ class Meta(object):
 
     @staticmethod
     def reset() -> None:
-        r"""Clears shared variables of shared, global singleton."""
-
+        """Clear shared variables of shared, global singleton."""
         Meta.log_path = None
         Meta.config = None

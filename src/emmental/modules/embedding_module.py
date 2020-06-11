@@ -1,3 +1,4 @@
+"""Emmental embedding module."""
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -8,7 +9,7 @@ from torch import Tensor
 
 
 class EmbeddingModule(nn.Module):
-    r"""Embedding module.
+    """Embedding module.
 
     Args:
       word_counter(dict): Word count dictionary that contians the frequencies of
@@ -21,7 +22,6 @@ class EmbeddingModule(nn.Module):
         vocabulary, defaults to None.
       embedding_file(str): The pretrained embedding file path, defaults to None.
       fix_emb(bool): Whether fix word embeddings or not, defaults to False.
-
     """
 
     UNK = "<unk>"
@@ -37,7 +37,7 @@ class EmbeddingModule(nn.Module):
         embedding_file: Optional[str] = None,
         fix_emb: bool = False,
     ) -> None:
-
+        """Initialize EmbeddingModule."""
         super().__init__()
         assert (
             word_counter is not None or embedding_file is not None
@@ -83,7 +83,7 @@ class EmbeddingModule(nn.Module):
         )
         self.size = len(self.id2word)
 
-        # Initalize word embeddings
+        # Initialize word embeddings
         self.embeddings = nn.Embedding(self.size, self.dim)
         self.embeddings.weight.data.uniform_(-1, 1)
         self.embeddings.weight.data[self.word2id[self.PAD]] = 0.0
@@ -103,16 +103,14 @@ class EmbeddingModule(nn.Module):
     def _load_embedding(
         self, embedding_file: str
     ) -> Tuple[int, Dict[str, int], List[ndarray]]:
-        r"""Load the pre-trained embeddings from file.
+        """Load the pre-trained embeddings from file.
 
         Args:
           embedding_file: The pretrained embedding file path.
 
         Returns:
           tuple: word embedding dimension, word to index dict, and embedding vectors.
-
         """
-
         emb_dim = 0
         emb_w2i: Dict[str, int] = {}
         emb_wv = []
@@ -136,13 +134,12 @@ class EmbeddingModule(nn.Module):
         return emb_dim, emb_w2i, emb_wv
 
     def forward(self, input: Tensor) -> Tensor:  # type: ignore
-        r"""Forward function.
+        """Forward function.
 
         Args:
           input(Tensor): Input tensor.
 
         Returns:
           Tensor: Output tensor.
-
         """
         return self.embeddings(input)

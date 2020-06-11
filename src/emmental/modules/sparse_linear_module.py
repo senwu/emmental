@@ -1,3 +1,4 @@
+"""Emmental sparse linear module."""
 import math
 
 import torch
@@ -6,14 +7,13 @@ from torch import Tensor
 
 
 class SparseLinear(nn.Module):
-    r"""A sparse linear module.
+    """A sparse linear module.
 
     Args:
       num_features(int): Size of features.
       num_classes(int): Number of classes.
       bias(bool): Use bias term or not, defaults to False.
       padding_idx(int): padding index, defaults to 0.
-
     """
 
     def __init__(
@@ -23,7 +23,7 @@ class SparseLinear(nn.Module):
         bias: bool = False,
         padding_idx: int = 0,
     ) -> None:
-
+        """Initialize SparseLinear."""
         super().__init__()
 
         self.num_features = num_features
@@ -41,8 +41,7 @@ class SparseLinear(nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self) -> None:
-        r"""Reinitiate the weight parameters."""
-
+        """Reinitiate the weight parameters."""
         stdv = 1.0 / math.sqrt(self.num_features)
         self.weight.weight.data.uniform_(-stdv, stdv)
         if self.bias is not None:
@@ -51,7 +50,7 @@ class SparseLinear(nn.Module):
             self.weight.weight.data[self.padding_idx].fill_(0)
 
     def forward(self, x: Tensor, w: Tensor) -> Tensor:  # type: ignore
-        r"""Forward function.
+        """Forward function.
 
         Args:
           x(Tensor): Feature indices.
@@ -59,9 +58,7 @@ class SparseLinear(nn.Module):
 
         Returns:
           Tensor: Output of linear layer.
-
         """
-
         if self.bias is None:
             return (w.unsqueeze(2) * self.weight(x)).sum(dim=1)
         else:

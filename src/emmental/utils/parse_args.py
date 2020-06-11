@@ -1,3 +1,4 @@
+"""Emmental parse_args."""
 import argparse
 from argparse import ArgumentParser, Namespace
 from typing import Any, Dict, Optional
@@ -12,16 +13,14 @@ from emmental.utils.utils import (
 
 
 def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
-    r"""Parse the configuration from command line.
+    """Parse the configuration from command line.
 
     Args:
       parser(ArgumentParser): The exterenl argument parser object, defaults to None.
 
     Returns:
       ArgumentParser: The updated argument parser object.
-
     """
-
     if parser is None:
         parser = argparse.ArgumentParser(
             "Emmental configuration",
@@ -811,14 +810,13 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
 
 
 def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
-    r"""Parse the arguments to config dict
+    """Parse the arguments to config dict.
 
     Args:
       args(Namespace): The parsed namespace from argument parser.
 
     Returns:
       dict: The config dict.
-
     """
     config = {
         "meta_config": {

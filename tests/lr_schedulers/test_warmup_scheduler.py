@@ -1,3 +1,4 @@
+"""Emmental warmup scheduler unit tests."""
 import logging
 import shutil
 
@@ -11,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_step_scheduler(caplog):
-    """Unit test of step scheduler"""
-
+    """Unit test of step scheduler."""
     caplog.set_level(logging.INFO)
 
     dirpath = "temp_test_scheduler"

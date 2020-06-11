@@ -1,3 +1,4 @@
+"""Emmental learner."""
 import collections
 import copy
 import logging
@@ -33,27 +34,25 @@ logger = logging.getLogger(__name__)
 
 
 class EmmentalLearner(object):
-    r"""A class for emmental multi-task learning.
+    """A class for emmental multi-task learning.
 
     Args:
       name(str, optional): Name of the learner, defaults to None.
-
     """
 
     def __init__(self, name: Optional[str] = None) -> None:
+        """Initialize EmmentalLearner."""
         self.name = name if name is not None else type(self).__name__
 
     def _set_logging_manager(self) -> None:
-        r"""Set logging manager."""
-
+        """Set logging manager."""
         self.logging_manager = LoggingManager(self.n_batches_per_epoch)
 
     def _set_optimizer(self, model: EmmentalModel) -> None:
-        r"""Set optimizer for learning process.
+        """Set optimizer for learning process.
 
         Args:
           model(EmmentalModel): The model to set up the optimizer.
-
         """
         optimizer_config = Meta.config["learner_config"]["optimizer_config"]
         opt = optimizer_config["optimizer"]
@@ -101,13 +100,11 @@ class EmmentalLearner(object):
             logger.info(f"Using optimizer {self.optimizer}")
 
     def _set_lr_scheduler(self, model: EmmentalModel) -> None:
-        r"""Set learning rate scheduler for learning process.
+        """Set learning rate scheduler for learning process.
 
         Args:
           model(EmmentalModel): The model to set up lr scheduler.
-
         """
-
         # Set warmup scheduler
         self._set_warmup_scheduler(model)
 
@@ -192,13 +189,11 @@ class EmmentalLearner(object):
             )
 
     def _set_warmup_scheduler(self, model: EmmentalModel) -> None:
-        r"""Set warmup learning rate scheduler for learning process.
+        """Set warmup learning rate scheduler for learning process.
 
         Args:
           model(EmmentalModel): The model to set up warmup scheduler.
-
         """
-
         self.warmup_steps = 0
         if Meta.config["learner_config"]["lr_scheduler_config"]["warmup_steps"]:
             warmup_steps = Meta.config["learner_config"]["lr_scheduler_config"][
@@ -246,12 +241,11 @@ class EmmentalLearner(object):
     def _update_lr_scheduler(
         self, model: EmmentalModel, step: int, metric_dict: Dict[str, float]
     ) -> None:
-        r"""Update the lr using lr_scheduler with each batch.
+        """Update the lr using lr_scheduler with each batch.
 
         Args:
           model(EmmentalModel): The model to update lr scheduler.
           step(int): The current step.
-
         """
         cur_lr = self.optimizer.param_groups[0]["lr"]
 
@@ -296,8 +290,7 @@ class EmmentalLearner(object):
             self.optimizer.state = collections.defaultdict(dict)  # Reset state
 
     def _set_task_scheduler(self) -> None:
-        r"""Set task scheduler for learning process"""
-
+        """Set task scheduler for learning process."""
         opt = Meta.config["learner_config"]["task_scheduler_config"]["task_scheduler"]
 
         if opt in ["sequential", "round_robin", "mixed"]:
@@ -317,7 +310,7 @@ class EmmentalLearner(object):
         dataloaders: List[EmmentalDataLoader],
         split: Union[List[str], str],
     ) -> Dict[str, float]:
-        r"""Evaluate the model.
+        """Evaluate the model.
 
         Args:
           model(EmmentalModel): The model to evaluate.
@@ -326,9 +319,7 @@ class EmmentalLearner(object):
 
         Returns:
           dict: The score dict.
-
         """
-
         if not isinstance(split, list):
             valid_split = [split]
         else:
@@ -345,7 +336,7 @@ class EmmentalLearner(object):
         dataloaders: List[EmmentalDataLoader],
         batch_size: int,
     ) -> Dict[str, float]:
-        r"""Checking if it's time to evaluting or checkpointing.
+        """Check if it's time to evaluting or checkpointing.
 
         Args:
           model(EmmentalModel): The model to log.
@@ -354,9 +345,7 @@ class EmmentalLearner(object):
 
         Returns:
           dict: The score dict.
-
         """
-
         # Switch to eval mode for evaluation
         model.eval()
 
@@ -411,7 +400,7 @@ class EmmentalLearner(object):
     def _aggregate_running_metrics(
         self, model: EmmentalModel, calc_running_scores: bool = False
     ) -> Dict[str, float]:
-        r"""Calculate the running overall and task specific metrics.
+        """Calculate the running overall and task specific metrics.
 
         Args:
           model(EmmentalModel): The model to evaluate.
@@ -419,9 +408,7 @@ class EmmentalLearner(object):
 
         Returns:
           dict: The score dict.
-
         """
-
         metric_dict = dict()
 
         total_count = 0
@@ -483,8 +470,7 @@ class EmmentalLearner(object):
         return metric_dict
 
     def _reset_losses(self) -> None:
-        r"""Reset running logs."""
-
+        """Reset running logs."""
         self.running_uids: Dict[str, List[str]] = defaultdict(list)
         self.running_losses: Dict[str, ndarray] = defaultdict(float)
         self.running_probs: Dict[str, List[ndarray]] = defaultdict(list)
@@ -493,15 +479,13 @@ class EmmentalLearner(object):
     def learn(
         self, model: EmmentalModel, dataloaders: List[EmmentalDataLoader]
     ) -> None:
-        r"""The learning procedure of emmental MTL.
+        """Learning procedure of emmental MTL.
 
         Args:
           model(EmmentalModel): The emmental model that needs to learn.
           dataloaders(List[EmmentalDataLoader]): a list of dataloaders used to
             learn the model.
-
         """
-
         # Generate the list of dataloaders for learning process
         train_split = Meta.config["learner_config"]["train_split"]
         if isinstance(train_split, str):

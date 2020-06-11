@@ -1,3 +1,4 @@
+"""Emmental round robin scheduler."""
 import random
 from typing import Dict, Iterator, List, Tuple, Union
 
@@ -9,30 +10,27 @@ from emmental.schedulers.scheduler import Scheduler
 
 
 class RoundRobinScheduler(Scheduler):
-    r"""Generate batch generator from all dataloaders in round robin order for MTL
-      training.
+    """Generate batch generator from all dataloaders in round robin order.
 
     Args:
       fillup(bool): Whether fillup to make all dataloader the same size.
-
     """
 
     def __init__(self, fillup: bool = False) -> None:
+        """Initialize RoundRobinScheduler."""
         super().__init__()
 
         self.fillup = fillup
 
     def get_num_batches(self, dataloaders: List[EmmentalDataLoader]) -> int:
-        r"""Get total number of batches per epoch.
+        """Get total number of batches per epoch.
 
         Args:
           dataloaders(list): List of dataloaders.
 
         Returns:
           int: Total number of batches per epoch.
-
         """
-
         batch_counts = [len(dataloader) for dataloader in dataloaders]
         if self.fillup:
             batch_counts = [max(batch_counts)] * len(dataloaders)
@@ -55,8 +53,7 @@ class RoundRobinScheduler(Scheduler):
             str,
         ]
     ]:
-        r"""Generate batch generator from all dataloaders in round robin order for
-          one epoch.
+        """Generate batch generator from all dataloaders for one epoch.
 
         Args:
           dataloaders(list): List of dataloaders.
@@ -64,9 +61,7 @@ class RoundRobinScheduler(Scheduler):
 
         Returns:
           genertor: A generator of all batches.
-
         """
-
         task_to_label_dicts = [
             dataloader.task_to_label_dict for dataloader in dataloaders
         ]

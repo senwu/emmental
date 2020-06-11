@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """PyTorch optimization for BERT model."""
-
 import logging
 from typing import Any, Callable, Iterable, Optional, Tuple
 
@@ -25,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class BertAdam(Optimizer):
-    r"""Implements BERT version of Adam algorithm with weight decay fix.
+    """Implements BERT version of Adam algorithm with weight decay fix.
 
     Args:
       params(iterable): Iterable of parameters to optimize or dicts defining
@@ -36,7 +35,6 @@ class BertAdam(Optimizer):
       eps(float, optional): Term added to the denominator to improve numerical
         stability, defaults to 1e-6.
       weight_decay(float, optional): Weight decay (L2 penalty), defaults to 0.01.
-
     """
 
     def __init__(
@@ -47,6 +45,7 @@ class BertAdam(Optimizer):
         eps: float = 1e-6,
         weight_decay: float = 0.01,
     ) -> None:
+        """Initialize BertAdam."""
         if not 0.0 <= lr:
             raise ValueError("Invalid learning rate: {}".format(lr))
         if not 0.0 <= eps:
@@ -60,14 +59,12 @@ class BertAdam(Optimizer):
         super().__init__(params, defaults)  # type: ignore
 
     def step(self, closure: Optional[Callable] = None) -> Any:
-        """Performs a single optimization step.
+        """Perform a single optimization step.
 
         Args:
           closure(callable, optional): A closure that reevaluates the model and returns
             the loss, defaults to None.
-
         """
-
         loss = None
         if closure is not None:
             loss = closure()

@@ -1,3 +1,4 @@
+"""Emmental linear scheduler unit tests."""
 import logging
 import shutil
 
@@ -11,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_linear_scheduler(caplog):
-    """Unit test of linear scheduler"""
-
+    """Unit test of linear scheduler."""
     caplog.set_level(logging.INFO)
 
     lr_scheduler = "linear"

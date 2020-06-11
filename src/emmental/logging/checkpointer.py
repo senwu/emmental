@@ -1,3 +1,4 @@
+"""Emmental checkpointer."""
 import glob
 import logging
 import os
@@ -15,12 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 class Checkpointer(object):
-    r"""Checkpointing class to log train information"""
+    """Checkpointing class to log train information."""
 
     def __init__(self) -> None:
-        r"""Initialize the checkpointer.
-        """
-
+        """Initialize the checkpointer."""
         # Set up checkpoint directory
         self.checkpoint_path = Meta.config["logging_config"]["checkpointer_config"][
             "checkpoint_path"
@@ -112,7 +111,7 @@ class Checkpointer(object):
         lr_scheduler: _LRScheduler,
         metric_dict: Dict[str, float],
     ) -> None:
-        r"""Checkpointing the checkpoint.
+        """Checkpointing the checkpoint.
 
         Args:
           iteration(float or int): The current iteration.
@@ -120,9 +119,7 @@ class Checkpointer(object):
           optimizer(Optimizer): The optimizer used during training process.
           lr_scheduler(_LRScheduler): Learning rate scheduler.
           metric_dict(dict): The metric dict.
-
         """
-
         # Check the checkpoint_runway condition is met
         if iteration < self.checkpoint_runway:
             return
@@ -164,16 +161,14 @@ class Checkpointer(object):
                 )
 
     def is_new_best(self, metric_dict: Dict[str, float]) -> Set[str]:
-        r"""Update the best score.
+        """Update the best score.
 
         Args:
           metric_dict(dict): The current metric dict.
 
         Returns:
           set: The updated best metric set.
-
         """
-
         best_metric = set()
 
         for metric in metric_dict:
@@ -198,8 +193,7 @@ class Checkpointer(object):
         return best_metric
 
     def clear(self) -> None:
-        r"""Clear checkpoints."""
-
+        """Clear checkpoints."""
         if self.clear_all_checkpoints:
             logger.info("Clear all checkpoints.")
             file_list = glob.glob(f"{self.checkpoint_path}/*.pth")
@@ -219,7 +213,7 @@ class Checkpointer(object):
         lr_scheduler: _LRScheduler,
         metric_dict: Dict[str, float],
     ) -> Dict[str, Any]:
-        r"""Collect the state dict of the model.
+        """Collect the state dict of the model.
 
         Args:
           iteration(float or int): The current iteration.
@@ -231,7 +225,6 @@ class Checkpointer(object):
         Returns:
           dict: The state dict.
         """
-
         model_params = {
             "name": model.name,
             "module_pool": model.collect_state_dict(),
@@ -253,16 +246,14 @@ class Checkpointer(object):
         return state_dict
 
     def load_best_model(self, model: EmmentalModel) -> EmmentalModel:
-        r"""Load the best model from the checkpoint.
+        """Load the best model from the checkpoint.
 
         Args:
           model(EmmentalModel.): The current model.
 
         Returns:
           EmmentalModel: The best model load from the checkpoint.
-
         """
-
         if list(self.checkpoint_metric.keys())[0] not in self.best_metric_dict:
             logger.info("No best model found, use the original model.")
         else:

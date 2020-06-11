@@ -1,3 +1,4 @@
+"""Emmental pad batch unit tests."""
 import logging
 
 import torch
@@ -6,8 +7,7 @@ from emmental.utils.utils import pad_batch
 
 
 def test_pad_batch(caplog):
-    """Unit test of pad batch"""
-
+    """Unit test of pad batch."""
     caplog.set_level(logging.INFO)
 
     batch = [torch.Tensor([1, 2]), torch.Tensor([3]), torch.Tensor([4, 5, 6])]

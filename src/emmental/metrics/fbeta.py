@@ -1,3 +1,4 @@
+"""Emmental fbeta scorer."""
 from typing import Dict, List, Optional
 
 from numpy import ndarray
@@ -27,9 +28,7 @@ def fbeta_scorer(
 
     Returns:
       dict: F-beta score.
-
     """
-
     # Convert probabilistic label to hard label
     if len(golds.shape) == 2:
         golds = prob_to_pred(golds)
@@ -64,7 +63,5 @@ def f1_scorer(
 
     Returns:
       dict: F-1 score.
-
     """
-
     return {"f1": fbeta_scorer(golds, probs, preds, uids, pos_label, beta=1)["f1"]}

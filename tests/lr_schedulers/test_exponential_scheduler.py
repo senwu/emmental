@@ -1,3 +1,4 @@
+"""Emmental exponential scheduler unit tests."""
 import logging
 import shutil
 
@@ -11,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_exponential_scheduler(caplog):
-    """Unit test of exponential scheduler"""
-
+    """Unit test of exponential scheduler."""
     caplog.set_level(logging.INFO)
 
     lr_scheduler = "exponential"

@@ -1,3 +1,4 @@
+"""Slicing modules."""
 from typing import Any, Dict, Optional
 
 import torch.nn.functional as F
@@ -22,9 +23,7 @@ def ce_loss(
 
     Returns:
       Tensor: Loss.
-
     """
-
     return F.cross_entropy(
         intermediate_output_dict[module_name][0][active],
         (Y.view(-1) - 1)[active],
@@ -42,5 +41,4 @@ def output(module_name: str, intermediate_output_dict: Dict[str, Any]) -> Tensor
     Returns:
       Tensor: Output.
     """
-
     return F.softmax(intermediate_output_dict[module_name][0], dim=1)

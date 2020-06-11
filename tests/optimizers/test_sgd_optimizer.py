@@ -1,3 +1,4 @@
+"""Emmental SGD optimizer unit tests."""
 import logging
 import shutil
 
@@ -11,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_sgd_optimizer(caplog):
-    """Unit test of SGD optimizer"""
-
+    """Unit test of SGD optimizer."""
     caplog.set_level(logging.INFO)
 
     optimizer = "sgd"

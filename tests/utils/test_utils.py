@@ -1,3 +1,4 @@
+"""Emmental utils unit tests."""
 import logging
 
 import numpy as np
@@ -21,8 +22,7 @@ from emmental.utils.utils import (
 
 
 def test_prob_to_pred(caplog):
-    """Unit test of prob_to_pred"""
-
+    """Unit test of prob_to_pred."""
     caplog.set_level(logging.INFO)
 
     assert (
@@ -39,8 +39,7 @@ def test_prob_to_pred(caplog):
 
 
 def test_pred_to_prob(caplog):
-    """Unit test of pred_to_prob"""
-
+    """Unit test of pred_to_prob."""
     caplog.set_level(logging.INFO)
 
     assert np.array_equal(
@@ -54,8 +53,7 @@ def test_pred_to_prob(caplog):
 
 
 def test_move_to_device(caplog):
-    """Unit test of move_to_device"""
-
+    """Unit test of move_to_device."""
     caplog.set_level(logging.INFO)
 
     assert torch.equal(move_to_device(torch.Tensor([1, 2]), -1), torch.Tensor([1, 2]))
@@ -65,8 +63,7 @@ def test_move_to_device(caplog):
 
 
 def test_array_to_numpy(caplog):
-    """Unit test of array_to_numpy"""
-
+    """Unit test of array_to_numpy."""
     caplog.set_level(logging.INFO)
 
     assert (
@@ -83,8 +80,7 @@ def test_array_to_numpy(caplog):
 
 
 def test_merge(caplog):
-    """Unit test of merge"""
-
+    """Unit test of merge."""
     caplog.set_level(logging.INFO)
 
     assert merge({1: 1}, {2: 2}) == {1: 1, 2: 2}
@@ -94,8 +90,7 @@ def test_merge(caplog):
 
 
 def test_str2bool(caplog):
-    """Unit test of str2bool"""
-
+    """Unit test of str2bool."""
     caplog.set_level(logging.INFO)
 
     assert str2bool("Yes") is True
@@ -115,8 +110,7 @@ def test_str2bool(caplog):
 
 
 def test_str2dict(caplog):
-    """Unit test of str2dict"""
-
+    """Unit test of str2dict."""
     caplog.set_level(logging.INFO)
 
     assert str2dict("1:1") == {"1": "1"}
@@ -124,8 +118,7 @@ def test_str2dict(caplog):
 
 
 def test_str2list(caplog):
-    """Unit test of str2list"""
-
+    """Unit test of str2list."""
     caplog.set_level(logging.INFO)
 
     assert str2list("1,2,3") == ["1", "2", "3"]
@@ -133,8 +126,7 @@ def test_str2list(caplog):
 
 
 def test_nullable_float(caplog):
-    """Unit test of nullable_float"""
-
+    """Unit test of nullable_float."""
     caplog.set_level(logging.INFO)
 
     assert nullable_float("none") is None
@@ -142,8 +134,7 @@ def test_nullable_float(caplog):
 
 
 def test_nullable_int(caplog):
-    """Unit test of nullable_int"""
-
+    """Unit test of nullable_int."""
     caplog.set_level(logging.INFO)
 
     assert nullable_int("none") is None
@@ -151,8 +142,7 @@ def test_nullable_int(caplog):
 
 
 def test_nullable_string(caplog):
-    """Unit test of nullable_string"""
-
+    """Unit test of nullable_string."""
     caplog.set_level(logging.INFO)
 
     assert nullable_string("none") is None
@@ -160,8 +150,7 @@ def test_nullable_string(caplog):
 
 
 def test_construct_identifier(caplog):
-    """Unit test of construct_identifier"""
-
+    """Unit test of construct_identifier."""
     caplog.set_level(logging.INFO)
 
     assert construct_identifier("1", "2", "3", "4") == "1/2/3/4"
@@ -169,8 +158,7 @@ def test_construct_identifier(caplog):
 
 
 def test_random_string(caplog):
-    """Unit test of random_string"""
-
+    """Unit test of random_string."""
     caplog.set_level(logging.INFO)
 
     assert len(random_string(10)) == 10

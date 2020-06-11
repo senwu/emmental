@@ -1,3 +1,4 @@
+"""Emmental recall scorer."""
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -24,9 +25,7 @@ def recall_scorer(
 
     Returns:
       dict: Recall.
-
     """
-
     # Convert probabilistic label to hard label
     if len(golds.shape) == 2:
         golds = prob_to_pred(golds)

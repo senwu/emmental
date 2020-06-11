@@ -1,3 +1,4 @@
+"""Emmental sequential scheduler."""
 from typing import Dict, Iterator, List, Tuple, Union
 
 from torch import Tensor
@@ -8,30 +9,27 @@ from emmental.schedulers.scheduler import Scheduler
 
 
 class SequentialScheduler(Scheduler):
-    r"""Generate batch generator from all dataloaders in sequential order for MTL
-      training.
+    """Generate batch generator from all dataloaders in sequential order.
 
     Args:
       fillup(bool): Whether fillup to make all dataloader the same size.
-
     """
 
     def __init__(self, fillup: bool = False) -> None:
+        """Initialize SequentialScheduler."""
         super().__init__()
 
         self.fillup = fillup
 
     def get_num_batches(self, dataloaders: List[EmmentalDataLoader]) -> int:
-        r"""Get total number of batches per epoch.
+        """Get total number of batches per epoch.
 
         Args:
           dataloaders(list): List of dataloaders.
 
         Returns:
           int: Total number of batches per epoch.
-
         """
-
         batch_counts = [len(dataloader) for dataloader in dataloaders]
         if self.fillup:
             batch_counts = [max(batch_counts)] * len(dataloaders)
@@ -54,8 +52,7 @@ class SequentialScheduler(Scheduler):
             str,
         ]
     ]:
-        r"""Generate batch generator from all dataloaders in sequential order for
-        one epoch.
+        """Generate batch generator from all dataloaders for one epoch.
 
         Args:
           dataloaders(list): List of dataloaders.
@@ -63,9 +60,7 @@ class SequentialScheduler(Scheduler):
 
         Returns:
           genertor: A generator of all batches.
-
         """
-
         task_to_label_dicts = [
             dataloader.task_to_label_dict for dataloader in dataloaders
         ]

@@ -1,3 +1,4 @@
+"""Emmental pearson spearman scorer."""
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -13,8 +14,7 @@ def pearson_spearman_scorer(
     preds: Optional[ndarray],
     uids: Optional[List[str]] = None,
 ) -> Dict[str, float]:
-    r"""Average of Pearson correlation coefficient and Spearman rank-order
-    correlation coefficient.
+    """Average of Pearson and Spearman rank-order correlation coefficients.
 
     Args:
       golds(ndarray): Ground truth values.
@@ -25,9 +25,7 @@ def pearson_spearman_scorer(
     Returns:
       dict: The average of Pearson correlation coefficient and Spearman rank-order
       correlation coefficient.
-
     """
-
     metrics = dict()
     pearson_correlation = pearson_correlation_scorer(golds, probs, preds, uids)
     spearman_correlation = spearman_correlation_scorer(golds, probs, preds, uids)

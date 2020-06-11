@@ -1,3 +1,4 @@
+"""Slicing function decorator."""
 import logging
 from functools import wraps
 from types import SimpleNamespace
@@ -13,23 +14,27 @@ logger = logging.getLogger(__name__)
 
 
 class slicing_function:
-    r"""When wrapped with this decorator, slicing functions only need to return an
-      indicator for whether an individual example (bundle of attributes) belongs
-      in that slice. Iterating through the dataset, making the pred array (and
-      masking), etc. are all handled automatically.
+    """Slicing function decorator.
+
+    When wrapped with this decorator, slicing functions only need to return an
+    indicator for whether an individual example (bundle of attributes) belongs
+    in that slice. Iterating through the dataset, making the pred array (and
+    masking), etc. are all handled automatically.
 
     Args:
       fields(list): Data attributes to use, defaults to [].
-
     """
 
     def __init__(self, fields: List[str] = []) -> None:
+        """Initialize slicing function."""
         self.fields = fields
 
     def __call__(self, f: Callable) -> Callable:
+        """Caller."""
+
         @wraps(f)
         def wrapped_f(dataset: EmmentalDataset) -> ndarray:
-            """
+            """Wrap function.
 
             Args:
               dataset(EmmentalDataset): Dataset to apply slicing function.

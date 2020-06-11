@@ -1,3 +1,4 @@
+"""Emmental model unit tests."""
 import logging
 import shutil
 from functools import partial
@@ -15,8 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_model(caplog):
-    """Unit test of model"""
-
+    """Unit test of model."""
     caplog.set_level(logging.INFO)
 
     dirpath = "temp_test_model"

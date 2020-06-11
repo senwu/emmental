@@ -1,3 +1,4 @@
+"""Emmental parsing args unit tests."""
 import logging
 import shutil
 
@@ -9,8 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_parse_args(caplog):
-    """Unit test of parsing args"""
-
+    """Unit test of parsing args."""
     caplog.set_level(logging.INFO)
 
     parser = parse_args()
@@ -166,8 +166,7 @@ def test_parse_args(caplog):
 
 
 def test_checkpoint_metric(caplog):
-    """Unit test of parsing checkpoint metric"""
-
+    """Unit test of parsing checkpoint metric."""
     caplog.set_level(logging.INFO)
 
     # Test different checkpoint_metric

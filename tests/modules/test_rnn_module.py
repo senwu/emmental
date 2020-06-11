@@ -1,3 +1,4 @@
+"""Emmental RNN module unit tests."""
 import logging
 
 import torch
@@ -9,8 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_rnn_module(caplog):
-    """Unit test of RNN Module"""
-
+    """Unit test of RNN Module."""
     caplog.set_level(logging.INFO)
 
     n_class = 2

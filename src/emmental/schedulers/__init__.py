@@ -1,3 +1,4 @@
+"""Emmental scheduler module."""
 from emmental.schedulers.mixed_scheduler import MixedScheduler
 from emmental.schedulers.round_robin_scheduler import RoundRobinScheduler
 from emmental.schedulers.sequential_scheduler import SequentialScheduler

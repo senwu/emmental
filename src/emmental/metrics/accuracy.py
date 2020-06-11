@@ -1,3 +1,4 @@
+"""Emmental accuracy scorer."""
 from typing import Dict, List, Optional, Union
 
 import numpy as np
@@ -14,7 +15,7 @@ def accuracy_scorer(
     normalize: bool = True,
     topk: int = 1,
 ) -> Dict[str, Union[float, int]]:
-    r"""Accuracy classification score.
+    """Accuracy classification score.
 
     Args:
       golds(ndarray): Ground truth values.
@@ -28,9 +29,7 @@ def accuracy_scorer(
       dict: Accuracy, if normalize is True, return the fraction of correctly
       predicted samples (float), else returns the number of correctly predicted
       samples (int).
-
     """
-
     # Convert probabilistic label to hard label
     if len(golds.shape) == 2:
         golds = prob_to_pred(golds)

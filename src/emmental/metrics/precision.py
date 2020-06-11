@@ -1,3 +1,4 @@
+"""Emmental precision scorer."""
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -24,9 +25,7 @@ def precision_scorer(
 
     Returns:
       dict: Precision.
-
     """
-
     # Convert probabilistic label to hard label
     if len(golds.shape) == 2:
         golds = prob_to_pred(golds)

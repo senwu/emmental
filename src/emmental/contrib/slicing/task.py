@@ -1,3 +1,4 @@
+"""Slicing task builder."""
 import copy
 import logging
 from functools import partial
@@ -24,7 +25,7 @@ def build_slice_tasks(
     slice_ind_head_module: Optional[nn.Module] = None,
     sep_slice_ind_feature: bool = False,
 ) -> List[EmmentalTask]:
-    r"""A function to build slice tasks based on slicing functions.
+    """Build slice tasks based on slicing functions.
 
       We assume the original task flow contains feature extractor and predictor head.
       - The predictor head action should be the last action
@@ -50,9 +51,7 @@ def build_slice_tasks(
 
     Returns:
       List[EmmentalTask]: list of tasks.
-
     """
-
     # Collect task predictor module info
     base_task_predictor_action = task.task_flow[-1]
     base_task_predictor_module = task.module_pool[

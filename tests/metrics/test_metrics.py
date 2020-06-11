@@ -1,3 +1,4 @@
+"""Emmental metric unit tests."""
 import logging
 
 import numpy as np
@@ -24,12 +25,14 @@ PROB_GOLDS = np.array(
 PROBS = np.array(
     [[0.9, 0.1], [0.6, 0.4], [1.0, 0.0], [0.8, 0.2], [0.6, 0.4], [0.05, 0.95]]
 )
+
+UNARY_PROBS = np.array([0.1, 0.4, 0.0, 0.2, 0.4, 0.95])
+
 PREDS = np.array([0, 0, 0, 0, 0, 1])
 
 
 def test_accuracy(caplog):
-    """Unit test of accuracy_scorer"""
-
+    """Unit test of accuracy_scorer."""
     caplog.set_level(logging.INFO)
 
     metric_dict = accuracy_scorer(GOLDS, PROBS, PREDS)
@@ -66,8 +69,7 @@ def test_accuracy(caplog):
 
 
 def test_precision(caplog):
-    """Unit test of precision_scorer"""
-
+    """Unit test of precision_scorer."""
     caplog.set_level(logging.INFO)
 
     metric_dict = precision_scorer(GOLDS, PROBS, PREDS, pos_label=1)
@@ -90,8 +92,7 @@ def test_precision(caplog):
 
 
 def test_recall(caplog):
-    """Unit test of recall_scorer"""
-
+    """Unit test of recall_scorer."""
     caplog.set_level(logging.INFO)
 
     metric_dict = recall_scorer(GOLDS, PROBS, PREDS, pos_label=1)
@@ -114,8 +115,7 @@ def test_recall(caplog):
 
 
 def test_f1(caplog):
-    """Unit test of f1_scorer"""
-
+    """Unit test of f1_scorer."""
     caplog.set_level(logging.INFO)
 
     metric_dict = f1_scorer(GOLDS, PROBS, PREDS, pos_label=1)
@@ -138,8 +138,7 @@ def test_f1(caplog):
 
 
 def test_fbeta(caplog):
-    """Unit test of fbeta_scorer"""
-
+    """Unit test of fbeta_scorer."""
     caplog.set_level(logging.INFO)
 
     metric_dict = fbeta_scorer(GOLDS, PROBS, PREDS, pos_label=1, beta=2)
@@ -162,8 +161,7 @@ def test_fbeta(caplog):
 
 
 def test_matthews_corrcoef(caplog):
-    """Unit test of matthews_correlation_coefficient_scorer"""
-
+    """Unit test of matthews_correlation_coefficient_scorer."""
     caplog.set_level(logging.INFO)
 
     metric_dict = matthews_correlation_coefficient_scorer(GOLDS, PROBS, PREDS)
@@ -180,11 +178,10 @@ def test_matthews_corrcoef(caplog):
 
 
 def test_mean_squared_error(caplog):
-    """Unit test of mean_squared_error_scorer"""
-
+    """Unit test of mean_squared_error_scorer."""
     caplog.set_level(logging.INFO)
 
-    metric_dict = mean_squared_error_scorer(GOLDS, PROBS[:, 1], None)
+    metric_dict = mean_squared_error_scorer(GOLDS, UNARY_PROBS, None)
     assert isequal(metric_dict, {"mean_squared_error": 0.1954166666666667})
 
     metric_dict = mean_squared_error_scorer(PROB_GOLDS, PROBS, None)
@@ -192,15 +189,14 @@ def test_mean_squared_error(caplog):
 
 
 def test_pearson_correlation(caplog):
-    """Unit test of pearson_correlation_scorer"""
-
+    """Unit test of pearson_correlation_scorer."""
     caplog.set_level(logging.INFO)
 
-    metric_dict = pearson_correlation_scorer(GOLDS, PROBS[:, 1], None)
+    metric_dict = pearson_correlation_scorer(GOLDS, UNARY_PROBS, None)
     assert isequal(metric_dict, {"pearson_correlation": 0.5667402091575048})
 
     metric_dict = pearson_correlation_scorer(
-        GOLDS, PROBS[:, 1], None, return_pvalue=True
+        GOLDS, UNARY_PROBS, None, return_pvalue=True
     )
     assert isequal(
         metric_dict,
@@ -212,15 +208,14 @@ def test_pearson_correlation(caplog):
 
 
 def test_spearman_correlation(caplog):
-    """Unit test of spearman_correlation_scorer"""
-
+    """Unit test of spearman_correlation_scorer."""
     caplog.set_level(logging.INFO)
 
-    metric_dict = spearman_correlation_scorer(GOLDS, PROBS[:, 1], None)
+    metric_dict = spearman_correlation_scorer(GOLDS, UNARY_PROBS, None)
     assert isequal(metric_dict, {"spearman_correlation": 0.5940885257860046})
 
     metric_dict = spearman_correlation_scorer(
-        GOLDS, PROBS[:, 1], None, return_pvalue=True
+        GOLDS, UNARY_PROBS, None, return_pvalue=True
     )
     assert isequal(
         metric_dict,
@@ -232,17 +227,15 @@ def test_spearman_correlation(caplog):
 
 
 def test_pearson_spearman(caplog):
-    """Unit test of pearson_spearman_scorer"""
-
+    """Unit test of pearson_spearman_scorer."""
     caplog.set_level(logging.INFO)
 
-    metric_dict = pearson_spearman_scorer(GOLDS, PROBS[:, 1], None)
+    metric_dict = pearson_spearman_scorer(GOLDS, UNARY_PROBS, None)
     assert isequal(metric_dict, {"pearson_spearman": 0.5804143674717547})
 
 
 def test_roc_auc(caplog):
-    """Unit test of roc_auc_scorer"""
-
+    """Unit test of roc_auc_scorer."""
     caplog.set_level(logging.INFO)
 
     metric_dict = roc_auc_scorer(GOLDS, PROBS, None)
@@ -253,11 +246,11 @@ def test_roc_auc(caplog):
 
     assert isequal(metric_dict, {"roc_auc": 0.8333333333333333})
 
-    metric_dict = roc_auc_scorer(GOLDS, PROBS[:, 1], None)
+    metric_dict = roc_auc_scorer(GOLDS, UNARY_PROBS, None)
 
     assert isequal(metric_dict, {"roc_auc": 0.8333333333333334})
 
-    metric_dict = roc_auc_scorer(PROB_GOLDS, PROBS[:, 1], None)
+    metric_dict = roc_auc_scorer(PROB_GOLDS, UNARY_PROBS, None)
 
     assert isequal(metric_dict, {"roc_auc": 0.8333333333333334})
 
@@ -268,8 +261,7 @@ def test_roc_auc(caplog):
 
 
 def test_accuracy_f1(caplog):
-    """Unit test of accuracy_f1_scorer"""
-
+    """Unit test of accuracy_f1_scorer."""
     caplog.set_level(logging.INFO)
 
     metric_dict = accuracy_f1_scorer(GOLDS, None, PREDS)

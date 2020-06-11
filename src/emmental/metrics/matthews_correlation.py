@@ -1,3 +1,4 @@
+"""Emmental matthews correlation coefficient scorer."""
 from typing import Dict, List, Optional
 
 from numpy import ndarray
@@ -22,9 +23,7 @@ def matthews_correlation_coefficient_scorer(
 
     Returns:
       dict: Matthews correlation coefficient score.
-
     """
-
     # Convert probabilistic label to hard label
     if len(golds.shape) == 2:
         golds = prob_to_pred(golds)

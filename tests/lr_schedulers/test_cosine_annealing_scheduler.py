@@ -1,3 +1,4 @@
+"""Emmental cosine annealing scheduler unit tests."""
 import logging
 import shutil
 
@@ -11,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_cosine_annealing_scheduler(caplog):
-    """Unit test of cosine annealing scheduler"""
-
+    """Unit test of cosine annealing scheduler."""
     caplog.set_level(logging.INFO)
 
     lr_scheduler = "cosine_annealing"

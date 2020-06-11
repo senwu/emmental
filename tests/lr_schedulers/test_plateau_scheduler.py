@@ -1,3 +1,4 @@
+"""Emmental plateau scheduler unit tests."""
 import logging
 import shutil
 
@@ -11,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_plateau_scheduler(caplog):
-    """Unit test of plateau scheduler"""
-
+    """Unit test of plateau scheduler."""
     caplog.set_level(logging.INFO)
 
     lr_scheduler = "plateau"

@@ -1,3 +1,4 @@
+"""Emmental Adagrad optimizer unit tests."""
 import logging
 import shutil
 
@@ -12,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_adagrad_optimizer(caplog):
-    """Unit test of Adagrad optimizer"""
-
+    """Unit test of Adagrad optimizer."""
     caplog.set_level(logging.INFO)
 
     optimizer = "adagrad"

@@ -1,3 +1,4 @@
+"""Emmental Rprop optimizer unit tests."""
 import logging
 import shutil
 
@@ -11,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_r_prop_optimizer(caplog):
-    """Unit test of Rprop optimizer"""
-
+    """Unit test of Rprop optimizer."""
     caplog.set_level(logging.INFO)
 
     optimizer = "r_prop"

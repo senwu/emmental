@@ -1,3 +1,4 @@
+"""Emmental mean squared error scorer."""
 from typing import Dict, List, Optional
 
 from numpy import ndarray
@@ -20,7 +21,5 @@ def mean_squared_error_scorer(
 
     Returns:
       dict: Mean squared error regression loss.
-
     """
-
     return {"mean_squared_error": float(mean_squared_error(golds, probs))}

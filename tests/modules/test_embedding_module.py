@@ -1,3 +1,4 @@
+"""Emmental embedding module unit tests."""
 import logging
 
 import torch
@@ -9,8 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_embedding_module(caplog):
-    """Unit test of Embedding Module"""
-
+    """Unit test of Embedding Module."""
     caplog.set_level(logging.INFO)
 
     # Set random seed seed

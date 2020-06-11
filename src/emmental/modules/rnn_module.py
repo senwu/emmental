@@ -1,3 +1,4 @@
+"""Emmental RNN module."""
 from typing import Optional
 
 import torch
@@ -6,7 +7,7 @@ from torch import Tensor
 
 
 class RNN(nn.Module):
-    r"""A recurrent neural network module.
+    """A recurrent neural network module.
 
     Args:
       num_classes(int): Number of classes.
@@ -16,7 +17,6 @@ class RNN(nn.Module):
       dropout(float): Dropout parameter of LSTM, defaults to 0.0.
       attention(bool): Use attention or not, defaults to True.
       bidirectional(bool): Use bidirectional LSTM or not, defaults to True.
-
     """
 
     def __init__(
@@ -29,7 +29,7 @@ class RNN(nn.Module):
         attention: bool = True,
         bidirectional: bool = True,
     ) -> None:
-
+        """Initialize RNN."""
         super().__init__()
 
         self.emb_size = emb_size
@@ -71,7 +71,7 @@ class RNN(nn.Module):
     def forward(  # type: ignore
         self, x: Tensor, x_mask: Optional[Tensor] = None
     ) -> Tensor:
-        r"""Forward function.
+        """Forward function.
 
         Args:
           x(Tensor): Input tensor.
@@ -79,7 +79,6 @@ class RNN(nn.Module):
 
         Returns:
           Tensor: Output tensor.
-
         """
         x_emb = self.drop(x)
         output_word, state_word = self.word_lstm(x_emb)

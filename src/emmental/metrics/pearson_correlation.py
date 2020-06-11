@@ -1,3 +1,4 @@
+"""Emmental pearson correlation scorer."""
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -23,9 +24,7 @@ def pearson_correlation_scorer(
 
     Returns:
       dict: Pearson correlation coefficient (with pvalue if return_pvalue is True).
-
     """
-
     probs = np.vstack(probs).squeeze()
     correlation, pvalue = pearsonr(golds, probs)
 

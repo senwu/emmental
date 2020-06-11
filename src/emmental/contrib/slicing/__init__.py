@@ -1,3 +1,4 @@
+"""Emmental slicing contrib module."""
 from emmental.contrib.slicing.data import add_slice_labels
 from emmental.contrib.slicing.slicing_function import slicing_function
 from emmental.contrib.slicing.task import build_slice_tasks

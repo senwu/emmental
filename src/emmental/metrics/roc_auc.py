@@ -1,3 +1,4 @@
+"""Emmental roc auc scorer."""
 import logging
 from typing import Dict, List, Optional
 
@@ -26,9 +27,7 @@ def roc_auc_scorer(
 
     Returns:
       dict: ROC AUC score.
-
     """
-
     if len(probs.shape) == 2 and probs.shape[1] == 1:
         probs = probs.reshape(probs.shape[0])
 

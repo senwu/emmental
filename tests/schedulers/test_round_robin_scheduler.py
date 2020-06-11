@@ -1,3 +1,4 @@
+"""Emmental round robin scheduler unit tests."""
 import logging
 
 import numpy as np
@@ -12,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_round_robin_scheduler(caplog):
-    """Unit test of round robin scheduler"""
-
+    """Unit test of round robin scheduler."""
     caplog.set_level(logging.INFO)
 
     emmental.Meta.init()
