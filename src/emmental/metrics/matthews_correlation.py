@@ -3,6 +3,8 @@ from typing import Dict, List, Optional
 from numpy import ndarray
 from sklearn.metrics import matthews_corrcoef
 
+from emmental.utils.utils import prob_to_pred
+
 
 def matthews_correlation_coefficient_scorer(
     golds: ndarray,
@@ -22,5 +24,9 @@ def matthews_correlation_coefficient_scorer(
       dict: Matthews correlation coefficient score.
 
     """
+
+    # Convert probabilistic label to hard label
+    if len(golds.shape) == 2:
+        golds = prob_to_pred(golds)
 
     return {"matthews_corrcoef": matthews_corrcoef(golds, preds)}
