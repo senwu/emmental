@@ -12,7 +12,7 @@ class MixedScheduler(Scheduler):
     """Generate batch generator from all dataloaders in mixture for MTL training.
 
     Args:
-      fillup(bool): Whether fillup to make all dataloader the same size.
+      fillup: Whether fillup to make all dataloader the same size.
     """
 
     def __init__(self, fillup: bool = False) -> None:
@@ -25,10 +25,10 @@ class MixedScheduler(Scheduler):
         """Get total number of batches per epoch.
 
         Args:
-          dataloaders(list): List of dataloaders.
+          dataloaders: List of dataloaders.
 
         Returns:
-          int: Total number of batches per epoch.
+          Total number of batches per epoch.
         """
         batch_counts = [len(dataloader) for dataloader in dataloaders]
         num_batch = max(batch_counts) if self.fillup else min(batch_counts)
@@ -52,11 +52,11 @@ class MixedScheduler(Scheduler):
         """Generate batch generator from all dataloaders in mixture for one epoch.
 
         Args:
-          dataloaders(list): List of dataloaders.
-          model(EmmentalModel): The training model, defaults to None.
+          dataloaders: List of dataloaders.
+          model: The training model, defaults to None.
 
         Returns:
-          genertor: A generator of all batches.
+          A generator of all batches.
         """
         task_to_label_dicts = [
             dataloader.task_to_label_dict for dataloader in dataloaders

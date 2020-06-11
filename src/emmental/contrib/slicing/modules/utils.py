@@ -15,14 +15,14 @@ def ce_loss(
     """Cross entropy loss.
 
     Args:
-      module_name(str): Module name.
-      intermediate_output_dict(dict): output dict.
-      Y(Tensor): Gold lables.
-      active(Tensor): Active sample index.
-      weight(Tensor, optional): Class weights.
+      module_name: Module name.
+      intermediate_output_dict: output dict.
+      Y: Gold lables.
+      active: Active sample index.
+      weight: Class weights.
 
     Returns:
-      Tensor: Loss.
+      Loss.
     """
     return F.cross_entropy(
         intermediate_output_dict[module_name][0][active],
@@ -35,10 +35,10 @@ def output(module_name: str, intermediate_output_dict: Dict[str, Any]) -> Tensor
     """Output function.
 
     Args:
-      module_name(str): Module name.
-      intermediate_output_dict(dict): output dict.
+      module_name: Module name.
+      intermediate_output_dict: output dict.
 
     Returns:
-      Tensor: Output.
+      Output.
     """
     return F.softmax(intermediate_output_dict[module_name][0], dim=1)

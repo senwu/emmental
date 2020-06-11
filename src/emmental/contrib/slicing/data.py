@@ -22,13 +22,13 @@ def add_slice_labels(
     """Extend dataloader by adding slice indicator and predictor labels.
 
     Args:
-      task(EmmentalTask): Task to add slices.
-      dataloaders(List[EmmentalDataLoader]): List of dataloaders to train on the task.
-      slice_func_dict(dict): Slicing functions.
-      split(str): Split to use, defaults to "train".
+      task: Task to add slices.
+      dataloaders: List of dataloaders to train on the task.
+      slice_func_dict: Slicing functions.
+      split: Split to use, defaults to "train".
 
     Returns:
-      dict: slice data class distribution.
+      Slice data class distribution.
     """
     # Calculate class balance
     slice_distribution = {}
@@ -99,9 +99,9 @@ def base_slice(example: Any) -> bool:
     """Slicing function which always to return True.
 
     Args:
-      example(Any): Sample to check if it's in the slice or not.
+      example: Sample to check if it's in the slice or not.
 
     Returns:
-      bool: True.
+      True.
     """
     return True

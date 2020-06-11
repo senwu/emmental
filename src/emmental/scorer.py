@@ -15,9 +15,9 @@ class Scorer(object):
     """A class to score tasks.
 
     Args:
-      metrics(list): a list of metric names which provides
+      metrics: A list of metric names which provides
         in emmental (e.g., accuracy), defaults to [].
-      customize_metric_funcs(dict): a dict of customize metric where key is the metric
+      customize_metric_funcs: a dict of customize metric where key is the metric
         name and value is the metric function which takes gold, preds, probs, uids as
         input, defaults to {}.
     """
@@ -45,13 +45,13 @@ class Scorer(object):
         """Calculate the score.
 
         Args:
-          golds(ndarray): Ground truth values.
-          probs(ndarray): Predicted probabilities.
-          preds(ndarray): Predicted values.
-          uids(list, optional): Unique ids, defaults to None.
+          golds: Ground truth values.
+          probs: Predicted probabilities.
+          preds: Predicted values.
+          uids: Unique ids, defaults to None.
 
         Returns:
-          dict: score dict.
+          Score dict.
         """
         metric_dict = dict()
 

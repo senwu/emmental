@@ -10,10 +10,10 @@ class SparseLinear(nn.Module):
     """A sparse linear module.
 
     Args:
-      num_features(int): Size of features.
-      num_classes(int): Number of classes.
-      bias(bool): Use bias term or not, defaults to False.
-      padding_idx(int): padding index, defaults to 0.
+      num_features: Size of features.
+      num_classes: Number of classes.
+      bias: Use bias term or not, defaults to False.
+      padding_idx: padding index, defaults to 0.
     """
 
     def __init__(
@@ -53,11 +53,11 @@ class SparseLinear(nn.Module):
         """Forward function.
 
         Args:
-          x(Tensor): Feature indices.
-          w(Tensor): Feature weights.
+          x: Feature indices.
+          w: Feature weights.
 
         Returns:
-          Tensor: Output of linear layer.
+          Output of linear layer.
         """
         if self.bias is None:
             return (w.unsqueeze(2) * self.weight(x)).sum(dim=1)

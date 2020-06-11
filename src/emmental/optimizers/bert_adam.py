@@ -27,14 +27,13 @@ class BertAdam(Optimizer):
     """Implements BERT version of Adam algorithm with weight decay fix.
 
     Args:
-      params(iterable): Iterable of parameters to optimize or dicts defining
-        parameter groups.
-      lr(float, optional): Learning rate, defaults to 1e-3.
-      betas(Tuple[float, float], optional): Coefficients used for computing running
+      params: Iterable of parameters to optimize or dicts defining parameter groups.
+      lr: Learning rate, defaults to 1e-3.
+      betas: Coefficients used for computing running
         averages of gradient and its square, defaults to (0.9, 0.999).
-      eps(float, optional): Term added to the denominator to improve numerical
+      eps: Term added to the denominator to improve numerical
         stability, defaults to 1e-6.
-      weight_decay(float, optional): Weight decay (L2 penalty), defaults to 0.01.
+      weight_decay: Weight decay (L2 penalty), defaults to 0.01.
     """
 
     def __init__(
@@ -62,7 +61,7 @@ class BertAdam(Optimizer):
         """Perform a single optimization step.
 
         Args:
-          closure(callable, optional): A closure that reevaluates the model and returns
+          closure: A closure that reevaluates the model and returns
             the loss, defaults to None.
         """
         loss = None

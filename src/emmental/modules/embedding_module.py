@@ -12,16 +12,16 @@ class EmbeddingModule(nn.Module):
     """Embedding module.
 
     Args:
-      word_counter(dict): Word count dictionary that contians the frequencies of
+      word_counter: Word count dictionary that contians the frequencies of
         each word, defaults to None.
-      max_size(int): Max size of word dictionary, defaults to None.
-      word_dim(int): Dimension of embeddings, defaults to 300.
-      specials(list): The list of special tokens (e.g., padding or eos) that will
+      max_size: Max size of word dictionary, defaults to None.
+      word_dim: Dimension of embeddings, defaults to 300.
+      specials: The list of special tokens (e.g., padding or eos) that will
         be prepended to the vocabulary, defaults to [].
-      threshold(int): The minimum frequency needed to include a token in the
+      threshold: The minimum frequency needed to include a token in the
         vocabulary, defaults to None.
-      embedding_file(str): The pretrained embedding file path, defaults to None.
-      fix_emb(bool): Whether fix word embeddings or not, defaults to False.
+      embedding_file: The pretrained embedding file path, defaults to None.
+      fix_emb: Whether fix word embeddings or not, defaults to False.
     """
 
     UNK = "<unk>"
@@ -109,7 +109,7 @@ class EmbeddingModule(nn.Module):
           embedding_file: The pretrained embedding file path.
 
         Returns:
-          tuple: word embedding dimension, word to index dict, and embedding vectors.
+          Word embedding dimension, word to index dict, and embedding vectors.
         """
         emb_dim = 0
         emb_w2i: Dict[str, int] = {}
@@ -137,9 +137,9 @@ class EmbeddingModule(nn.Module):
         """Forward function.
 
         Args:
-          input(Tensor): Input tensor.
+          input: Input tensor.
 
         Returns:
-          Tensor: Output tensor.
+          Output tensor.
         """
         return self.embeddings(input)

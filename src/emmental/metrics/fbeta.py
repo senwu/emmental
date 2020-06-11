@@ -19,15 +19,15 @@ def fbeta_scorer(
     """F-beta score is the weighted harmonic mean of precision and recall.
 
     Args:
-      golds(ndarray): Ground truth values.
-      probs(ndarray or None): Predicted probabilities.
-      preds(ndarray): Predicted values.
-      uids(list, optional): Unique ids, defaults to None.
-      pos_label(int, optional): The positive class label, defaults to 1.
-      beta(float, optional): Weight of precision in harmonic mean, defaults to 1.
+      golds: Ground truth values.
+      probs: Predicted probabilities.
+      preds: Predicted values.
+      uids: Unique ids, defaults to None.
+      pos_label: The positive class label, defaults to 1.
+      beta: Weight of precision in harmonic mean, defaults to 1.
 
     Returns:
-      dict: F-beta score.
+      F-beta score.
     """
     # Convert probabilistic label to hard label
     if len(golds.shape) == 2:
@@ -55,13 +55,13 @@ def f1_scorer(
     """F-1 score.
 
     Args:
-      golds(ndarray): Ground truth values.
-      probs(ndarray or None): Predicted probabilities.
-      preds(ndarray): Predicted values.
-      uids(list, optional): Unique ids.
-      pos_label(int, optional): The positive class label, defaults to 1.
+      golds: Ground truth values.
+      probs: Predicted probabilities.
+      preds: Predicted values.
+      uids: Unique ids.
+      pos_label: The positive class label, defaults to 1.
 
     Returns:
-      dict: F-1 score.
+      F-1 score.
     """
     return {"f1": fbeta_scorer(golds, probs, preds, uids, pos_label, beta=1)["f1"]}

@@ -8,3 +8,4 @@ pytest
 sphinx
 sphinx_rtd_theme
 sphinxcontrib-napoleon
+sphinx_autodoc_typehints

@@ -15,13 +15,13 @@ class EmmentalTask(object):
     """Task class to define task in Emmental model.
 
     Args:
-      name(str): The name of the task (Primary key).
-      module_pool(ModuleDict): A dict of modules that uses in the task.
-      task_flow(list): The task flow among modules to define how the data flows.
-      loss_func(callable): The function to calculate the loss.
-      output_func(callable): The function to generate the output.
-      scorer(Scorer): The class of metrics to evaluate the task.
-      weight(float or int): The weight of the task.
+      name: The name of the task (Primary key).
+      module_pool: A dict of modules that uses in the task.
+      task_flow: The task flow among modules to define how the data flows.
+      loss_func: The function to calculate the loss.
+      output_func: The function to generate the output.
+      scorer: The class of metrics to evaluate the task.
+      weight: The weight of the task.
     """
 
     def __init__(

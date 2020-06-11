@@ -18,17 +18,16 @@ def accuracy_scorer(
     """Accuracy classification score.
 
     Args:
-      golds(ndarray): Ground truth values.
-      probs(ndarray or None): Predicted probabilities.
-      preds(ndarray or None): Predicted values.
-      uids(list, optional): Unique ids, defaults to None.
-      normalize(bool, optional): Normalize the results or not, defaults to True.
-      topk(int, optional): Top K accuracy, defaults to 1.
+      golds: Ground truth values.
+      probs: Predicted probabilities.
+      preds: Predicted values.
+      uids: Unique ids, defaults to None.
+      normalize: Normalize the results or not, defaults to True.
+      topk: Top K accuracy, defaults to 1.
 
     Returns:
-      dict: Accuracy, if normalize is True, return the fraction of correctly
-      predicted samples (float), else returns the number of correctly predicted
-      samples (int).
+      Accuracy, if normalize is True, return the fraction of correctly predicted
+      samples (float), else returns the number of correctly predicted samples (int).
     """
     # Convert probabilistic label to hard label
     if len(golds.shape) == 2:

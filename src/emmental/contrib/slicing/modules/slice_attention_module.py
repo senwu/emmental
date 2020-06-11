@@ -11,9 +11,9 @@ class SliceAttentionModule(nn.Module):
     """An attention module to leverage all slice representations.
 
     Args:
-      slice_ind_key(str): Slice indicator head key, defaults to "_slice_ind_".
-      slice_pred_key(str): Slice prediction head key, defaults to "_slice_pred_",
-      slice_pred_feat_key(str): Slice prediction feature key,
+      slice_ind_key: Slice indicator head key, defaults to "_slice_ind_".
+      slice_pred_key: Slice prediction head key, defaults to "_slice_pred_",
+      slice_pred_feat_key: Slice prediction feature key,
         defaults to "_slice_feat_".
     """
 
@@ -36,10 +36,10 @@ class SliceAttentionModule(nn.Module):
         """Forward function.
 
         Args:
-          intermediate_output_dict(dict): output dict.
+          intermediate_output_dict: output dict.
 
         Returns:
-          Tensor: output of attention.
+          Output of attention.
         """
         # Collect ordered slice indicator head names
         slice_indicator_names = sorted(

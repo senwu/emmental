@@ -17,10 +17,10 @@ class Scheduler(ABC):
         """Get total number of batches per epoch.
 
         Args:
-          dataloaders(list): List of dataloaders.
+          dataloaders: List of dataloaders.
 
         Returns:
-          int: Total number of batches per epoch.
+          Total number of batches per epoch.
         """
         raise NotImplementedError()
 
@@ -31,10 +31,10 @@ class Scheduler(ABC):
         """Generate batch generator from all dataloaders for one epoch.
 
         Args:
-          dataloaders(list): List of dataloaders.
-          model(EmmentalModel): The training model, defaults to None.
+          dataloaders: List of dataloaders.
+          model: The training model, defaults to None.
 
         Returns:
-          genertor: A generator of all batches.
+          A generator of all batches.
         """
         raise NotImplementedError()

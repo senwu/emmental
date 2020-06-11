@@ -24,9 +24,9 @@ class TensorBoardWriter(LogWriter):
         """Log a scalar variable.
 
         Args:
-          name(str): The name of the scalar.
-          value(float or int): The value of the scalar.
-          step(float or int): The current step.
+          name: The name of the scalar.
+          value: The value of the scalar.
+          step: The current step.
         """
         self.writer.add_scalar(name, value, step)
 
@@ -34,8 +34,7 @@ class TensorBoardWriter(LogWriter):
         """Write the config to tensorboard and dump it to file.
 
         Args:
-          config_filename(str, optional): The config filename,
-            defaults to "config.yaml".
+          config_filename: The config filename, defaults to "config.yaml".
         """
         config = json.dumps(Meta.config)
         self.writer.add_text(tag="config", text_string=config)
@@ -46,7 +45,7 @@ class TensorBoardWriter(LogWriter):
         """Dump the log to file.
 
         Args:
-          log_filename(str, optional): The log filename, defaults to "log.json".
+          log_filename: The log filename, defaults to "log.json".
         """
         pass
 

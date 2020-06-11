@@ -18,14 +18,14 @@ def accuracy_f1_scorer(
     """Average of accuracy and f1 score.
 
     Args:
-      golds(ndarray): Ground truth values.
-      probs(ndarray or None): Predicted probabilities.
-      preds(ndarray): Predicted values.
-      uids(list, optional): Unique ids, defaults to None.
-      pos_label(int, optional): The positive class label, defaults to 1.
+      golds: Ground truth values.
+      probs: Predicted probabilities.
+      preds: Predicted values.
+      uids: Unique ids, defaults to None.
+      pos_label: The positive class label, defaults to 1.
 
     Returns:
-      dict: Average of accuracy and f1.
+      Average of accuracy and f1.
     """
     metrics = dict()
     accuracy = accuracy_scorer(golds, probs, preds, uids)

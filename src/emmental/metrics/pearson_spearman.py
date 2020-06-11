@@ -17,13 +17,13 @@ def pearson_spearman_scorer(
     """Average of Pearson and Spearman rank-order correlation coefficients.
 
     Args:
-      golds(ndarray): Ground truth values.
-      probs(ndarray): Predicted probabilities.
-      preds(ndarray or None): Predicted values.
-      uids(list, optional): Unique ids, defaults to None.
+      golds: Ground truth values.
+      probs: Predicted probabilities.
+      preds: Predicted values.
+      uids: Unique ids, defaults to None.
 
     Returns:
-      dict: The average of Pearson correlation coefficient and Spearman rank-order
+      The average of Pearson correlation coefficient and Spearman rank-order
       correlation coefficient.
     """
     metrics = dict()

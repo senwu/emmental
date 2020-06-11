@@ -13,6 +13,16 @@ These are Emmental_'s core objects used for learning.
     :inherited-members:
     :show-inheritance:
 
+Schedulers
+-------------------
+
+These are several schedulers supported in Emmental_ learner.
+
+.. automodule:: emmental.schedulers
+    :members:
+    :inherited-members:
+    :show-inheritance:
+
 Configuration Settings
 ----------------------
 

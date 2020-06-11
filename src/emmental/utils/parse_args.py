@@ -16,10 +16,10 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     """Parse the configuration from command line.
 
     Args:
-      parser(ArgumentParser): The exterenl argument parser object, defaults to None.
+      parser: The exterenl argument parser object, defaults to None.
 
     Returns:
-      ArgumentParser: The updated argument parser object.
+      The updated argument parser object.
     """
     if parser is None:
         parser = argparse.ArgumentParser(
@@ -813,10 +813,10 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
     """Parse the arguments to config dict.
 
     Args:
-      args(Namespace): The parsed namespace from argument parser.
+      args: The parsed namespace from argument parser.
 
     Returns:
-      dict: The config dict.
+      The config dict.
     """
     config = {
         "meta_config": {

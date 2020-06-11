@@ -18,7 +18,7 @@ class LoggingManager(object):
     """A class to manage logging during training progress.
 
     Args:
-      n_batches_per_epoch(int): Total number batches per epoch.
+      n_batches_per_epoch: Total number batches per epoch.
     """
 
     def __init__(self, n_batches_per_epoch: int) -> None:
@@ -98,7 +98,7 @@ class LoggingManager(object):
         """Update the counter.
 
         Args:
-          batch_size(int): The number of the samples in the batch.
+          batch_size: The number of the samples in the batch.
         """
         # Update number of samples
         self.sample_count += batch_size
@@ -151,7 +151,7 @@ class LoggingManager(object):
         """Write the metrics to the log.
 
         Args:
-          metric_dict(dict): The metric dict.
+          metric_dict: The metric dict.
         """
         for metric_name, metric_value in metric_dict.items():
             self.writer.add_scalar(metric_name, metric_value, self.unit_total)
@@ -166,10 +166,10 @@ class LoggingManager(object):
         """Checkpoint the model.
 
         Args:
-          model(EmmentalModel): The model to checkpoint.
-          optimizer(Optimizer): The optimizer used during training process.
-          lr_scheduler(_LRScheduler): Learning rate scheduler.
-          metric_dict(dict): the metric dict.
+          model: The model to checkpoint.
+          optimizer: The optimizer used during training process.
+          lr_scheduler: Learning rate scheduler.
+          metric_dict: the metric dict.
         """
         self.checkpointer.checkpoint(
             self.unit_total, model, optimizer, lr_scheduler, metric_dict
@@ -179,10 +179,10 @@ class LoggingManager(object):
         """Close the checkpointer and reload the model if necessary.
 
         Args:
-          model(EmmentalModel): The trained model.
+          model: The trained model.
 
         Returns:
-          EmmentalModel: The reloaded model if necessary
+          The reloaded model if necessary
         """
         self.writer.close()
         if self.checkpointing:

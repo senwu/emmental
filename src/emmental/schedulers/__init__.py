@@ -9,4 +9,4 @@ SCHEDULERS = {
     "sequential": SequentialScheduler,
 }
 
-__all__ = ["mixed", "round_robin", "sequential"]
+__all__ = ["MixedScheduler", "RoundRobinScheduler", "SequentialScheduler"]

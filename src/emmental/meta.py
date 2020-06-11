@@ -29,18 +29,15 @@ def init(
     """Initialize the logging and configuration.
 
     Args:
-      log_dir(str, optional): The directory to store logs in,
-        defaults to tempfile.gettempdir().
-      log_name(str, optional): The log file name, defaults to "emmental.log".
-      use_exact_log_path(bool, optional): Whether to use the exact log directory,
-        defaults to False.
-      format(str, optional): The logging format string to use,
+      log_dir: The directory to store logs in, defaults to tempfile.gettempdir().
+      log_name: The log file name, defaults to "emmental.log".
+      use_exact_log_path: Whether to use the exact log directory, defaults to False.
+      format: The logging format string to use,
         defaults to "[%(asctime)s][%(levelname)s] %(name)s:%(lineno)s - %(message)s".
-      level(int, optional): The logging level to use, defaults to logging.INFO.
-      config(dict, optional): The new configuration, defaults to {}.
-      config_dir(str, optional): The path to the config file, defaults to None.
-      config_name(str, optional): The config file name,
-        defaults to "emmental-config.yaml".
+      level: The logging level to use, defaults to logging.INFO.
+      config: The new configuration, defaults to {}.
+      config_dir: The path to the config file, defaults to None.
+      config_name: The config file name, defaults to "emmental-config.yaml".
     """
     init_logging(log_dir, log_name, use_exact_log_path, format, level)
     init_config()
@@ -75,14 +72,12 @@ def init_logging(
     Will use a nested directory whose name is the current timestamp.
 
     Args:
-      log_dir(str, optional): The directory to store logs in,
-        defaults to tempfile.gettempdir().
-      log_name(str, optional): The log file name, defaults to "emmental.log".
-      use_exact_log_path(bool, optional): Whether to use the exact log directory,
-        defaults to False.
-      format(str, optional): The logging format string to use,
+      log_dir: The directory to store logs in, defaults to tempfile.gettempdir().
+      log_name: The log file name, defaults to "emmental.log".
+      use_exact_log_path: Whether to use the exact log directory, defaults to False.
+      format: The logging format string to use,
         defaults to "[%(asctime)s][%(levelname)s] %(name)s:%(lineno)s - %(message)s".
-      level(int, optional): The logging level to use, defaults to logging.INFO.
+      level: The logging level to use, defaults to logging.INFO.
     """
     if not Meta.log_path:
         if not use_exact_log_path:
@@ -153,10 +148,9 @@ class Meta(object):
             (2) uses path and filename to load yaml file to update config
 
         Args:
-          config(dict, optional): The new configuration, defaults to {}.
-          path(str, optional): The path to the config file, defaults to os.getcwd().
-          filename(str, optional): The config file name,
-            defaults to "emmental-config.yaml".
+          config: The new configuration, defaults to {}.
+          path: The path to the config file, defaults to os.getcwd().
+          filename: The config file name, defaults to "emmental-config.yaml".
         """
         if config != {}:
             Meta.config = merge(Meta.config, config, specical_keys="checkpoint_metric")

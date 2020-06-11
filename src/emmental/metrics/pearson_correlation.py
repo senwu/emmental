@@ -16,14 +16,14 @@ def pearson_correlation_scorer(
     """Pearson correlation coefficient and the p-value.
 
     Args:
-      golds(ndarray): Ground truth values.
-      probs(ndarray): Predicted probabilities.
-      preds(ndarray or None): Predicted values.
-      uids(list, optional): Unique ids, defaults to None.
-      return_pvalue(bool, optional): Whether return pvalue or not, defaults to False.
+      golds: Ground truth values.
+      probs: Predicted probabilities.
+      preds: Predicted values.
+      uids: Unique ids, defaults to None.
+      return_pvalue: Whether return pvalue or not, defaults to False.
 
     Returns:
-      dict: Pearson correlation coefficient (with pvalue if return_pvalue is True).
+      Pearson correlation coefficient with pvalue if return_pvalue is True.
     """
     probs = np.vstack(probs).squeeze()
     correlation, pvalue = pearsonr(golds, probs)

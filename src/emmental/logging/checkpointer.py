@@ -114,11 +114,11 @@ class Checkpointer(object):
         """Checkpointing the checkpoint.
 
         Args:
-          iteration(float or int): The current iteration.
-          model(EmmentalModel): The model to checkpoint.
-          optimizer(Optimizer): The optimizer used during training process.
-          lr_scheduler(_LRScheduler): Learning rate scheduler.
-          metric_dict(dict): The metric dict.
+          iteration: The current iteration.
+          model: The model to checkpoint.
+          optimizer: The optimizer used during training process.
+          lr_scheduler: Learning rate scheduler.
+          metric_dict: The metric dict.
         """
         # Check the checkpoint_runway condition is met
         if iteration < self.checkpoint_runway:
@@ -164,10 +164,10 @@ class Checkpointer(object):
         """Update the best score.
 
         Args:
-          metric_dict(dict): The current metric dict.
+          metric_dict: The current metric dict.
 
         Returns:
-          set: The updated best metric set.
+          The updated best metric set.
         """
         best_metric = set()
 
@@ -216,14 +216,14 @@ class Checkpointer(object):
         """Collect the state dict of the model.
 
         Args:
-          iteration(float or int): The current iteration.
-          model(EmmentalModel): The model to checkpoint.
-          optimizer(Optimizer): The optimizer used during training process.
-          lr_scheduler(_LRScheduler): Learning rate scheduler.
-          metric_dict(dict): the metric dict.
+          iteration: The current iteration.
+          model: The model to checkpoint.
+          optimizer: The optimizer used during training process.
+          lr_scheduler: Learning rate scheduler.
+          metric_dict: the metric dict.
 
         Returns:
-          dict: The state dict.
+          The state dict.
         """
         model_params = {
             "name": model.name,
@@ -249,10 +249,10 @@ class Checkpointer(object):
         """Load the best model from the checkpoint.
 
         Args:
-          model(EmmentalModel.): The current model.
+          model: The current model.
 
         Returns:
-          EmmentalModel: The best model load from the checkpoint.
+          The best model load from the checkpoint.
         """
         if list(self.checkpoint_metric.keys())[0] not in self.best_metric_dict:
             logger.info("No best model found, use the original model.")

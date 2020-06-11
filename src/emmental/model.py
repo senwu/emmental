@@ -26,8 +26,8 @@ class EmmentalModel(nn.Module):
     """A class to build multi-task model.
 
     Args:
-      name(str, optional): Name of the model, defaults to None.
-      tasks(EmmentalTask or List[EmmentalTask]): A task or a list of tasks.
+      name: Name of the model, defaults to None.
+      tasks: A task or a list of tasks.
     """
 
     def __init__(
@@ -79,7 +79,7 @@ class EmmentalModel(nn.Module):
         """Build the MTL network using all tasks.
 
         Args:
-          tasks(EmmentalTask or List[EmmentalTask]): A task or a list of tasks.
+          tasks: A task or a list of tasks.
         """
         if not isinstance(tasks, Iterable):
             tasks = [tasks]
@@ -90,7 +90,7 @@ class EmmentalModel(nn.Module):
         """Add a single task into MTL network.
 
         Args:
-          task(EmmentalTask): A task to add.
+          task: A task to add.
         """
         if not isinstance(task, EmmentalTask):
             raise ValueError(f"Unrecognized task type {task}.")
@@ -133,7 +133,7 @@ class EmmentalModel(nn.Module):
         """Update a existing task in MTL network.
 
         Args:
-          task(EmmentalTask): A task to update.
+          task: A task to update.
         """
         # Update module_pool with task
         for key in task.module_pool.keys():
@@ -160,7 +160,7 @@ class EmmentalModel(nn.Module):
         """Remove a existing task from MTL network.
 
         Args:
-          task_name(str): The task name to remove.
+          task_name: The task name to remove.
         """
         if task_name not in self.task_flows:
             if Meta.config["meta_config"]["verbose"]:
@@ -192,11 +192,11 @@ class EmmentalModel(nn.Module):
           same input.
 
         Args:
-          X_dict(dict): The input data
-          task_names(list): The task names that needs to forward.
+          X_dict: The input data
+          task_names: The task names that needs to forward.
 
         Returns:
-          dict: The output of all forwarded modules
+          The output of all forwarded modules
         """
         X_dict = move_to_device(X_dict, Meta.config["model_config"]["device"])
 
@@ -237,13 +237,13 @@ class EmmentalModel(nn.Module):
         """Forward function.
 
         Args:
-          uids(list): The uids of input data.
-          X_dict(dict): The input data.
-          Y_dict(dict): The output data.
-          task_to_label_dict(dict): The task to label mapping.
+          uids: The uids of input data.
+          X_dict: The input data.
+          Y_dict: The output data.
+          task_to_label_dict: The task to label mapping.
 
         Returns:
-          tuple: The (active) uids, loss and prob in the batch of all tasks.
+          The (active) uids, loss and prob in the batch of all tasks.
         """
         uid_dict: Dict[str, List[str]] = defaultdict(list)
         loss_dict: Dict[str, ndarray] = defaultdict(float)
@@ -300,11 +300,11 @@ class EmmentalModel(nn.Module):
         """Predict from dataloader.
 
         Args:
-          dataloader(EmmentalDataLoader): The dataloader to predict.
-          return_preds(bool): Whether return predictions or not, defaults to False.
+          dataloader: The dataloader to predict.
+          return_preds: Whether return predictions or not, defaults to False.
 
         Returns:
-          dict: The result dict.
+          The result dict.
         """
         self.eval()
 
@@ -366,12 +366,11 @@ class EmmentalModel(nn.Module):
         """Score the data from dataloader.
 
         Args:
-          dataloaders(EmmentalDataLoader or List[EmmentalDataLoader]): The dataloaders
-            to score.
-          return_average(bool): Whether to return average score.
+          dataloaders: The dataloaders to score.
+          return_average: Whether to return average score.
 
         Returns:
-          dict: Score dict.
+          Score dict.
         """
         self.eval()
 
@@ -472,7 +471,7 @@ class EmmentalModel(nn.Module):
         """Save the current model.
 
         Args:
-          model_path(str): Saved model path.
+          model_path: Saved model path.
         """
         # Check existence of model saving directory and create if does not exist.
         if not os.path.exists(os.path.dirname(model_path)):
@@ -502,7 +501,7 @@ class EmmentalModel(nn.Module):
         """Load model state_dict from file and reinitialize the model weights.
 
         Args:
-          model_path(str): Saved model path.
+          model_path: Saved model path.
         """
         if not os.path.exists(model_path):
             logger.error("Loading failed... Model does not exist.")
@@ -537,7 +536,7 @@ class EmmentalModel(nn.Module):
         """Load the state dict.
 
         Args:
-          state_dict(dict): The state dict to load.
+          state_dict: The state dict to load.
         """
         for module_name, module_state_dict in state_dict.items():
             if module_name in self.module_pool:

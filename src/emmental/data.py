@@ -20,12 +20,12 @@ class EmmentalDataset(Dataset):
     and the output data contains multiple label sets.
 
     Args:
-      name(str): The name of the dataset.
-      X_dict(dict): The feature dict where key is the feature name and value is the
+      name: The name of the dataset.
+      X_dict: The feature dict where key is the feature name and value is the
         feature.
-      Y_dict(dict): The label dict where key is the label name and value is
+      Y_dict: The label dict where key is the label name and value is
         the label.
-      uid(str, optional): The unique id key in the X_dict, defaults to None.
+      uid: The unique id key in the X_dict, defaults to None.
     """
 
     def __init__(
@@ -67,10 +67,10 @@ class EmmentalDataset(Dataset):
         """Get item by index.
 
         Args:
-          index(index): The index of the item.
+          index: The index of the item.
 
         Returns:
-          Tuple[Dict[str, Any], Dict[str, Tensor]]: Tuple of x_dict and y_dict
+          Tuple of x_dict and y_dict
         """
         x_dict = {name: feature[index] for name, feature in self.X_dict.items()}
         y_dict = {name: label[index] for name, label in self.Y_dict.items()}
@@ -87,8 +87,8 @@ class EmmentalDataset(Dataset):
         """Update original dict with new dict.
 
         Args:
-          ori_dict(dict): The original dict.
-          new_dict(dict): The new dict.
+          ori_dict: The original dict.
+          new_dict: The new dict.
         """
         for key, value in new_dict.items():
             ori_dict[key] = value
@@ -97,8 +97,8 @@ class EmmentalDataset(Dataset):
         """Remove key from dataset dict.
 
         Args:
-          ori_dict(dict): The original dict.
-          key(str): The key to remove from the original dict.
+          ori_dict: The original dict.
+          key: The key to remove from the original dict.
         """
         if key in ori_dict:
             del ori_dict[key]
@@ -107,7 +107,7 @@ class EmmentalDataset(Dataset):
         """Add new features into X_dict.
 
         Args:
-          X_dict(dict): The new feature dict to add into the existing feature dict.
+          X_dict: The new feature dict to add into the existing feature dict.
         """
         self._update_dict(self.X_dict, X_dict)
 
@@ -115,7 +115,7 @@ class EmmentalDataset(Dataset):
         """Add new labels into Y_dict.
 
         Args:
-          Y_dict(dict): the new label dict to add into the existing label dict
+          Y_dict: the new label dict to add into the existing label dict
         """
         for name, label in Y_dict.items():
             if not isinstance(label, Tensor):
@@ -127,7 +127,7 @@ class EmmentalDataset(Dataset):
         """Remove one feature from feature dict.
 
         Args:
-          feature_name(str): The feature that removes from feature dict.
+          feature_name: The feature that removes from feature dict.
         """
         self._remove_key(self.X_dict, feature_name)
 
@@ -135,7 +135,7 @@ class EmmentalDataset(Dataset):
         """Remove one label from label dict.
 
         Args:
-          label_name(str): The label that removes from label dict.
+          label_name: The label that removes from label dict.
         """
         self._remove_key(self.Y_dict, label_name)
 
@@ -146,10 +146,10 @@ def emmental_collate_fn(
     """Collate function.
 
     Args:
-      batch(Tuple[Dict[str, Any], Dict[str, Tensor]]): The batch to collate.
+      batch: The batch to collate.
 
     Returns:
-      Tuple[Dict[str, Any], Dict[str, Tensor]]: The collated batch.
+      The collated batch.
     """
     X_batch: defaultdict = defaultdict(list)
     Y_batch: defaultdict = defaultdict(list)
@@ -199,13 +199,13 @@ class EmmentalDataLoader(DataLoader):
     dataset belongs to) information.
 
     Args:
-      task_to_label_dict(dict): The task to label mapping where key is the task name
+      task_to_label_dict: The task to label mapping where key is the task name
         and value is the label(s) for that task and should be the key in Y_dict.
-      dataset(EmmentalDataset): The dataset to construct the dataloader
-      split(str, optional): The split information, defaults to "train".
-      collate_fn(callable, optional): The function that merges a list of samples to
+      dataset: The dataset to construct the dataloader
+      split: The split information, defaults to "train".
+      collate_fn: The function that merges a list of samples to
         form a mini-batch, defaults to emmental_collate_fn.
-      n_batches(int, optional): Total number of batches.
+      n_batches: Total number of batches.
       **Kwargs: Other arguments of dataloader.
     """
 

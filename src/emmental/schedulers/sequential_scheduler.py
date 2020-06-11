@@ -12,7 +12,7 @@ class SequentialScheduler(Scheduler):
     """Generate batch generator from all dataloaders in sequential order.
 
     Args:
-      fillup(bool): Whether fillup to make all dataloader the same size.
+      fillup: Whether fillup to make all dataloader the same size.
     """
 
     def __init__(self, fillup: bool = False) -> None:
@@ -25,10 +25,10 @@ class SequentialScheduler(Scheduler):
         """Get total number of batches per epoch.
 
         Args:
-          dataloaders(list): List of dataloaders.
+          dataloaders: List of dataloaders.
 
         Returns:
-          int: Total number of batches per epoch.
+          Total number of batches per epoch.
         """
         batch_counts = [len(dataloader) for dataloader in dataloaders]
         if self.fillup:
@@ -55,11 +55,11 @@ class SequentialScheduler(Scheduler):
         """Generate batch generator from all dataloaders for one epoch.
 
         Args:
-          dataloaders(list): List of dataloaders.
-          model(EmmentalModel): The training model, defaults to None.
+          dataloaders: List of dataloaders.
+          model: The training model, defaults to None.
 
         Returns:
-          genertor: A generator of all batches.
+          A generator of all batches.
         """
         task_to_label_dicts = [
             dataloader.task_to_label_dict for dataloader in dataloaders

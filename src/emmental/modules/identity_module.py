@@ -14,9 +14,9 @@ class IdentityModule(nn.Module):
         """Forward function.
 
         Args:
-          x(Tensor): Input tensor.
+          x: Input tensor.
 
         Returns:
-          Tensor: Output of identity module which is the same with input.
+          Output of identity module which is the same with input.
         """
         return input

@@ -22,7 +22,7 @@ class slicing_function:
     masking), etc. are all handled automatically.
 
     Args:
-      fields(list): Data attributes to use, defaults to [].
+      fields: Data attributes to use, defaults to [].
     """
 
     def __init__(self, fields: List[str] = []) -> None:
@@ -37,11 +37,10 @@ class slicing_function:
             """Wrap function.
 
             Args:
-              dataset(EmmentalDataset): Dataset to apply slicing function.
+              dataset: Dataset to apply slicing function.
 
             Returns:
-              ndarray: Indicators.
-
+              Indicators.
             """
             inds = []
             for idx in range(len(dataset)):
