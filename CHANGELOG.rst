@@ -1,6 +1,13 @@
 Unreleased_
 -----------
 
+Changed
+^^^^^^^
+* `@senwu`_: Enabled "Type hints (PEP 484) support for the Sphinx autodoc extension."
+  (`#69 <https://github.com/SenWu/emmental/pull/69>`_)
+* `@senwu`_: Refactor docstrings and enforce using flake8-docstrings.
+  (`#69 <https://github.com/SenWu/emmental/pull/69>`_)
+
 0.0.6_ - 2020-04-07
 -------------------
 
