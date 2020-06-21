@@ -598,11 +598,11 @@ class EmmentalLearner(object):
                     # Update the parameters
                     self.optimizer.step()
 
-                    # Update lr using lr scheduler
-                    self._update_lr_scheduler(model, total_batch_num, self.metrics)
-
                     # Set gradients of all model parameters to zero
                     self.optimizer.zero_grad()
+
+                # Update lr using lr scheduler
+                self._update_lr_scheduler(model, total_batch_num, self.metrics)
 
                 self.metrics.update(self._logging(model, dataloaders, batch_size))
 
