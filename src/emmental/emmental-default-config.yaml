@@ -32,6 +32,7 @@ learner_config:
         lr: 0.001 # Learing rate
         l2: 0.0 # l2 regularization
         grad_clip: # gradient clipping
+        gradient_accumulation_steps: 1 # gradient accumulation steps
         asgd_config:
             lambd: 0.0001
             alpha: 0.75
