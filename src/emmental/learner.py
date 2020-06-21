@@ -586,7 +586,6 @@ class EmmentalLearner(object):
                     batch_num + 1 == self.n_batches_per_epoch
                     and epoch_num + 1 == Meta.config["learner_config"]["n_epochs"]
                 ):
-                    logger.info(total_batch_num)
                     # Clip gradient norm
                     if Meta.config["learner_config"]["optimizer_config"]["grad_clip"]:
                         torch.nn.utils.clip_grad_norm_(
