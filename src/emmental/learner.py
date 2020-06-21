@@ -524,6 +524,9 @@ class EmmentalLearner(object):
         self.metrics: Dict[str, float] = dict()
         self._reset_losses()
 
+        # Set gradients of all model parameters to zero
+        self.optimizer.zero_grad()
+
         for epoch_num in range(Meta.config["learner_config"]["n_epochs"]):
             batches = tqdm(
                 enumerate(self.task_scheduler.get_batches(train_dataloaders, model)),
@@ -539,9 +542,6 @@ class EmmentalLearner(object):
 
                 total_batch_num = epoch_num * self.n_batches_per_epoch + batch_num
                 batch_size = 0
-
-                # Set gradients of all model parameters to zero
-                self.optimizer.zero_grad()
 
                 for uids, X_dict, Y_dict, task_to_label_dict, data_name, split in batch:
                     batch_size += len(next(iter(Y_dict.values())))
@@ -580,21 +580,33 @@ class EmmentalLearner(object):
                     # Perform backward pass to calculate gradients
                     loss.backward()  # type: ignore
 
-                # Clip gradient norm
-                if Meta.config["learner_config"]["optimizer_config"]["grad_clip"]:
-                    torch.nn.utils.clip_grad_norm_(
-                        model.parameters(),
-                        Meta.config["learner_config"]["optimizer_config"]["grad_clip"],
-                    )
+                if (total_batch_num + 1) % Meta.config["learner_config"][
+                    "optimizer_config"
+                ]["gradient_accumulation_steps"] == 0 or (
+                    batch_num + 1 == self.n_batches_per_epoch
+                    and epoch_num + 1 == Meta.config["learner_config"]["n_epochs"]
+                ):
+                    logger.info(total_batch_num)
+                    # Clip gradient norm
+                    if Meta.config["learner_config"]["optimizer_config"]["grad_clip"]:
+                        torch.nn.utils.clip_grad_norm_(
+                            model.parameters(),
+                            Meta.config["learner_config"]["optimizer_config"][
+                                "grad_clip"
+                            ],
+                        )
 
-                # Update the parameters
-                self.optimizer.step()
+                    # Update the parameters
+                    self.optimizer.step()
+
+                    # Update lr using lr scheduler
+                    self._update_lr_scheduler(model, total_batch_num, self.metrics)
+
+                    # Set gradients of all model parameters to zero
+                    self.optimizer.zero_grad()
 
                 self.metrics.update(self._logging(model, dataloaders, batch_size))
 
                 batches.set_postfix(self.metrics)
-
-                # Update lr using lr scheduler
-                self._update_lr_scheduler(model, total_batch_num, self.metrics)
 
         model = self.logging_manager.close(model)
