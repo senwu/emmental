@@ -57,7 +57,13 @@ class EmmentalLearner(object):
         optimizer_config = Meta.config["learner_config"]["optimizer_config"]
         opt = optimizer_config["optimizer"]
 
-        parameters = filter(lambda p: p.requires_grad, model.parameters())
+        # If Meta.config["learner_config"]["optimizer_config"]["parameters"] is None,
+        # create a parameter group with all parameters in the model, else load user
+        # specified parameter groups.
+        if optimizer_config["parameters"] is None:
+            parameters = filter(lambda p: p.requires_grad, model.parameters())
+        else:
+            parameters = optimizer_config["parameters"](model)
 
         optim_dict = {
             # PyTorch optimizer

@@ -29,6 +29,7 @@ learner_config:
     ignore_index: # the ignore index, uses for masking samples
     optimizer_config:
         optimizer: adam # [sgd, adam, adamax, bert_adam]
+        parameters: # parameters to optimize
         lr: 0.001 # Learing rate
         l2: 0.0 # l2 regularization
         grad_clip: # gradient clipping

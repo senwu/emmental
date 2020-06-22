@@ -170,6 +170,7 @@ def test_parse_args(caplog):
     config2 = emmental.Meta.config
 
     del config2["learner_config"]["global_evaluation_metric_dict"]
+    del config2["learner_config"]["optimizer_config"]["parameters"]
     assert config1 == config2
 
     shutil.rmtree(dirpath)
@@ -212,6 +213,7 @@ def test_checkpoint_metric(caplog):
             "global_evaluation_metric_dict": None,
             "optimizer_config": {
                 "optimizer": "adam",
+                "parameters": None,
                 "lr": 0.001,
                 "l2": 0.0,
                 "grad_clip": None,
