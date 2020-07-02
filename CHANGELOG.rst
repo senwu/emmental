@@ -1,6 +1,12 @@
 Unreleased_
 -----------
 
+Added
+^^^^^
+
+* `@senwu`_: Support gradient accumulation step when machine cannot run large batch size.
+  (`#74 <https://github.com/SenWu/emmental/pull/74>`_)
+
 Changed
 ^^^^^^^
 * `@senwu`_: Enabled "Type hints (PEP 484) support for the Sphinx autodoc extension."
@@ -11,7 +17,7 @@ Changed
 0.0.6_ - 2020-04-07
 -------------------
 
-added
+Added
 ^^^^^
 * `@senwu`_: Support probabilistic gold label in scorer.
 * `@senwu`_: Add `add_tasks` to support adding one task or mulitple tasks into model.
