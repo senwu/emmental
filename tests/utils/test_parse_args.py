@@ -15,7 +15,16 @@ def test_parse_args(caplog):
 
     parser = parse_args()
     args = parser.parse_args(
-        ["--seed", "0", "--checkpoint_all", "True", "--reset_state", "True"]
+        [
+            "--seed",
+            "0",
+            "--checkpoint_all",
+            "True",
+            "--reset_state",
+            "True",
+            "--gradient_accumulation_steps",
+            "3",
+        ]
     )
     assert args.seed == 0
 
@@ -42,6 +51,7 @@ def test_parse_args(caplog):
                 "lr": 0.001,
                 "l2": 0.0,
                 "grad_clip": None,
+                "gradient_accumulation_steps": 3,
                 "asgd_config": {"lambd": 0.0001, "alpha": 0.75, "t0": 1000000.0},
                 "adadelta_config": {"rho": 0.9, "eps": 1e-06},
                 "adagrad_config": {
@@ -160,6 +170,7 @@ def test_parse_args(caplog):
     config2 = emmental.Meta.config
 
     del config2["learner_config"]["global_evaluation_metric_dict"]
+    del config2["learner_config"]["optimizer_config"]["parameters"]
     assert config1 == config2
 
     shutil.rmtree(dirpath)
@@ -202,9 +213,11 @@ def test_checkpoint_metric(caplog):
             "global_evaluation_metric_dict": None,
             "optimizer_config": {
                 "optimizer": "adam",
+                "parameters": None,
                 "lr": 0.001,
                 "l2": 0.0,
                 "grad_clip": None,
+                "gradient_accumulation_steps": 1,
                 "asgd_config": {"lambd": 0.0001, "alpha": 0.75, "t0": 1000000.0},
                 "adadelta_config": {"rho": 0.9, "eps": 1e-06},
                 "adagrad_config": {

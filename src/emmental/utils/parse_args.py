@@ -173,6 +173,13 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         "--grad_clip", type=nullable_float, default=None, help="Gradient clipping"
     )
 
+    optimizer_config.add_argument(
+        "--gradient_accumulation_steps",
+        type=int,
+        default=1,
+        help="Gradient accumulation steps",
+    )
+
     # ASGD config
     optimizer_config.add_argument(
         "--asgd_lambd", type=float, default=0.0001, help="ASGD lambd"
@@ -846,6 +853,7 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
                 "lr": args.lr,
                 "l2": args.l2,
                 "grad_clip": args.grad_clip,
+                "gradient_accumulation_steps": args.gradient_accumulation_steps,
                 "asgd_config": {
                     "lambd": args.asgd_lambd,
                     "alpha": args.asgd_alpha,

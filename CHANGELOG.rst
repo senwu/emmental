@@ -1,6 +1,51 @@
 Unreleased_
 -----------
 
+Added
+^^^^^
+
+* `@senwu`_: Support gradient accumulation step when machine cannot run large batch size.
+  (`#74 <https://github.com/SenWu/emmental/pull/74>`_)
+* `@senwu`_: Support user specified parameter groups in optimizer.
+  (`#74 <https://github.com/SenWu/emmental/pull/74>`_)
+
+.. note::
+
+    When building the emmental learner, user can specify parameter groups for optimizer
+    using `emmental.Meta.config["learner_config"]["optimizer_config"]["parameters"]`
+    which is function takes the model as input and outputs a list of parameter groups,
+    otherwise learner will create a parameter group with all parameters in the model.
+    Below is an example of optimizing Adam Bert.
+
+    .. code:: python
+
+        def grouped_parameters(model):
+            no_decay = ["bias", "LayerNorm.weight"]
+            return [
+                {
+                    "params": [
+                        p
+                        for n, p in model.named_parameters()
+                        if not any(nd in n for nd in no_decay)
+                    ],
+                    "weight_decay": emmental.Meta.config["learner_config"][
+                        "optimizer_config"
+                    ]["l2"],
+                },
+                {
+                    "params": [
+                        p
+                        for n, p in model.named_parameters()
+                        if any(nd in n for nd in no_decay)
+                    ],
+                    "weight_decay": 0.0,
+                },
+            ]
+
+        emmental.Meta.config["learner_config"]["optimizer_config"][
+            "parameters"
+        ] = grouped_parameters
+
 Changed
 ^^^^^^^
 * `@senwu`_: Enabled "Type hints (PEP 484) support for the Sphinx autodoc extension."
@@ -11,7 +56,7 @@ Changed
 0.0.6_ - 2020-04-07
 -------------------
 
-added
+Added
 ^^^^^
 * `@senwu`_: Support probabilistic gold label in scorer.
 * `@senwu`_: Add `add_tasks` to support adding one task or mulitple tasks into model.
