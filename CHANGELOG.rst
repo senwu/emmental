@@ -6,6 +6,8 @@ Added
 
 * `@senwu`_: Support gradient accumulation step when machine cannot run large batch size.
   (`#74 <https://github.com/SenWu/emmental/pull/74>`_)
+* `@senwu`_: Support user specified parameter groups in optimizer.
+  (`#74 <https://github.com/SenWu/emmental/pull/74>`_)
 
 Changed
 ^^^^^^^
