@@ -8,9 +8,8 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import torch
-import torch.nn as nn
 from numpy import ndarray
-from torch import Tensor
+from torch import Tensor, nn as nn
 from torch.nn import ModuleDict
 
 from emmental.data import EmmentalDataLoader

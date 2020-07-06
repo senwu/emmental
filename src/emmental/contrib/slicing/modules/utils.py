@@ -1,8 +1,8 @@
 """Slicing modules."""
 from typing import Any, Dict, Optional
 
-import torch.nn.functional as F
 from torch import Tensor
+from torch.nn import functional as F
 
 
 def ce_loss(

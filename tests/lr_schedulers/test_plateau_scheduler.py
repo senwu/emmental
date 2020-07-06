@@ -2,7 +2,7 @@
 import logging
 import shutil
 
-import torch.nn as nn
+from torch import nn as nn
 
 import emmental
 from emmental import Meta
