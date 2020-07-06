@@ -1,6 +1,5 @@
 """Emmental identity module."""
-import torch.nn as nn
-from torch import Tensor
+from torch import Tensor, nn as nn
 
 
 class IdentityModule(nn.Module):

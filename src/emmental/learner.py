@@ -7,8 +7,8 @@ from typing import Dict, List, Optional, Union
 
 import numpy as np
 import torch
-import torch.optim as optim
 from numpy import ndarray
+from torch import optim as optim
 from torch.optim.lr_scheduler import _LRScheduler
 
 from emmental import Meta

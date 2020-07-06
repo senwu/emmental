@@ -3,9 +3,8 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
-import torch.nn as nn
 from numpy import ndarray
-from torch import Tensor
+from torch import Tensor, nn as nn
 
 
 class EmbeddingModule(nn.Module):
