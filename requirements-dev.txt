@@ -5,7 +5,7 @@ mypy
 isort>=5.0.0
 pre-commit
 pytest
-sphinx
+sphinx>=3.0.0
 sphinx_rtd_theme
 sphinxcontrib-napoleon
 sphinx_autodoc_typehints
