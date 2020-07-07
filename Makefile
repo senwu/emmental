@@ -8,8 +8,8 @@ test: dev check docs
 	pytest tests
 
 check:
-	isort -rc -c src/
-	isort -rc -c tests/
+	isort -c src/
+	isort -c tests/
 	black src/ --check
 	black tests/ --check
 	flake8 src/
@@ -17,8 +17,8 @@ check:
 	mypy src/
 
 format:
-	isort -rc src/
-	isort -rc tests/
+	isort src/
+	isort tests/
 	black src/
 	black tests/
 

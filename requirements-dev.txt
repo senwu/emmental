@@ -2,7 +2,7 @@ black>=18.9b0
 flake8>=3.8.0
 flake8-docstrings
 mypy
-isort
+isort>=5.0.0
 pre-commit
 pytest
 sphinx
