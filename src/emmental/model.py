@@ -74,6 +74,10 @@ class EmmentalModel(nn.Module):
                 if Meta.config["meta_config"]["verbose"]:
                     logger.info("No cuda device available. Switch to cpu instead.")
 
+    def _to_dataparallel(self) -> None:
+        for key in self.module_pool.keys():
+            self.module_pool[key] = torch.nn.DataParallel(self.module_pool[key])
+
     def add_tasks(self, tasks: Union[EmmentalTask, List[EmmentalTask]]) -> None:
         """Build the MTL network using all tasks.
 
@@ -103,15 +107,9 @@ class EmmentalModel(nn.Module):
         # Combine module_pool from all tasks
         for key in task.module_pool.keys():
             if key in self.module_pool.keys():
-                if Meta.config["model_config"]["dataparallel"]:
-                    task.module_pool[key] = nn.DataParallel(self.module_pool[key])
-                else:
-                    task.module_pool[key] = self.module_pool[key]
+                task.module_pool[key] = self.module_pool[key]
             else:
-                if Meta.config["model_config"]["dataparallel"]:
-                    self.module_pool[key] = nn.DataParallel(task.module_pool[key])
-                else:
-                    self.module_pool[key] = task.module_pool[key]
+                self.module_pool[key] = task.module_pool[key]
         # Collect task name
         self.task_names.add(task.name)
         # Collect task flow
@@ -137,10 +135,7 @@ class EmmentalModel(nn.Module):
         # Update module_pool with task
         for key in task.module_pool.keys():
             # Update the model's module with the task's module
-            if Meta.config["model_config"]["dataparallel"]:
-                self.module_pool[key] = nn.DataParallel(task.module_pool[key])
-            else:
-                self.module_pool[key] = task.module_pool[key]
+            self.module_pool[key] = task.module_pool[key]
         # Update task flow
         self.task_flows[task.name] = task.task_flow
         # Update loss function

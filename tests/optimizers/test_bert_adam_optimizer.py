@@ -61,7 +61,6 @@ def test_bert_adam_optimizer(caplog):
 
     # Test BertAdam setp
     emmental_learner.optimizer.zero_grad()
-    torch.Tensor(1)
     F.mse_loss(model(torch.randn(1, 1)), torch.randn(1, 1)).backward()
     emmental_learner.optimizer.step()
 

@@ -521,6 +521,28 @@ class EmmentalLearner(object):
         # Set up lr_scheduler
         self._set_lr_scheduler(model)
 
+        if Meta.config["learner_config"]["fp16"]:
+            try:
+                from apex import amp  # type: ignore
+            except ImportError:
+                raise ImportError(
+                    "Please install apex from https://www.github.com/nvidia/apex to "
+                    "use fp16 training."
+                )
+            logger.info(
+                f"Modeling training with 16-bit (mixed) precision"
+                f"and {Meta.config['learner_config']['fp16_opt_level']} opt level."
+            )
+            model, self.optimizer = amp.initialize(
+                model,
+                self.optimizer,
+                opt_level=Meta.config["learner_config"]["fp16_opt_level"],
+            )
+
+        # Multi-gpu training (after apex fp16 initialization)
+        if Meta.config["model_config"]["dataparallel"]:
+            model._to_dataparallel()
+
         # Set to training mode
         model.train()
 
@@ -584,7 +606,11 @@ class EmmentalLearner(object):
                     )
 
                     # Perform backward pass to calculate gradients
-                    loss.backward()  # type: ignore
+                    if Meta.config["learner_config"]["fp16"]:
+                        with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                            scaled_loss.backward()
+                    else:
+                        loss.backward()  # type: ignore
 
                 if (total_batch_num + 1) % Meta.config["learner_config"][
                     "optimizer_config"
@@ -594,12 +620,20 @@ class EmmentalLearner(object):
                 ):
                     # Clip gradient norm
                     if Meta.config["learner_config"]["optimizer_config"]["grad_clip"]:
-                        torch.nn.utils.clip_grad_norm_(
-                            model.parameters(),
-                            Meta.config["learner_config"]["optimizer_config"][
-                                "grad_clip"
-                            ],
-                        )
+                        if Meta.config["learner_config"]["fp16"]:
+                            torch.nn.utils.clip_grad_norm_(
+                                amp.master_params(self.optimizer),
+                                Meta.config["learner_config"]["optimizer_config"][
+                                    "grad_clip"
+                                ],
+                            )
+                        else:
+                            torch.nn.utils.clip_grad_norm_(
+                                model.parameters(),
+                                Meta.config["learner_config"]["optimizer_config"][
+                                    "grad_clip"
+                                ],
+                            )
 
                     # Update the parameters
                     self.optimizer.step()
