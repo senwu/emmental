@@ -2,6 +2,7 @@
 import collections
 import copy
 import logging
+import time
 from collections import defaultdict
 from typing import Dict, List, Optional, Union
 
@@ -492,6 +493,8 @@ class EmmentalLearner(object):
           dataloaders: A list of dataloaders used to learn the model.
         """
         # Generate the list of dataloaders for learning process
+        start_time = time.time()
+
         train_split = Meta.config["learner_config"]["train_split"]
         if isinstance(train_split, str):
             train_split = [train_split]
@@ -530,7 +533,7 @@ class EmmentalLearner(object):
                     "use fp16 training."
                 )
             logger.info(
-                f"Modeling training with 16-bit (mixed) precision"
+                f"Modeling training with 16-bit (mixed) precision "
                 f"and {Meta.config['learner_config']['fp16_opt_level']} opt level."
             )
             model, self.optimizer = amp.initialize(
@@ -649,3 +652,4 @@ class EmmentalLearner(object):
                 self._update_lr_scheduler(model, total_batch_num, self.metrics)
 
         model = self.logging_manager.close(model)
+        logger.info(f"Total learning time: {time.time() - start_time} seconds.")

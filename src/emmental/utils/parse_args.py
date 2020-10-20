@@ -98,8 +98,7 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
 
     learner_config.add_argument(
         "--fp16",
-        type=str2bool,
-        default=False,
+        action="store_true",
         help="Whether to use 16-bit (mixed) precision (through NVIDIA apex)"
         "instead of 32-bit",
     )
