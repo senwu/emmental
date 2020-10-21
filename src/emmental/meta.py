@@ -7,6 +7,7 @@ from builtins import object
 from datetime import datetime
 from typing import Any, Dict, Optional, Type
 
+import torch
 import yaml
 
 from emmental.utils.utils import merge, set_random_seed
@@ -112,6 +113,19 @@ def init_logging(
             "To configure logging manually, call emmental.init_logging before "
             "initialiting Meta."
         )
+
+
+def init_distributed_backend() -> None:
+    """Initialize distributed learning backend."""
+    if (
+        Meta.config["learner_config"]["local_rank"] != -1
+        and Meta.config["model_config"]["device"] != -1
+    ):
+        torch.cuda.set_device(Meta.config["learner_config"]["local_rank"])
+        Meta.config["model_config"]["device"] = torch.device(
+            "cuda", Meta.config["learner_config"]["local_rank"]
+        )
+        torch.distributed.init_process_group(backend="nccl")
 
 
 class Meta(object):
