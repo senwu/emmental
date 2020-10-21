@@ -97,7 +97,7 @@ class EmmentalLearner(object):
                 **optimizer_config[f"{opt}_config"],
             )
         elif isinstance(opt, optim.Optimizer):  # type: ignore
-            optimizer = opt(parameters)
+            optimizer = opt(parameters)  # type: ignore
         else:
             raise ValueError(f"Unrecognized optimizer option '{opt}'")
 
