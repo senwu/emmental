@@ -18,7 +18,8 @@ model_config:
 
 # Learning configuration
 learner_config:
-    fp16: False # whether to use half precision
+    fp16: False # whether to use 16-bit precision
+    fp16_opt_level: O1 # Apex AMP optimization level (e.g., ['O0', 'O1', 'O2', 'O3'])
     n_epochs: 1 # total number of learning epochs
     train_split: # the split for training, accepts str or list of strs
         - train

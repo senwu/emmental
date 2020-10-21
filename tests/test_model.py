@@ -74,39 +74,6 @@ def test_model(caplog):
         scorer=Scorer(metrics=["accuracy"]),
     )
 
-    # Test w/ dataparallel
-    model = EmmentalModel(name="test", tasks=task1)
-
-    assert model.name == "test"
-    assert model.task_names == set(["task_1"])
-    assert model.module_pool["m1"].module.weight.data.size() == (10, 10)
-    assert model.module_pool["m2"].module.weight.data.size() == (2, 10)
-
-    model.update_task(new_task1)
-
-    assert model.module_pool["m1"].module.weight.data.size() == (5, 10)
-    assert model.module_pool["m2"].module.weight.data.size() == (2, 5)
-
-    model.update_task(task2)
-
-    assert model.task_names == set(["task_1"])
-
-    model.add_task(task2)
-
-    assert model.task_names == set(["task_1", "task_2"])
-
-    model.remove_task("task_1")
-    assert model.task_names == set(["task_2"])
-
-    model.save(f"{dirpath}/saved_model.pth")
-
-    model.load(f"{dirpath}/saved_model.pth")
-
-    # Test w/o dataparallel
-
-    Meta.reset()
-    emmental.init(dirpath)
-
     config = {"model_config": {"dataparallel": False}}
     emmental.Meta.update_config(config)
 

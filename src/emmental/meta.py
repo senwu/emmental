@@ -177,6 +177,7 @@ class Meta(object):
                     break
                 current_dir = new_dir
                 tries += 1
+        set_random_seed(Meta.config["meta_config"]["seed"])
 
     @staticmethod
     def reset() -> None:

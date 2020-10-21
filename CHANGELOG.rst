@@ -1,6 +1,12 @@
 Unreleased_
 -----------
 
+Added
+^^^^^
+
+* `@senwu`_: Support fp16 optimization.
+  (`#77 <https://github.com/SenWu/emmental/pull/77>`_)
+
 0.0.7_ - 2020-06-03
 -------------------
 

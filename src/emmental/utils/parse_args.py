@@ -98,9 +98,17 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
 
     learner_config.add_argument(
         "--fp16",
-        type=str2bool,
-        default=False,
-        help="Whether to use half precision to train",
+        action="store_true",
+        help="Whether to use 16-bit (mixed) precision (through NVIDIA apex)"
+        "instead of 32-bit",
+    )
+
+    learner_config.add_argument(
+        "--fp16_opt_level",
+        type=str,
+        default="O1",
+        help="Apex AMP optimization level selected in ['O0', 'O1', 'O2', 'O3']."
+        "See details at https://nvidia.github.io/apex/amp.html",
     )
 
     learner_config.add_argument(
@@ -843,6 +851,7 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
         },
         "learner_config": {
             "fp16": args.fp16,
+            "fp16_opt_level": args.fp16_opt_level,
             "n_epochs": args.n_epochs,
             "train_split": args.train_split,
             "valid_split": args.valid_split,

@@ -41,6 +41,7 @@ def test_parse_args(caplog):
         "model_config": {"model_path": None, "device": 0, "dataparallel": True},
         "learner_config": {
             "fp16": False,
+            "fp16_opt_level": "O1",
             "n_epochs": 1,
             "train_split": ["train"],
             "valid_split": ["valid"],
@@ -205,6 +206,7 @@ def test_checkpoint_metric(caplog):
         "model_config": {"model_path": None, "device": 0, "dataparallel": True},
         "learner_config": {
             "fp16": False,
+            "fp16_opt_level": "O1",
             "n_epochs": 1,
             "train_split": ["train"],
             "valid_split": ["valid"],
