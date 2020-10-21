@@ -11,6 +11,7 @@ import torch
 from numpy import ndarray
 from torch import Tensor, nn as nn
 from torch.nn import ModuleDict
+from tqdm import tqdm
 
 from emmental.data import EmmentalDataLoader
 from emmental.meta import Meta
@@ -62,14 +63,16 @@ class EmmentalModel(nn.Module):
 
     def _move_to_device(self) -> None:
         """Move model to specified device."""
-        if Meta.config["model_config"]["device"] >= 0:
+        if Meta.config["model_config"]["device"] != -1:
             if torch.cuda.is_available():
+                device = (
+                    f"cuda:{Meta.config['model_config']['device']}"
+                    if isinstance(Meta.config["model_config"]["device"], int)
+                    else Meta.config["model_config"]["device"]
+                )
                 if Meta.config["meta_config"]["verbose"]:
-                    logger.info(
-                        f"Moving model to GPU "
-                        f"(cuda:{Meta.config['model_config']['device']})."
-                    )
-                self.to(torch.device(f"cuda:{Meta.config['model_config']['device']}"))
+                    logger.info(f"Moving model to GPU ({device}).")
+                self.to(torch.device(device))
             else:
                 if Meta.config["meta_config"]["verbose"]:
                     logger.info("No cuda device available. Switch to cpu instead.")
@@ -77,6 +80,17 @@ class EmmentalModel(nn.Module):
     def _to_dataparallel(self) -> None:
         for key in self.module_pool.keys():
             self.module_pool[key] = torch.nn.DataParallel(self.module_pool[key])
+
+    def _to_distributed_dataparallel(self) -> None:
+        for key in self.module_pool.keys():
+            self.module_pool[
+                key
+            ] = torch.nn.parallel.DistributedDataParallel(  # type: ignore
+                self.module_pool[key],
+                device_ids=[Meta.config["learner_config"]["local_rank"]],
+                output_device=Meta.config["learner_config"]["local_rank"],
+                find_unused_parameters=True,
+            )
 
     def add_tasks(self, tasks: Union[EmmentalTask, List[EmmentalTask]]) -> None:
         """Build the MTL network using all tasks.
@@ -313,7 +327,11 @@ class EmmentalModel(nn.Module):
         task_to_label_dict = dataloader.task_to_label_dict
         uid = dataloader.uid
 
-        for batch_num, (X_bdict, Y_bdict) in enumerate(dataloader):
+        for batch_num, (X_bdict, Y_bdict) in tqdm(
+            enumerate(dataloader),
+            total=len(dataloader),
+            desc=f"Evaluating {dataloader.data_name} ({dataloader.split})",
+        ):
             uid_bdict, loss_bdict, prob_bdict, gold_bdict = self.forward(
                 X_bdict[uid], X_bdict, Y_bdict, task_to_label_dict
             )

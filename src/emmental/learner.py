@@ -47,7 +47,8 @@ class EmmentalLearner(object):
 
     def _set_logging_manager(self) -> None:
         """Set logging manager."""
-        self.logging_manager = LoggingManager(self.n_batches_per_epoch)
+        if Meta.config["learner_config"]["local_rank"] in [-1, 0]:
+            self.logging_manager = LoggingManager(self.n_batches_per_epoch)
 
     def _set_optimizer(self, model: EmmentalModel) -> None:
         """Set optimizer for learning process.
@@ -543,8 +544,15 @@ class EmmentalLearner(object):
             )
 
         # Multi-gpu training (after apex fp16 initialization)
-        if Meta.config["model_config"]["dataparallel"]:
+        if (
+            Meta.config["learner_config"]["local_rank"] == -1
+            and Meta.config["model_config"]["dataparallel"]
+        ):
             model._to_dataparallel()
+
+        # Distributed training (after apex fp16 initialization)
+        if Meta.config["learner_config"]["local_rank"] != -1:
+            model._to_distributed_dataparallel()
 
         # Set to training mode
         model.train()
@@ -562,7 +570,10 @@ class EmmentalLearner(object):
             batches = tqdm(
                 enumerate(self.task_scheduler.get_batches(train_dataloaders, model)),
                 total=self.n_batches_per_epoch,
-                disable=(not Meta.config["meta_config"]["verbose"]),
+                disable=(
+                    not Meta.config["meta_config"]["verbose"]
+                    or Meta.config["learner_config"]["local_rank"] not in [-1, 0]
+                ),
                 desc=f"Epoch {epoch_num}:",
             )
 
@@ -644,12 +655,14 @@ class EmmentalLearner(object):
                     # Set gradients of all model parameters to zero
                     self.optimizer.zero_grad()
 
-                self.metrics.update(self._logging(model, dataloaders, batch_size))
+                if Meta.config["learner_config"]["local_rank"] in [-1, 0]:
+                    self.metrics.update(self._logging(model, dataloaders, batch_size))
 
-                batches.set_postfix(self.metrics)
+                    batches.set_postfix(self.metrics)
 
                 # Update lr using lr scheduler
                 self._update_lr_scheduler(model, total_batch_num, self.metrics)
 
-        model = self.logging_manager.close(model)
+        if Meta.config["learner_config"]["local_rank"] in [-1, 0]:
+            model = self.logging_manager.close(model)
         logger.info(f"Total learning time: {time.time() - start_time} seconds.")

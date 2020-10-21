@@ -42,6 +42,7 @@ def test_parse_args(caplog):
         "learner_config": {
             "fp16": False,
             "fp16_opt_level": "O1",
+            "local_rank": -1,
             "n_epochs": 1,
             "train_split": ["train"],
             "valid_split": ["valid"],
@@ -207,6 +208,7 @@ def test_checkpoint_metric(caplog):
         "learner_config": {
             "fp16": False,
             "fp16_opt_level": "O1",
+            "local_rank": -1,
             "n_epochs": 1,
             "train_split": ["train"],
             "valid_split": ["valid"],

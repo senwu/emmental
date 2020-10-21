@@ -26,6 +26,7 @@ def init(
     config: Optional[Dict[Any, Any]] = {},
     config_dir: Optional[str] = None,
     config_name: Optional[str] = "emmental-config.yaml",
+    local_rank: int = -1,
 ) -> None:
     """Initialize the logging and configuration.
 
@@ -39,8 +40,9 @@ def init(
       config: The new configuration, defaults to {}.
       config_dir: The path to the config file, defaults to None.
       config_name: The config file name, defaults to "emmental-config.yaml".
+      local_rank: local_rank for distributed training on gpus.
     """
-    init_logging(log_dir, log_name, use_exact_log_path, format, level)
+    init_logging(log_dir, log_name, use_exact_log_path, format, level, local_rank)
     init_config()
     if config or config_dir is not None:
         Meta.update_config(config, config_dir, config_name)
@@ -67,6 +69,7 @@ def init_logging(
     use_exact_log_path: bool = False,
     format: str = "[%(asctime)s][%(levelname)s] %(name)s:%(lineno)s - %(message)s",
     level: int = logging.INFO,
+    local_rank: int = -1,
 ) -> None:
     """Config logging to output to the provided log_dir.
 
@@ -79,6 +82,7 @@ def init_logging(
       format: The logging format string to use,
         defaults to "[%(asctime)s][%(levelname)s] %(name)s:%(lineno)s - %(message)s".
       level: The logging level to use, defaults to logging.INFO.
+      local_rank: local_rank for distributed training on gpus.
     """
     if not Meta.log_path:
         if not use_exact_log_path:
@@ -92,17 +96,23 @@ def init_logging(
                 log_path = os.path.join(log_dir, date, time, uid)
         else:
             log_path = log_dir
-        os.makedirs(log_path, exist_ok=True)
+        if local_rank in [-1, 0]:
+            os.makedirs(log_path, exist_ok=True)
 
         # Configure the logger using the provided path
-        logging.basicConfig(
-            format=format,
-            level=level,
-            handlers=[
-                logging.FileHandler(os.path.join(log_path, log_name)),
-                logging.StreamHandler(),
-            ],
-        )
+        if local_rank in [-1, 0]:
+            logging.basicConfig(
+                format=format,
+                level=level,
+                handlers=[
+                    logging.FileHandler(os.path.join(log_path, log_name)),
+                    logging.StreamHandler(),
+                ],
+            )
+        else:
+            logging.basicConfig(
+                format=format, level=logging.WARN, handlers=[logging.StreamHandler()],
+            )
 
         # Notify user of log location
         logger.info(f"Setting logging directory to: {log_path}")
@@ -113,19 +123,6 @@ def init_logging(
             "To configure logging manually, call emmental.init_logging before "
             "initialiting Meta."
         )
-
-
-def init_distributed_backend() -> None:
-    """Initialize distributed learning backend."""
-    if (
-        Meta.config["learner_config"]["local_rank"] != -1
-        and Meta.config["model_config"]["device"] != -1
-    ):
-        torch.cuda.set_device(Meta.config["learner_config"]["local_rank"])
-        Meta.config["model_config"]["device"] = torch.device(
-            "cuda", Meta.config["learner_config"]["local_rank"]
-        )
-        torch.distributed.init_process_group(backend="nccl")
 
 
 class Meta(object):
@@ -198,3 +195,16 @@ class Meta(object):
         """Clear shared variables of shared, global singleton."""
         Meta.log_path = None
         Meta.config = None
+
+    @staticmethod
+    def init_distributed_backend() -> None:
+        """Initialize distributed learning backend."""
+        if (
+            Meta.config["learner_config"]["local_rank"] != -1
+            and Meta.config["model_config"]["device"] != -1
+        ):
+            torch.cuda.set_device(Meta.config["learner_config"]["local_rank"])
+            Meta.config["model_config"]["device"] = torch.device(
+                "cuda", Meta.config["learner_config"]["local_rank"]
+            )
+            torch.distributed.init_process_group(backend="nccl")
