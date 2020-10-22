@@ -537,7 +537,7 @@ class EmmentalModel(nn.Module):
         state_dict: Dict[str, Any] = defaultdict(list)
 
         for module_name, module in self.module_pool.items():
-            if Meta.config["model_config"]["dataparallel"]:
+            if hasattr(module, "module"):
                 state_dict[module_name] = module.module.state_dict()  # type: ignore
             else:
                 state_dict[module_name] = module.state_dict()
@@ -552,10 +552,10 @@ class EmmentalModel(nn.Module):
         """
         for module_name, module_state_dict in state_dict.items():
             if module_name in self.module_pool:
-                if Meta.config["model_config"]["dataparallel"]:
-                    self.module_pool[  # type: ignore
-                        module_name
-                    ].module.load_state_dict(module_state_dict)
+                if hasattr(self.module_pool[module_name], "module"):
+                    self.module_pool[module_name].module.load_state_dict(
+                        module_state_dict
+                    )
                 else:
                     self.module_pool[module_name].load_state_dict(module_state_dict)
             else:
