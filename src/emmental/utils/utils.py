@@ -26,8 +26,8 @@ def set_random_seed(seed: int = None) -> None:
     # Set random seed for PyTorch
     if isinstance(seed, int):
         torch.manual_seed(seed)
-        torch.backends.cudnn.deterministic = True  # type: ignore
-        torch.backends.cudnn.benchmark = False  # type: ignore
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
 
 def list_to_tensor(
@@ -158,7 +158,7 @@ def move_to_device(obj: Any, device: Optional[Union[int, str]] = -1) -> Any:
     if device == -1 or not torch.cuda.is_available():
         return obj
     elif isinstance(obj, torch.Tensor):
-        return obj.cuda(device)  # type: ignore
+        return obj.cuda(device)
     elif isinstance(obj, dict):
         return {key: move_to_device(value, device) for key, value in obj.items()}
     elif isinstance(obj, list):
