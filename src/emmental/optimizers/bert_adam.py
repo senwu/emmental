@@ -55,7 +55,7 @@ class BertAdam(Optimizer):
             raise ValueError("Invalid beta parameter at index 1: {}".format(betas[1]))
 
         defaults = dict(lr=lr, betas=betas, eps=eps, weight_decay=weight_decay)
-        super().__init__(params, defaults)  # type: ignore
+        super().__init__(params, defaults)
 
     def step(self, closure: Optional[Callable] = None) -> Any:
         """Perform a single optimization step.
@@ -68,7 +68,7 @@ class BertAdam(Optimizer):
         if closure is not None:
             loss = closure()
 
-        for group in self.param_groups:  # type: ignore
+        for group in self.param_groups:
             for p in group["params"]:
                 if p.grad is None:
                     continue
@@ -79,7 +79,7 @@ class BertAdam(Optimizer):
                         "SparseAdam instead"
                     )
 
-                state = self.state[p]  # type: ignore
+                state = self.state[p]
 
                 # State initialization
                 if len(state) == 0:

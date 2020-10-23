@@ -47,7 +47,8 @@ class EmmentalLearner(object):
 
     def _set_logging_manager(self) -> None:
         """Set logging manager."""
-        self.logging_manager = LoggingManager(self.n_batches_per_epoch)
+        if Meta.config["learner_config"]["local_rank"] in [-1, 0]:
+            self.logging_manager = LoggingManager(self.n_batches_per_epoch)
 
     def _set_optimizer(self, model: EmmentalModel) -> None:
         """Set optimizer for learning process.
@@ -68,17 +69,17 @@ class EmmentalLearner(object):
 
         optim_dict = {
             # PyTorch optimizer
-            "asgd": optim.ASGD,  # type: ignore
-            "adadelta": optim.Adadelta,  # type: ignore
-            "adagrad": optim.Adagrad,  # type: ignore
-            "adam": optim.Adam,  # type: ignore
-            "adamw": optim.AdamW,  # type: ignore
-            "adamax": optim.Adamax,  # type: ignore
-            "lbfgs": optim.LBFGS,  # type: ignore
-            "rms_prop": optim.RMSprop,  # type: ignore
-            "r_prop": optim.Rprop,  # type: ignore
-            "sgd": optim.SGD,  # type: ignore
-            "sparse_adam": optim.SparseAdam,  # type: ignore
+            "asgd": optim.ASGD,
+            "adadelta": optim.Adadelta,
+            "adagrad": optim.Adagrad,
+            "adam": optim.Adam,
+            "adamw": optim.AdamW,
+            "adamax": optim.Adamax,
+            "lbfgs": optim.LBFGS,
+            "rms_prop": optim.RMSprop,
+            "r_prop": optim.Rprop,
+            "sgd": optim.SGD,
+            "sparse_adam": optim.SparseAdam,
             # Customize optimizer
             "bert_adam": BertAdam,
         }
@@ -96,7 +97,7 @@ class EmmentalLearner(object):
                 weight_decay=optimizer_config["l2"],
                 **optimizer_config[f"{opt}_config"],
             )
-        elif isinstance(opt, optim.Optimizer):  # type: ignore
+        elif isinstance(opt, optim.Optimizer):
             optimizer = opt(parameters)  # type: ignore
         else:
             raise ValueError(f"Unrecognized optimizer option '{opt}'")
@@ -140,17 +141,17 @@ class EmmentalLearner(object):
                 total_steps - self.warmup_steps
             )
             lr_scheduler = optim.lr_scheduler.LambdaLR(
-                self.optimizer, linear_decay_func  # type: ignore
+                self.optimizer, linear_decay_func
             )
         elif opt in ["exponential", "step", "multi_step", "cyclic"]:
-            lr_scheduler = lr_scheduler_dict[opt](  # type: ignore
+            lr_scheduler = lr_scheduler_dict[opt](
                 self.optimizer, **lr_scheduler_config[f"{opt}_config"]
             )
         elif opt == "one_cycle":
             total_steps = (
                 self.n_batches_per_epoch * Meta.config["learner_config"]["n_epochs"]
             )
-            lr_scheduler = lr_scheduler_dict[opt](  # type: ignore
+            lr_scheduler = lr_scheduler_dict[opt](
                 self.optimizer,
                 total_steps=total_steps,
                 epochs=Meta.config["learner_config"]["n_epochs"],
@@ -161,7 +162,7 @@ class EmmentalLearner(object):
             total_steps = (
                 self.n_batches_per_epoch * Meta.config["learner_config"]["n_epochs"]
             )
-            lr_scheduler = lr_scheduler_dict[opt](  # type: ignore
+            lr_scheduler = lr_scheduler_dict[opt](
                 self.optimizer,
                 total_steps,
                 eta_min=lr_scheduler_config["min_lr"],
@@ -221,7 +222,7 @@ class EmmentalLearner(object):
                 )
             linear_warmup_func = lambda x: x / self.warmup_steps
             warmup_scheduler = optim.lr_scheduler.LambdaLR(
-                self.optimizer, linear_warmup_func  # type: ignore
+                self.optimizer, linear_warmup_func
             )
             if Meta.config["meta_config"]["verbose"]:
                 logger.info(f"Warmup {self.warmup_steps} batchs.")
@@ -236,7 +237,7 @@ class EmmentalLearner(object):
             )
             linear_warmup_func = lambda x: x / self.warmup_steps
             warmup_scheduler = optim.lr_scheduler.LambdaLR(
-                self.optimizer, linear_warmup_func  # type: ignore
+                self.optimizer, linear_warmup_func
             )
             if Meta.config["meta_config"]["verbose"]:
                 logger.info(f"Warmup {self.warmup_steps} batchs.")
@@ -257,7 +258,7 @@ class EmmentalLearner(object):
         cur_lr = self.optimizer.param_groups[0]["lr"]
 
         if self.warmup_scheduler and step < self.warmup_steps:
-            self.warmup_scheduler.step()  # type: ignore
+            self.warmup_scheduler.step()
         elif self.lr_scheduler is not None:
             lr_step_cnt = (
                 self.lr_scheduler_step_freq
@@ -270,7 +271,7 @@ class EmmentalLearner(object):
                     Meta.config["learner_config"]["lr_scheduler_config"]["lr_scheduler"]
                     != "plateau"
                 ):
-                    self.lr_scheduler.step()  # type: ignore
+                    self.lr_scheduler.step()
                 elif (
                     Meta.config["learner_config"]["lr_scheduler_config"][
                         "plateau_config"
@@ -543,8 +544,15 @@ class EmmentalLearner(object):
             )
 
         # Multi-gpu training (after apex fp16 initialization)
-        if Meta.config["model_config"]["dataparallel"]:
+        if (
+            Meta.config["learner_config"]["local_rank"] == -1
+            and Meta.config["model_config"]["dataparallel"]
+        ):
             model._to_dataparallel()
+
+        # Distributed training (after apex fp16 initialization)
+        if Meta.config["learner_config"]["local_rank"] != -1:
+            model._to_distributed_dataparallel()
 
         # Set to training mode
         model.train()
@@ -562,7 +570,10 @@ class EmmentalLearner(object):
             batches = tqdm(
                 enumerate(self.task_scheduler.get_batches(train_dataloaders, model)),
                 total=self.n_batches_per_epoch,
-                disable=(not Meta.config["meta_config"]["verbose"]),
+                disable=(
+                    not Meta.config["meta_config"]["verbose"]
+                    or Meta.config["learner_config"]["local_rank"] not in [-1, 0]
+                ),
                 desc=f"Epoch {epoch_num}:",
             )
 
@@ -644,12 +655,14 @@ class EmmentalLearner(object):
                     # Set gradients of all model parameters to zero
                     self.optimizer.zero_grad()
 
-                self.metrics.update(self._logging(model, dataloaders, batch_size))
+                if Meta.config["learner_config"]["local_rank"] in [-1, 0]:
+                    self.metrics.update(self._logging(model, dataloaders, batch_size))
 
-                batches.set_postfix(self.metrics)
+                    batches.set_postfix(self.metrics)
 
                 # Update lr using lr scheduler
                 self._update_lr_scheduler(model, total_batch_num, self.metrics)
 
-        model = self.logging_manager.close(model)
+        if Meta.config["learner_config"]["local_rank"] in [-1, 0]:
+            model = self.logging_manager.close(model)
         logger.info(f"Total learning time: {time.time() - start_time} seconds.")

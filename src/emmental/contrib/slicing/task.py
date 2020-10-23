@@ -54,9 +54,7 @@ def build_slice_tasks(
     """
     # Collect task predictor module info
     base_task_predictor_action = task.task_flow[-1]
-    base_task_predictor_module = task.module_pool[
-        base_task_predictor_action["module"]  # type: ignore
-    ]
+    base_task_predictor_module = task.module_pool[base_task_predictor_action["module"]]
     if isinstance(base_task_predictor_module, nn.DataParallel):
         base_task_predictor_module = base_task_predictor_module.module
 
@@ -76,7 +74,7 @@ def build_slice_tasks(
     slice_actions = [action for action in base_task_task_flow]
 
     if slice_ind_head_module is None:
-        slice_ind_head_module = nn.Linear(task_feature_size, 2)  # type: ignore
+        slice_ind_head_module = nn.Linear(task_feature_size, 2)
 
     assert isinstance(slice_ind_head_module, nn.Module)
 
@@ -183,9 +181,7 @@ def build_slice_tasks(
 
     # Create share predictor for all slice predictor
     shared_pred_head_module_name = f"{task.name}_slice:shared_pred"
-    shared_pred_head_module = nn.Linear(
-        task_feature_size, task_cardinality  # type: ignore
-    )
+    shared_pred_head_module = nn.Linear(task_feature_size, task_cardinality)
 
     # Add slice specific module to slice_module_pool
     slice_module_pool[shared_pred_head_module_name] = shared_pred_head_module
@@ -197,9 +193,7 @@ def build_slice_tasks(
         # Create pred module
         pred_head_module_name = f"{pred_task_name}_head"
         pred_transform_module_name = f"{task.name}_slice:transform_{slice_name}"
-        pred_transform_module = nn.Linear(
-            task_feature_size, task_feature_size  # type: ignore
-        )
+        pred_transform_module = nn.Linear(task_feature_size, task_feature_size)
 
         # Create module_pool
         pred_module_pool = nn.ModuleDict(

@@ -92,7 +92,7 @@ class EmbeddingModule(nn.Module):
             for w, i in emb_w2i.items():
                 if w in self.word2id:
                     self.word2id[w]
-                    self.embeddings.weight.data[self.word2id[w]].copy_(  # type: ignore
+                    self.embeddings.weight.data[self.word2id[w]].copy_(
                         torch.from_numpy(emb_wv[emb_w2i[w]])
                     )
 
@@ -132,7 +132,7 @@ class EmbeddingModule(nn.Module):
                     emb_wv.append(np.array([float(v) for v in elems[1:]]))
         return emb_dim, emb_w2i, emb_wv
 
-    def forward(self, input: Tensor) -> Tensor:  # type: ignore
+    def forward(self, input: Tensor) -> Tensor:
         """Forward function.
 
         Args:

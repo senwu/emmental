@@ -112,6 +112,13 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     learner_config.add_argument(
+        "--local_rank",
+        type=int,
+        default=-1,
+        help="local_rank for distributed training on gpus",
+    )
+
+    learner_config.add_argument(
         "--n_epochs", type=int, default=1, help="Total number of learning epochs"
     )
 
@@ -852,6 +859,7 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
         "learner_config": {
             "fp16": args.fp16,
             "fp16_opt_level": args.fp16_opt_level,
+            "local_rank": args.local_rank,
             "n_epochs": args.n_epochs,
             "train_split": args.train_split,
             "valid_split": args.valid_split,

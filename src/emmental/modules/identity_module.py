@@ -9,7 +9,7 @@ class IdentityModule(nn.Module):
         """Initialize IdentityModule."""
         super().__init__()
 
-    def forward(self, input: Tensor) -> Tensor:  # type: ignore
+    def forward(self, input: Tensor) -> Tensor:
         """Forward function.
 
         Args:

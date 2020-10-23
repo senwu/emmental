@@ -55,7 +55,7 @@ def add_slice_labels(
                     ind_labels.numpy(), return_counts=True
                 )
                 if ind_classes.shape[0] == 2:
-                    slice_distribution[slice_ind_name] = torch.Tensor(  # type: ignore
+                    slice_distribution[slice_ind_name] = torch.Tensor(
                         np.sum(ind_counts) / ind_counts / ind_classes.shape[0]
                     )
                 pred_classes, pred_counts = np.unique(
@@ -65,15 +65,11 @@ def add_slice_labels(
                     pred_classes[0] == 1 and pred_classes.shape[0] == 2
                 ):
                     if pred_classes[0] == 0:
-                        slice_distribution[
-                            slice_pred_name
-                        ] = torch.Tensor(  # type: ignore
+                        slice_distribution[slice_pred_name] = torch.Tensor(
                             1 - pred_counts[1:] / np.sum(pred_counts[1:])
                         )
                     else:
-                        slice_distribution[
-                            slice_pred_name
-                        ] = torch.Tensor(  # type: ignore
+                        slice_distribution[slice_pred_name] = torch.Tensor(
                             1 - pred_counts / np.sum(pred_counts)
                         )
 

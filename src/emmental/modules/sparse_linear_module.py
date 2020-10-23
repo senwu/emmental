@@ -33,7 +33,7 @@ class SparseLinear(nn.Module):
             self.num_features, self.num_classes, padding_idx=self.padding_idx
         )
         if bias:
-            self.bias = nn.Parameter(torch.Tensor(self.num_classes))  # type: ignore
+            self.bias = nn.Parameter(torch.Tensor(self.num_classes))
         else:
             self.bias = None
 
@@ -48,7 +48,7 @@ class SparseLinear(nn.Module):
         if self.padding_idx is not None:
             self.weight.weight.data[self.padding_idx].fill_(0)
 
-    def forward(self, x: Tensor, w: Tensor) -> Tensor:  # type: ignore
+    def forward(self, x: Tensor, w: Tensor) -> Tensor:
         """Forward function.
 
         Args:
