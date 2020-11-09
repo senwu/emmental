@@ -257,11 +257,10 @@ class EmmentalModel(nn.Module):
         loss_dict: Dict[str, ndarray] = defaultdict(float)
         gold_dict: Dict[str, ndarray] = defaultdict(list)
         prob_dict: Dict[str, ndarray] = defaultdict(list)
-
         task_names = (
-            sorted(list(task_to_label_dict.keys()))
+            list(task_to_label_dict.keys())
             if isinstance(task_to_label_dict, dict)
-            else sorted(list(task_to_label_dict))
+            else list(task_to_label_dict)
         )
 
         output_dict = self.flow(X_dict, task_names)

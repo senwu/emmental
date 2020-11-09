@@ -253,13 +253,15 @@ class EmmentalDataLoader(DataLoader):
         self.uid = dataset.uid
         self.split = split
         self.n_batches = n_batches
-        self.is_learnable = False if dataset.Y_dict is None else True
+        self.is_learnable = True if not isinstance(dataset[0], dict) else False
 
         if self.is_learnable:
             for task_name, label_names in task_to_label_dict.items():
                 if not isinstance(label_names, list):
                     label_names = [label_names]  # type: ignore
-                unrecognized_labels = set(label_names) - set(dataset.Y_dict.keys())
+                unrecognized_labels = set(label_names) - set(
+                    dataset[0][1].keys()  # type: ignore
+                )
                 if len(unrecognized_labels) > 0:
                     msg = (
                         f"Unrecognized Label {unrecognized_labels} of Task {task_name} "
