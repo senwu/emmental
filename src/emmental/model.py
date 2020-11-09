@@ -258,46 +258,66 @@ class EmmentalModel(nn.Module):
         gold_dict: Dict[str, ndarray] = defaultdict(list)
         prob_dict: Dict[str, ndarray] = defaultdict(list)
 
-        output_dict = self.flow(X_dict, list(task_to_label_dict.keys()))
+        task_names = (
+            sorted(list(task_to_label_dict.keys()))
+            if isinstance(task_to_label_dict, dict)
+            else sorted(list(task_to_label_dict))
+        )
 
-        # Calculate loss for each task
-        for task_name, label_name in task_to_label_dict.items():
-            Y = Y_dict[label_name]
+        output_dict = self.flow(X_dict, task_names)
 
-            # Select the active samples
-            if Meta.config["learner_config"]["ignore_index"] is not None:
-                if len(Y.size()) == 1:
-                    active = Y.detach() != Meta.config["learner_config"]["ignore_index"]
+        if Y_dict is not None:
+            # Calculate logit and loss for each task
+            for task_name, label_name in task_to_label_dict.items():
+                Y = Y_dict[label_name]
+
+                # Select the active samples
+                if Meta.config["learner_config"]["ignore_index"] is not None:
+                    if len(Y.size()) == 1:
+                        active = (
+                            Y.detach() != Meta.config["learner_config"]["ignore_index"]
+                        )
+                    else:
+                        active = torch.any(
+                            Y.detach() != Meta.config["learner_config"]["ignore_index"],
+                            dim=1,
+                        )
                 else:
-                    active = torch.any(
-                        Y.detach() != Meta.config["learner_config"]["ignore_index"],
-                        dim=1,
+                    active = torch.BoolTensor([True] * Y.size()[0])  # type: ignore
+
+                # Only calculate the loss when active example exists
+                if active.any():
+                    uid_dict[task_name] = [*itertools.compress(uids, active.numpy())]
+
+                    loss_dict[task_name] = self.loss_funcs[task_name](
+                        output_dict,
+                        move_to_device(
+                            Y_dict[label_name], Meta.config["model_config"]["device"]
+                        ),
+                        move_to_device(active, Meta.config["model_config"]["device"]),
                     )
-            else:
-                active = torch.BoolTensor([True] * Y.size()[0])  # type: ignore
 
-            # Only calculate the loss when active example exists
-            if active.any():
-                uid_dict[task_name] = [*itertools.compress(uids, active.numpy())]
+                    prob_dict[task_name] = (
+                        self.output_funcs[task_name](output_dict)[
+                            move_to_device(
+                                active, Meta.config["model_config"]["device"]
+                            )
+                        ]
+                        .cpu()
+                        .detach()
+                        .numpy()
+                    )
 
-                loss_dict[task_name] = self.loss_funcs[task_name](
-                    output_dict,
-                    move_to_device(
-                        Y_dict[label_name], Meta.config["model_config"]["device"]
-                    ),
-                    move_to_device(active, Meta.config["model_config"]["device"]),
-                )
-
+                    gold_dict[task_name] = Y_dict[label_name][active].cpu().numpy()
+        else:
+            # Calculate logit for each task
+            for task_name in task_to_label_dict:
+                uid_dict[task_name] = uids
                 prob_dict[task_name] = (
-                    self.output_funcs[task_name](output_dict)[
-                        move_to_device(active, Meta.config["model_config"]["device"])
-                    ]
-                    .cpu()
-                    .detach()
-                    .numpy()
+                    self.output_funcs[task_name](output_dict).cpu().detach().numpy()
                 )
-
-                gold_dict[task_name] = Y_dict[label_name][active].cpu().numpy()
+                loss_dict = None
+                gold_dict = None
 
         return uid_dict, loss_dict, prob_dict, gold_dict
 
@@ -317,43 +337,54 @@ class EmmentalModel(nn.Module):
         self.eval()
 
         uid_dict: Dict[str, List[str]] = defaultdict(list)
-        gold_dict: Dict[str, List[Union[ndarray, int, float]]] = defaultdict(list)
         prob_dict: Dict[str, List[Union[ndarray, int, float]]] = defaultdict(list)
         pred_dict: Dict[str, List[ndarray]] = defaultdict(list)
-        # Fix it later
+        gold_dict: Dict[str, List[Union[ndarray, int, float]]] = defaultdict(list)
         loss_dict: Dict[str, Union[ndarray, float]] = defaultdict(list)  # type: ignore
+
+        if not dataloader.is_learnable:
+            gold_dict = None
+            loss_dict = None
 
         # Collect dataloader information
         task_to_label_dict = dataloader.task_to_label_dict
         uid = dataloader.uid
 
-        for batch_num, (X_bdict, Y_bdict) in tqdm(
+        for batch_num, bdict in tqdm(
             enumerate(dataloader),
             total=len(dataloader),
             desc=f"Evaluating {dataloader.data_name} ({dataloader.split})",
         ):
+            if isinstance(bdict, dict) == 1:
+                X_bdict = bdict
+                Y_bdict = None
+            else:
+                X_bdict, Y_bdict = bdict
+
             uid_bdict, loss_bdict, prob_bdict, gold_bdict = self.forward(
                 X_bdict[uid], X_bdict, Y_bdict, task_to_label_dict
             )
             for task_name in uid_bdict.keys():
                 uid_dict[task_name].extend(uid_bdict[task_name])
                 prob_dict[task_name].extend(prob_bdict[task_name])
-                gold_dict[task_name].extend(gold_bdict[task_name])
-                if len(loss_bdict[task_name].size()) == 0:
-                    if loss_dict[task_name] == []:
-                        loss_dict[task_name] = 0
-                    loss_dict[task_name] += loss_bdict[task_name].item() * len(
-                        uid_bdict[task_name]
-                    )
-                else:
-                    loss_dict[task_name].extend(  # type: ignore
-                        loss_bdict[task_name].cpu().numpy()
-                    )
+                if dataloader.is_learnable:
+                    gold_dict[task_name].extend(gold_bdict[task_name])
+                    if len(loss_bdict[task_name].size()) == 0:
+                        if loss_dict[task_name] == []:
+                            loss_dict[task_name] = 0
+                        loss_dict[task_name] += loss_bdict[task_name].item() * len(
+                            uid_bdict[task_name]
+                        )
+                    else:
+                        loss_dict[task_name].extend(  # type: ignore
+                            loss_bdict[task_name].cpu().numpy()
+                        )
 
         # Calculate average loss
-        for task_name in uid_dict.keys():
-            if not isinstance(loss_dict[task_name], list):
-                loss_dict[task_name] /= len(uid_dict[task_name])
+        if dataloader.is_learnable:
+            for task_name in uid_dict.keys():
+                if not isinstance(loss_dict[task_name], list):
+                    loss_dict[task_name] /= len(uid_dict[task_name])
 
         res = {
             "uids": uid_dict,
@@ -397,8 +428,14 @@ class EmmentalModel(nn.Module):
             macro_loss_dict: defaultdict = defaultdict(list)
 
         for dataloader in dataloaders:
+            if not dataloader.is_learnable:
+                logger.warning(
+                    f"Dataloader {dataloader.data_name} doesn't have gold data, "
+                    f"continue..."
+                )
+                continue
             predictions = self.predict(dataloader, return_preds=True)
-            for task_name in predictions["golds"].keys():
+            for task_name in predictions["uids"].keys():
                 metric_score = self.scorers[task_name].score(
                     predictions["golds"][task_name],
                     predictions["probs"][task_name],
@@ -456,18 +493,25 @@ class EmmentalModel(nn.Module):
                 metric_score_dict[identifier] = np.mean(macro_loss_dict[split])
 
             # Collect overall micro/macro average score/loss
-            identifier = construct_identifier("model", "all", "all", "micro_average")
-            metric_score_dict[identifier] = np.mean(
-                list(itertools.chain.from_iterable(micro_score_dict.values()))
-            )
-            identifier = construct_identifier("model", "all", "all", "macro_average")
-            metric_score_dict[identifier] = np.mean(
-                list(itertools.chain.from_iterable(macro_score_dict.values()))
-            )
-            identifier = construct_identifier("model", "all", "all", "loss")
-            metric_score_dict[identifier] = np.mean(
-                list(itertools.chain.from_iterable(macro_loss_dict.values()))
-            )
+            if len(micro_score_dict):
+                identifier = construct_identifier(
+                    "model", "all", "all", "micro_average"
+                )
+                metric_score_dict[identifier] = np.mean(
+                    list(itertools.chain.from_iterable(micro_score_dict.values()))
+                )
+            if len(macro_score_dict):
+                identifier = construct_identifier(
+                    "model", "all", "all", "macro_average"
+                )
+                metric_score_dict[identifier] = np.mean(
+                    list(itertools.chain.from_iterable(macro_score_dict.values()))
+                )
+            if len(macro_loss_dict):
+                identifier = construct_identifier("model", "all", "all", "loss")
+                metric_score_dict[identifier] = np.mean(
+                    list(itertools.chain.from_iterable(macro_loss_dict.values()))
+                )
 
         # TODO: have a better to handle global evaluation metric
         if Meta.config["learner_config"]["global_evaluation_metric_dict"]:

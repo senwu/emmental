@@ -2,7 +2,7 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
@@ -24,7 +24,7 @@ class EmmentalDataset(Dataset):
       X_dict: The feature dict where key is the feature name and value is the
         feature.
       Y_dict: The label dict where key is the label name and value is
-        the label.
+        the label, defaults to None.
       uid: The unique id key in the X_dict, defaults to None.
     """
 
@@ -32,7 +32,7 @@ class EmmentalDataset(Dataset):
         self,
         name: str,
         X_dict: Dict[str, Any],
-        Y_dict: Dict[str, Tensor],
+        Y_dict: Optional[Dict[str, Tensor]] = None,
         uid: Optional[str] = None,
     ) -> None:
         """Initialize EmmentalDataset."""
@@ -57,13 +57,16 @@ class EmmentalDataset(Dataset):
                     f"Auto generate uids for dataset {self.name} under {self.uid}."
                 )
 
-        for name, label in self.Y_dict.items():
-            if not isinstance(label, Tensor):
-                raise ValueError(
-                    f"Label {name} should be torch.Tensor, not {type(label)}."
-                )
+        if self.Y_dict is not None:
+            for name, label in self.Y_dict.items():
+                if not isinstance(label, Tensor):
+                    raise ValueError(
+                        f"Label {name} should be torch.Tensor, not {type(label)}."
+                    )
 
-    def __getitem__(self, index: int) -> Tuple[Dict[str, Any], Dict[str, Tensor]]:
+    def __getitem__(
+        self, index: int
+    ) -> Union[Tuple[Dict[str, Any], Dict[str, Tensor]], Dict[str, Any]]:
         """Get item by index.
 
         Args:
@@ -73,7 +76,12 @@ class EmmentalDataset(Dataset):
           Tuple of x_dict and y_dict
         """
         x_dict = {name: feature[index] for name, feature in self.X_dict.items()}
-        y_dict = {name: label[index] for name, label in self.Y_dict.items()}
+
+        if self.Y_dict is None:
+            return x_dict
+        else:
+            y_dict = {name: label[index] for name, label in self.Y_dict.items()}
+
         return x_dict, y_dict
 
     def __len__(self) -> int:
@@ -121,6 +129,8 @@ class EmmentalDataset(Dataset):
             if not isinstance(label, Tensor):
                 raise ValueError(f"Label {name} should be torch.Tensor.")
 
+        if self.Y_dict is None:
+            self.Y_dict = {}
         self._update_dict(self.Y_dict, Y_dict)
 
     def remove_feature(self, feature_name: str) -> None:
@@ -141,8 +151,8 @@ class EmmentalDataset(Dataset):
 
 
 def emmental_collate_fn(
-    batch: List[Tuple[Dict[str, Any], Dict[str, Tensor]]]
-) -> Tuple[Dict[str, Any], Dict[str, Tensor]]:
+    batch: Union[List[Tuple[Dict[str, Any], Dict[str, Tensor]]], List[Dict[str, Any]]]
+) -> Union[Tuple[Dict[str, Any], Dict[str, Tensor]], Dict[str, Any]]:
     """Collate function.
 
     Args:
@@ -154,17 +164,29 @@ def emmental_collate_fn(
     X_batch: defaultdict = defaultdict(list)
     Y_batch: defaultdict = defaultdict(list)
 
-    for x_dict, y_dict in batch:
-        for field_name, value in x_dict.items():
-            if isinstance(value, list):
-                X_batch[field_name] += value
-            else:
-                X_batch[field_name].append(value)
-        for label_name, value in y_dict.items():
-            if isinstance(value, list):
-                Y_batch[label_name] += value
-            else:
-                Y_batch[label_name].append(value)
+    # Learnable batch should be a pair of dict, while non learnable batch is a dict
+    is_learnable = True if not isinstance(batch[0], dict) else False
+
+    if is_learnable:
+        for x_dict, y_dict in batch:
+            if isinstance(x_dict, dict) and isinstance(y_dict, dict):
+                for field_name, value in x_dict.items():
+                    if isinstance(value, list):
+                        X_batch[field_name] += value
+                    else:
+                        X_batch[field_name].append(value)
+                for label_name, value in y_dict.items():
+                    if isinstance(value, list):
+                        Y_batch[label_name] += value
+                    else:
+                        Y_batch[label_name].append(value)
+    else:
+        for x_dict in batch:  # type: ignore
+            for field_name, value in x_dict.items():  # type: ignore
+                if isinstance(value, list):
+                    X_batch[field_name] += value
+                else:
+                    X_batch[field_name].append(value)
 
     field_names = copy.deepcopy(list(X_batch.keys()))
 
@@ -181,14 +203,18 @@ def emmental_collate_fn(
             if item_mask_tensor is not None:
                 X_batch[f"{field_name}_mask"] = item_mask_tensor
 
-    for label_name, values in Y_batch.items():
-        Y_batch[label_name] = list_to_tensor(
-            values,
-            min_len=Meta.config["data_config"]["min_data_len"],
-            max_len=Meta.config["data_config"]["max_data_len"],
-        )[0]
+    if is_learnable:
+        for label_name, values in Y_batch.items():
+            Y_batch[label_name] = list_to_tensor(
+                values,
+                min_len=Meta.config["data_config"]["min_data_len"],
+                max_len=Meta.config["data_config"]["max_data_len"],
+            )[0]
 
-    return dict(X_batch), dict(Y_batch)
+    if is_learnable:
+        return dict(X_batch), dict(Y_batch)
+    else:
+        return dict(X_batch)
 
 
 class EmmentalDataLoader(DataLoader):
@@ -227,15 +253,17 @@ class EmmentalDataLoader(DataLoader):
         self.uid = dataset.uid
         self.split = split
         self.n_batches = n_batches
+        self.is_learnable = False if dataset.Y_dict is None else True
 
-        for task_name, label_names in task_to_label_dict.items():
-            if not isinstance(label_names, list):
-                label_names = [label_names]  # type: ignore
-            unrecognized_labels = set(label_names) - set(dataset.Y_dict.keys())
-            if len(unrecognized_labels) > 0:
-                msg = (
-                    f"Unrecognized Label {unrecognized_labels} of Task {task_name} in "
-                    f"dataset {dataset.name}"
-                )
-                logger.warn(msg)
-                raise ValueError(msg)
+        if self.is_learnable:
+            for task_name, label_names in task_to_label_dict.items():
+                if not isinstance(label_names, list):
+                    label_names = [label_names]  # type: ignore
+                unrecognized_labels = set(label_names) - set(dataset.Y_dict.keys())
+                if len(unrecognized_labels) > 0:
+                    msg = (
+                        f"Unrecognized Label {unrecognized_labels} of Task {task_name} "
+                        f"in dataset {dataset.name}."
+                    )
+                    logger.warn(msg)
+                    raise ValueError(msg)

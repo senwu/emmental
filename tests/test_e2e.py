@@ -102,6 +102,8 @@ def test_e2e(caplog):
         name="synthetic", X_dict={"data": X_test}, Y_dict={"label2": Y2_test}
     )
 
+    test_dataset3 = EmmentalDataset(name="synthetic", X_dict={"data": X_test})
+
     task_to_label_dict = {"task1": "label1"}
 
     train_dataloader1 = EmmentalDataLoader(
@@ -140,6 +142,13 @@ def test_e2e(caplog):
     test_dataloader2 = EmmentalDataLoader(
         task_to_label_dict=task_to_label_dict,
         dataset=test_dataset2,
+        split="test",
+        batch_size=10,
+    )
+
+    test_dataloader3 = EmmentalDataLoader(
+        task_to_label_dict=["task2"],
+        dataset=test_dataset3,
         split="test",
         batch_size=10,
     )
@@ -208,5 +217,19 @@ def test_e2e(caplog):
     )
     assert test2_score["task2/synthetic/test/accuracy"] >= 0.7
     assert test2_score["task2/synthetic/test/roc_auc"] >= 0.7
+
+    test3_score = mtl_model.score(test_dataloader3)
+    assert test3_score == {}
+
+    test2_pred = mtl_model.predict(test_dataloader2)
+    test3_pred = mtl_model.predict(test_dataloader3)
+
+    assert test2_pred["uids"] == test3_pred["uids"]
+    assert False not in [
+        np.array_equal(
+            test2_pred["probs"]["task2"][idx], test3_pred["probs"]["task2"][idx]
+        )
+        for idx in range(len(test3_pred["probs"]["task2"]))
+    ]
 
     shutil.rmtree(dirpath)
