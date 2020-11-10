@@ -23,6 +23,33 @@ def test_sparse_adam_optimizer(caplog):
     Meta.reset()
     emmental.init(dirpath)
 
+    def grouped_parameters(model):
+        no_decay = ["bias"]
+        return [
+            {
+                "params": [
+                    p
+                    for n, p in model.named_parameters()
+                    if not any(nd in n for nd in no_decay)
+                ],
+                "weight_decay": emmental.Meta.config["learner_config"][
+                    "optimizer_config"
+                ]["l2"],
+            },
+            {
+                "params": [
+                    p
+                    for n, p in model.named_parameters()
+                    if any(nd in n for nd in no_decay)
+                ],
+                "weight_decay": 0.0,
+            },
+        ]
+
+    emmental.Meta.config["learner_config"]["optimizer_config"][
+        "parameters"
+    ] = grouped_parameters
+
     # Test default SparseAdam setting
     config = {"learner_config": {"optimizer_config": {"optimizer": optimizer}}}
     emmental.Meta.update_config(config)
