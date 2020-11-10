@@ -8,6 +8,9 @@ Added
   (`#77 <https://github.com/SenWu/emmental/pull/77>`_)
 * `@senwu`_: Support distributed learning.
   (`#78 <https://github.com/SenWu/emmental/pull/78>`_)
+* `@senwu`_: Support no label dataset.
+  (`#79 <https://github.com/SenWu/emmental/pull/79>`_)
+
 
 0.0.7_ - 2020-06-03
 -------------------
