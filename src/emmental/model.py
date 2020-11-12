@@ -359,6 +359,8 @@ class EmmentalModel(nn.Module):
                 Y_bdict = None
             else:
                 X_bdict, Y_bdict = bdict
+                if not dataloader.is_learnable:
+                    Y_bdict = None
 
             uid_bdict, loss_bdict, prob_bdict, gold_bdict = self.forward(
                 X_bdict[uid], X_bdict, Y_bdict, task_to_label_dict
