@@ -589,7 +589,7 @@ class EmmentalLearner(object):
                     batch_size += len(next(iter(Y_dict.values())))
 
                     # Perform forward pass and calcualte the loss and count
-                    uid_dict, loss_dict, prob_dict, gold_dict = model(
+                    uid_dict, loss_dict, prob_dict, gold_dict, out_dict = model(
                         uids, X_dict, Y_dict, task_to_label_dict
                     )
 

@@ -189,6 +189,13 @@ def test_e2e(caplog):
             ],
             loss_func=partial(ce_loss, task_name),
             output_func=partial(output, task_name),
+            action_outputs=[
+                (f"{task_name}_pred_head", 0),
+                ("_input_", "data"),
+                (f"{task_name}_pred_head", 0),
+            ]
+            if task_name == "task2"
+            else None,
             scorer=Scorer(metrics=task_metrics[task_name]),
         )
         for task_name in ["task1", "task2"]
@@ -230,6 +237,20 @@ def test_e2e(caplog):
             test2_pred["probs"]["task2"][idx], test3_pred["probs"]["task2"][idx]
         )
         for idx in range(len(test3_pred["probs"]["task2"]))
+    ]
+    assert False not in [
+        np.array_equal(
+            test2_pred["outputs"]["task2"]["task2_pred_head_0"][idx],
+            test3_pred["outputs"]["task2"]["task2_pred_head_0"][idx],
+        )
+        for idx in range(len(test2_pred["outputs"]["task2"]["task2_pred_head_0"]))
+    ]
+    assert False not in [
+        np.array_equal(
+            test2_pred["outputs"]["task2"]["_input__data"][idx],
+            test3_pred["outputs"]["task2"]["_input__data"][idx],
+        )
+        for idx in range(len(test2_pred["outputs"]["task2"]["_input__data"]))
     ]
 
     shutil.rmtree(dirpath)
