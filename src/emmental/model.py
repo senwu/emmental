@@ -247,12 +247,21 @@ class EmmentalModel(nn.Module):
         X_dict: Dict[str, Any],
         Y_dict: Dict[str, Tensor],
         task_to_label_dict: Dict[str, str],
-    ) -> Tuple[
-        Dict[str, List[str]],
-        Dict[str, ndarray],
-        Dict[str, ndarray],
-        Dict[str, ndarray],
-        Dict[str, Dict[str, ndarray]],
+        return_action_outputs=False,
+    ) -> Union[
+        Tuple[
+            Dict[str, List[str]],
+            Dict[str, ndarray],
+            Dict[str, ndarray],
+            Dict[str, ndarray],
+            Dict[str, Dict[str, ndarray]],
+        ],
+        Tuple[
+            Dict[str, List[str]],
+            Dict[str, ndarray],
+            Dict[str, ndarray],
+            Dict[str, ndarray],
+        ],
     ]:
         """Forward function.
 
@@ -261,9 +270,12 @@ class EmmentalModel(nn.Module):
           X_dict: The input data.
           Y_dict: The output data.
           task_to_label_dict: The task to label mapping.
+          return_action_outputs: Whether return action_outputs or not,
+          defaults to False.
 
         Returns:
-          The (active) uids, loss and prob in the batch of all tasks.
+          The (active) uids, loss, prob, gold, action_output (optional) in the batch of
+          all tasks.
         """
         uid_dict: Dict[str, List[str]] = defaultdict(list)
         loss_dict: Dict[str, ndarray] = defaultdict(float)
@@ -322,7 +334,10 @@ class EmmentalModel(nn.Module):
 
                     gold_dict[task_name] = Y_dict[label_name][active].cpu().numpy()
 
-                    if self.action_outputs[task_name] is not None:
+                    if (
+                        return_action_outputs
+                        and self.action_outputs[task_name] is not None
+                    ):
                         for action_name, output_index in self.action_outputs[task_name]:
                             out_dict[task_name][f"{action_name}_{output_index}"] = (
                                 output_dict[action_name][output_index][
@@ -341,7 +356,7 @@ class EmmentalModel(nn.Module):
                 prob_dict[task_name] = (
                     self.output_funcs[task_name](output_dict).cpu().detach().numpy()
                 )
-                if self.action_outputs[task_name] is not None:
+                if return_action_outputs and self.action_outputs[task_name] is not None:
                     for action_name, output_index in self.action_outputs[task_name]:
                         out_dict[task_name][f"{action_name}_{output_index}"] = (
                             output_dict[action_name][output_index]
@@ -351,17 +366,25 @@ class EmmentalModel(nn.Module):
                         )
                 loss_dict = None
                 gold_dict = None
-        return uid_dict, loss_dict, prob_dict, gold_dict, out_dict
+
+        if return_action_outputs:
+            return uid_dict, loss_dict, prob_dict, gold_dict, out_dict
+        else:
+            return uid_dict, loss_dict, prob_dict, gold_dict
 
     @torch.no_grad()
     def predict(
-        self, dataloader: EmmentalDataLoader, return_preds: bool = False
+        self,
+        dataloader: EmmentalDataLoader,
+        return_preds: bool = False,
+        return_action_outputs: bool = True,
     ) -> Dict[str, Any]:
         """Predict from dataloader.
 
         Args:
           dataloader: The dataloader to predict.
           return_preds: Whether return predictions or not, defaults to False.
+          return_action_outputs: Whether return action_outputs or not, defaults to True.
 
         Returns:
           The result dict.
@@ -398,9 +421,34 @@ class EmmentalModel(nn.Module):
                 if not dataloader.is_learnable:
                     Y_bdict = None
 
-            uid_bdict, loss_bdict, prob_bdict, gold_bdict, out_bdict = self.forward(
-                X_bdict[uid], X_bdict, Y_bdict, task_to_label_dict
-            )
+            if return_action_outputs:
+                (
+                    uid_bdict,
+                    loss_bdict,
+                    prob_bdict,
+                    gold_bdict,
+                    out_bdict,
+                ) = self.forward(  # type: ignore
+                    X_bdict[uid],
+                    X_bdict,
+                    Y_bdict,
+                    task_to_label_dict,
+                    return_action_outputs=return_action_outputs,
+                )
+            else:
+                (
+                    uid_bdict,
+                    loss_bdict,
+                    prob_bdict,
+                    gold_bdict,
+                ) = self.forward(  # type: ignore
+                    X_bdict[uid],
+                    X_bdict,
+                    Y_bdict,
+                    task_to_label_dict,
+                    return_action_outputs=return_action_outputs,
+                )
+                out_bdict = None
             for task_name in uid_bdict.keys():
                 uid_dict[task_name].extend(uid_bdict[task_name])
                 prob_dict[task_name].extend(prob_bdict[task_name])
@@ -416,7 +464,7 @@ class EmmentalModel(nn.Module):
                         loss_dict[task_name].extend(  # type: ignore
                             loss_bdict[task_name].cpu().numpy()
                         )
-            if out_bdict:
+            if return_action_outputs and out_bdict:
                 for task_name in out_bdict.keys():
                     for action_name in out_bdict[task_name].keys():
                         out_dict[task_name][action_name].extend(
@@ -434,8 +482,10 @@ class EmmentalModel(nn.Module):
             "golds": gold_dict,
             "probs": prob_dict,
             "losses": loss_dict,
-            "outputs": out_dict,
         }
+
+        if return_action_outputs:
+            res["outputs"] = out_dict
 
         if return_preds:
             for task_name, prob in prob_dict.items():

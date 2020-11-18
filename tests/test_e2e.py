@@ -238,6 +238,8 @@ def test_e2e(caplog):
         )
         for idx in range(len(test3_pred["probs"]["task2"]))
     ]
+    assert "outputs" in test2_pred
+    assert "outputs" in test3_pred
     assert False not in [
         np.array_equal(
             test2_pred["outputs"]["task2"]["task2_pred_head_0"][idx],
@@ -252,5 +254,8 @@ def test_e2e(caplog):
         )
         for idx in range(len(test2_pred["outputs"]["task2"]["_input__data"]))
     ]
+
+    test4_pred = mtl_model.predict(test_dataloader2, return_action_outputs=False)
+    assert "outputs" not in test4_pred
 
     shutil.rmtree(dirpath)
