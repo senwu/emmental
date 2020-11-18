@@ -1,6 +1,6 @@
 """Emmental task."""
 import logging
-from typing import Callable, Dict, List, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 from torch import nn
 from torch.nn.modules.container import ModuleDict
@@ -20,6 +20,7 @@ class EmmentalTask(object):
       task_flow: The task flow among modules to define how the data flows.
       loss_func: The function to calculate the loss.
       output_func: The function to generate the output.
+      action_outputs: The action outputs need to output.
       scorer: The class of metrics to evaluate the task.
       weight: The weight of the task.
     """
@@ -34,6 +35,7 @@ class EmmentalTask(object):
         loss_func: Callable,
         output_func: Callable,
         scorer: Scorer,
+        action_outputs: Optional[List[Union[Tuple[str, str], Tuple[str, int]]]] = None,
         weight: Union[float, int] = 1.0,
     ) -> None:
         """Initialize EmmentalTask."""
@@ -44,6 +46,13 @@ class EmmentalTask(object):
         self.loss_func = loss_func
         self.output_func = output_func
         self.scorer = scorer
+        self.action_outputs = (
+            action_outputs
+            if action_outputs is None or isinstance(action_outputs, list)
+            else [action_outputs]  # type: ignore
+        )
+        if action_outputs is not None:
+            self.action_outputs = list(set(action_outputs))
         self.weight = weight
 
         if Meta.config["meta_config"]["verbose"]:
