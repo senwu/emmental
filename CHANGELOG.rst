@@ -10,7 +10,49 @@ Added
   (`#78 <https://github.com/SenWu/emmental/pull/78>`_)
 * `@senwu`_: Support no label dataset.
   (`#79 <https://github.com/SenWu/emmental/pull/79>`_)
+* `@senwu`_: Support output model immediate_ouput.
+  (`#80 <https://github.com/SenWu/emmental/pull/80>`_)
 
+.. note::
+
+    To output model immediate_ouput, the user needs to specify which module output
+    he/she wants to output in `EmmentalTask`'s `action_outputs`. It should be a pair of
+    task_flow name and index or list of that pair. During the prediction phrase, the
+    user needs to set `return_action_outputs=True` to get the outputs where the key is
+    `{task_flow name}_{index}`.
+
+    .. code:: python
+
+        task_name = "Task1"
+        EmmentalTask(
+            name=task_name,
+            module_pool=nn.ModuleDict(
+                {
+                    "input_module": nn.Linear(2, 8),
+                    f"{task_name}_pred_head": nn.Linear(8, 2),
+                }
+            ),
+            task_flow=[
+                {
+                    "name": "input",
+                    "module": "input_module",
+                    "inputs": [("_input_", "data")],
+                },
+                {
+                    "name": f"{task_name}_pred_head",
+                    "module": f"{task_name}_pred_head",
+                    "inputs": [("input", 0)],
+                },
+            ],
+            loss_func=partial(ce_loss, task_name),
+            output_func=partial(output, task_name),
+            action_outputs=[
+                (f"{task_name}_pred_head", 0),
+                ("_input_", "data"),
+                (f"{task_name}_pred_head", 0),
+            ],
+            scorer=Scorer(metrics=task_metrics[task_name]),
+        )
 
 0.0.7_ - 2020-06-03
 -------------------
