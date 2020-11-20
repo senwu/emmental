@@ -54,6 +54,12 @@ Added
             scorer=Scorer(metrics=task_metrics[task_name]),
         )
 
+Fixed
+^^^^^
+* `@senwu`_: Fix customized optimizer support issue.
+  (`#81 <https://github.com/SenWu/emmental/pull/81>`_)
+
+
 0.0.7_ - 2020-06-03
 -------------------
 
