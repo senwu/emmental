@@ -4,6 +4,7 @@ import copy
 import logging
 import time
 from collections import defaultdict
+from functools import partial
 from typing import Dict, List, Optional, Union
 
 import numpy as np
@@ -97,7 +98,9 @@ class EmmentalLearner(object):
                 weight_decay=optimizer_config["l2"],
                 **optimizer_config[f"{opt}_config"],
             )
-        elif isinstance(opt, optim.Optimizer):
+        elif (isinstance(opt, type) and issubclass(opt, optim.Optimizer)) or (
+            isinstance(opt, partial) and issubclass(opt.func, optim.Optimizer)
+        ):
             optimizer = opt(parameters)  # type: ignore
         else:
             raise ValueError(f"Unrecognized optimizer option '{opt}'")
