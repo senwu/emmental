@@ -99,7 +99,8 @@ class EmmentalLearner(object):
                 **optimizer_config[f"{opt}_config"],
             )
         elif (isinstance(opt, type) and issubclass(opt, optim.Optimizer)) or (
-            isinstance(opt, partial) and issubclass(opt.func, optim.Optimizer)
+            isinstance(opt, partial)
+            and issubclass(opt.func, optim.Optimizer)  # type: ignore
         ):
             optimizer = opt(parameters)  # type: ignore
         else:
