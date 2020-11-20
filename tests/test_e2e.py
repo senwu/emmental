@@ -166,25 +166,39 @@ def test_e2e(caplog):
 
     task_metrics = {"task1": ["accuracy"], "task2": ["accuracy", "roc_auc"]}
 
+    class IdentityModule(nn.Module):
+        def __init__(self):
+            """Initialize IdentityModule."""
+            super().__init__()
+
+        def forward(self, input):
+            return {"out": input}
+
     tasks = [
         EmmentalTask(
             name=task_name,
             module_pool=nn.ModuleDict(
                 {
-                    "input_module": nn.Linear(2, 8),
+                    "input_module0": IdentityModule(),
+                    "input_module1": nn.Linear(2, 8),
                     f"{task_name}_pred_head": nn.Linear(8, 2),
                 }
             ),
             task_flow=[
                 {
                     "name": "input",
-                    "module": "input_module",
+                    "module": "input_module0",
                     "inputs": [("_input_", "data")],
+                },
+                {
+                    "name": "input1",
+                    "module": "input_module1",
+                    "inputs": [("input", "out")],
                 },
                 {
                     "name": f"{task_name}_pred_head",
                     "module": f"{task_name}_pred_head",
-                    "inputs": [("input", 0)],
+                    "inputs": [("input1", 0)],
                 },
             ],
             loss_func=partial(ce_loss, task_name),

@@ -235,7 +235,7 @@ class EmmentalModel(nn.Module):
                         output = self.module_pool[action["module"]].forward(output_dict)
                     if isinstance(output, tuple):
                         output = list(output)
-                    if not isinstance(output, list):
+                    if not isinstance(output, list) and not isinstance(output, dict):
                         output = [output]
                     output_dict[action["name"]] = output
 

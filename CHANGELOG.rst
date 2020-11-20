@@ -54,6 +54,9 @@ Added
             scorer=Scorer(metrics=task_metrics[task_name]),
         )
 
+* `@senwu`_: Support action output dict.
+  (`#82 <https://github.com/SenWu/emmental/pull/82>`_)
+
 Fixed
 ^^^^^
 * `@senwu`_: Fix customized optimizer support issue.
