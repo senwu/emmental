@@ -79,16 +79,6 @@ def test_emmental_dataset(caplog):
         X_dict={"_uids_": x1}, Y_dict={"label1": y1}, name="new_data"
     )
 
-    with pytest.raises(ValueError):
-        dataset = EmmentalDataset(
-            X_dict={"data1": x1}, Y_dict={"label1": x1}, name="new_data"
-        )
-
-    with pytest.raises(ValueError):
-        dataset = EmmentalDataset(
-            X_dict={"data1": x1}, Y_dict={"label1": x1}, name="new_data"
-        )
-
     dataset = EmmentalDataset(X_dict={"data1": x1}, name="new_data")
 
     # Check if the dataset is correctly constructed
