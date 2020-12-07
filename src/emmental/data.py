@@ -57,12 +57,12 @@ class EmmentalDataset(Dataset):
                     f"Auto generate uids for dataset {self.name} under {self.uid}."
                 )
 
-        if self.Y_dict is not None:
-            for name, label in self.Y_dict.items():
-                if not isinstance(label, Tensor):
-                    raise ValueError(
-                        f"Label {name} should be torch.Tensor, not {type(label)}."
-                    )
+        # if self.Y_dict is not None:
+        #     for name, label in self.Y_dict.items():
+        #         if not isinstance(label, Tensor):
+        #             raise ValueError(
+        #                 f"Label {name} should be torch.Tensor, not {type(label)}."
+        #             )
 
     def __getitem__(
         self, index: int

@@ -114,7 +114,12 @@ def prob_to_pred(probs: ndarray) -> ndarray:
     Returns:
       predicted labels.
     """
-    return np.argmax(probs, axis=-1)
+    if isinstance(probs, ndarray):
+        return np.argmax(probs, axis=-1)
+    elif isinstance(probs, list):
+        return np.array([np.argmax(prob, axis=-1) for prob in probs])
+    else:
+        raise ValueError(f"Unrecognized type {type(probs)}")
 
 
 def pred_to_prob(preds: ndarray, n_classes: int) -> ndarray:
