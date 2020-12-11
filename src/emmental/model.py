@@ -49,6 +49,7 @@ class EmmentalModel(nn.Module):
         self.action_outputs: Dict[
             str, Optional[List[Union[Tuple[str, str], Tuple[str, int]]]]
         ] = dict()
+        self.module_device: Dict[str, Union[int, str, torch.device]] = {}
         self.weights: Dict[str, float] = dict()
 
         # Build network with given tasks
@@ -61,30 +62,56 @@ class EmmentalModel(nn.Module):
                 f"task {self.task_names}."
             )
 
-        # Move model to specified device
-        self._move_to_device()
+    def _get_default_device(self) -> torch.device:
+        return (
+            torch.device("cpu")
+            if Meta.config["model_config"]["device"] == -1
+            else torch.device(Meta.config["model_config"]["device"])
+        )
 
     def _move_to_device(self) -> None:
         """Move model to specified device."""
-        if Meta.config["model_config"]["device"] != -1:
-            if torch.cuda.is_available():
-                device = (
-                    f"cuda:{Meta.config['model_config']['device']}"
-                    if isinstance(Meta.config["model_config"]["device"], int)
-                    else Meta.config["model_config"]["device"]
-                )
-                if Meta.config["meta_config"]["verbose"]:
-                    logger.info(f"Moving model to GPU ({device}).")
-                self.to(torch.device(device))
+        default_device = self._get_default_device()
+
+        for module_name in self.module_pool.keys():
+            device = (
+                self.module_device[module_name]
+                if module_name in self.module_device
+                else default_device
+            )
+            if device != torch.device("cpu"):
+                if torch.cuda.is_available():
+                    if Meta.config["meta_config"]["verbose"]:
+                        logger.info(f"Moving {module_name} module to GPU ({device}).")
+                    self.module_pool[module_name].to(device)
+                else:
+                    if Meta.config["meta_config"]["verbose"]:
+                        logger.info(
+                            f"No cuda device available. "
+                            f"Switch {module_name} to cpu instead."
+                        )
+                    self.module_pool[module_name].to(torch.device("cpu"))
             else:
                 if Meta.config["meta_config"]["verbose"]:
-                    logger.info("No cuda device available. Switch to cpu instead.")
+                    logger.info(f"Moving {module_name} module to CPU.")
+                self.module_pool[module_name].to(torch.device("cpu"))
 
     def _to_dataparallel(self) -> None:
-        for key in self.module_pool.keys():
-            self.module_pool[key] = torch.nn.DataParallel(self.module_pool[key])
+        default_device = self._get_default_device()
+
+        for module_name in self.module_pool.keys():
+            device = (
+                self.module_device[module_name]
+                if module_name in self.module_device
+                else default_device
+            )
+            if device != torch.device("cpu"):
+                self.module_pool[module_name] = torch.nn.DataParallel(
+                    self.module_pool[module_name]
+                )
 
     def _to_distributed_dataparallel(self) -> None:
+        # TODO support multiple device with DistributedDataParallel
         for key in self.module_pool.keys():
             # Ensure there is some gradient parameter for DDP
             if not any(p.requires_grad for p in self.module_pool[key].parameters()):
@@ -140,6 +167,8 @@ class EmmentalModel(nn.Module):
         self.output_funcs[task.name] = task.output_func
         # Collect action outputs
         self.action_outputs[task.name] = task.action_outputs
+        # Collect module device
+        self.module_device.update(task.module_device)
         # Collect scorer
         self.scorers[task.name] = task.scorer
         # Collect weight
@@ -166,6 +195,8 @@ class EmmentalModel(nn.Module):
         self.output_funcs[task.name] = task.output_func
         # Update action outputs
         self.action_outputs[task.name] = task.action_outputs
+        # Update module device
+        self.module_device.update(task.module_device)
         # Update scorer
         self.scorers[task.name] = task.scorer
         # Update weight
@@ -217,7 +248,9 @@ class EmmentalModel(nn.Module):
         Returns:
           The output of all forwarded modules
         """
-        X_dict = move_to_device(X_dict, Meta.config["model_config"]["device"])
+        default_device = self._get_default_device()
+
+        X_dict = move_to_device(X_dict, default_device)
 
         output_dict = dict(_input_=X_dict)
 
@@ -227,14 +260,23 @@ class EmmentalModel(nn.Module):
                 if action["name"] not in output_dict:
                     if action["inputs"]:
                         try:
-                            input = [
-                                output_dict[action_name][output_index]
-                                for action_name, output_index in action["inputs"]
-                            ]
+                            action_module_device = (
+                                self.module_device[action["module"]]
+                                if action["module"] in self.module_device
+                                else default_device
+                            )
+                            input = move_to_device(
+                                [
+                                    output_dict[action_name][output_index]
+                                    for action_name, output_index in action["inputs"]
+                                ],
+                                action_module_device,
+                            )
                         except Exception:
                             raise ValueError(f"Unrecognized action {action}.")
                         output = self.module_pool[action["module"]].forward(*input)
                     else:
+                        # TODO: Handle multiple device with not inputs case
                         output = self.module_pool[action["module"]].forward(output_dict)
                     if isinstance(output, tuple):
                         output = list(output)

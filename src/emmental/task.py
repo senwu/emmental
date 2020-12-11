@@ -2,6 +2,7 @@
 import logging
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
+import torch
 from torch import nn
 from torch.nn.modules.container import ModuleDict
 
@@ -20,9 +21,10 @@ class EmmentalTask(object):
       task_flow: The task flow among modules to define how the data flows.
       loss_func: The function to calculate the loss.
       output_func: The function to generate the output.
-      action_outputs: The action outputs need to output.
       scorer: The class of metrics to evaluate the task.
-      weight: The weight of the task.
+      action_outputs: The action outputs need to output, defaults to None.
+      module_device: The dict of module device specification, defaults to None.
+      weight: The weight of the task, defaults to 1.0.
     """
 
     def __init__(
@@ -36,6 +38,7 @@ class EmmentalTask(object):
         output_func: Callable,
         scorer: Scorer,
         action_outputs: Optional[List[Union[Tuple[str, str], Tuple[str, int]]]] = None,
+        module_device: Dict[str, Union[int, str, torch.device]] = {},
         weight: Union[float, int] = 1.0,
     ) -> None:
         """Initialize EmmentalTask."""
@@ -53,6 +56,18 @@ class EmmentalTask(object):
         )
         if action_outputs is not None:
             self.action_outputs = list(set(action_outputs))
+
+        self.module_device = {}
+        for module_name in module_device.keys():
+            if module_name not in self.module_pool:
+                continue
+            if module_device[module_name] == -1:
+                self.module_device[module_name] = torch.device("cpu")
+            else:
+                self.module_device[module_name] = torch.device(
+                    module_device[module_name]
+                )
+
         self.weight = weight
 
         if Meta.config["meta_config"]["verbose"]:
