@@ -2,6 +2,7 @@
 import collections
 import copy
 import logging
+import math
 import time
 from collections import defaultdict
 from functools import partial
@@ -212,7 +213,7 @@ class EmmentalLearner(object):
                 "warmup_steps"
             ]
             if warmup_steps < 0:
-                raise ValueError("warmup_steps much greater or equal than 0.")
+                raise ValueError("warmup_steps must greater than 0.")
             warmup_unit = Meta.config["learner_config"]["lr_scheduler_config"][
                 "warmup_unit"
             ]
@@ -234,7 +235,7 @@ class EmmentalLearner(object):
             warmup_percentage = Meta.config["learner_config"]["lr_scheduler_config"][
                 "warmup_percentage"
             ]
-            self.warmup_steps = int(
+            self.warmup_steps = math.ceil(
                 warmup_percentage
                 * Meta.config["learner_config"]["n_epochs"]
                 * self.n_batches_per_epoch
