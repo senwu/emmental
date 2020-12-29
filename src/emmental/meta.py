@@ -209,4 +209,4 @@ class Meta(object):
             Meta.config["model_config"]["device"] = torch.device(
                 "cuda", Meta.config["learner_config"]["local_rank"]
             )
-            torch.distributed.init_process_group(backend="nccl")
+            torch.distributed.init_process_group(backend=Meta.config["model_config"]["distributed_backend"])

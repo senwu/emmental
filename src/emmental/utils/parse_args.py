@@ -93,6 +93,14 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         help="Whether to use dataparallel or not",
     )
 
+    model_config.add_argument(
+        "--distributed_backend",
+        type=str,
+        default='nccl',
+        choices=['nccl', 'gloo'],
+        help="Which backend to use for distributed training.",
+    )
+
     # Learning configuration
     learner_config = parser.add_argument_group("Learning configuration")
 
@@ -855,6 +863,7 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
             "model_path": args.model_path,
             "device": args.device,
             "dataparallel": args.dataparallel,
+            "distributed_backend": args.distributed_backend
         },
         "learner_config": {
             "fp16": args.fp16,
