@@ -37,7 +37,12 @@ def test_parse_args(caplog):
             "use_exact_log_path": False,
         },
         "data_config": {"min_data_len": 0, "max_data_len": 0},
-        "model_config": {"model_path": None, "device": 0, "dataparallel": True, "distributed_backend": "nccl"},
+        "model_config": {
+            "model_path": None,
+            "device": 0,
+            "dataparallel": True,
+            "distributed_backend": "nccl",
+        },
         "learner_config": {
             "fp16": False,
             "fp16_opt_level": "O1",
@@ -184,7 +189,7 @@ def test_checkpoint_metric(caplog):
     # Test different checkpoint_metric
     dirpath = "temp_parse_args"
     Meta.reset()
-    
+
     emmental.init(
         log_dir=dirpath,
         config={
@@ -204,7 +209,12 @@ def test_checkpoint_metric(caplog):
             "use_exact_log_path": False,
         },
         "data_config": {"min_data_len": 0, "max_data_len": 0},
-        "model_config": {"model_path": None, "device": 0, "dataparallel": True, "distributed_backend": "nccl"},
+        "model_config": {
+            "model_path": None,
+            "device": 0,
+            "dataparallel": True,
+            "distributed_backend": "nccl",
+        },
         "learner_config": {
             "fp16": False,
             "fp16_opt_level": "O1",
