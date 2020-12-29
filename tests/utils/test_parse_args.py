@@ -27,7 +27,6 @@ def test_parse_args(caplog):
         ]
     )
     assert args.seed == 0
-
     config = parse_args_to_config(args)
 
     assert config == {
@@ -185,6 +184,7 @@ def test_checkpoint_metric(caplog):
     # Test different checkpoint_metric
     dirpath = "temp_parse_args"
     Meta.reset()
+    
     emmental.init(
         log_dir=dirpath,
         config={
