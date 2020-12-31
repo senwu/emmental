@@ -562,7 +562,7 @@ class EmmentalLearner(object):
         self.optimizer.zero_grad()
 
         @contextlib.contextmanager
-        def dummy_context_mgr():
+        def dummy_context_mgr():  # type: ignore
             yield None
 
         for epoch_num in range(Meta.config["learner_config"]["n_epochs"]):
@@ -589,7 +589,7 @@ class EmmentalLearner(object):
 
                     with torch.cuda.amp.autocast() if Meta.config["learner_config"][
                         "fp16"
-                    ] else dummy_context_mgr():
+                    ] else dummy_context_mgr():  # type: ignore
                         # Perform forward pass and calcualte the loss and count
                         uid_dict, loss_dict, prob_dict, gold_dict = model(
                             uids, X_dict, Y_dict, task_to_label_dict
