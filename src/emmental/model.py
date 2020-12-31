@@ -86,6 +86,9 @@ class EmmentalModel(nn.Module):
 
     def _to_distributed_dataparallel(self) -> None:
         for key in self.module_pool.keys():
+            # Ensure there is some gradient parameter for DDP
+            if not any(p.requires_grad for p in self.module_pool[key].parameters()):
+                continue
             self.module_pool[
                 key
             ] = torch.nn.parallel.DistributedDataParallel(  # type: ignore
