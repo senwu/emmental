@@ -1,5 +1,9 @@
+# Copyright (c) 2020 Sen Wu. All Rights Reserved.
+
+
 """Emmental learner."""
 import collections
+import contextlib
 import copy
 import logging
 import math
@@ -12,6 +16,7 @@ import numpy as np
 import torch
 from numpy import ndarray
 from torch import optim as optim
+from torch.cuda.amp import GradScaler, autocast
 from torch.optim.lr_scheduler import _LRScheduler
 
 from emmental import Meta
@@ -531,31 +536,17 @@ class EmmentalLearner(object):
         self._set_lr_scheduler(model)
 
         if Meta.config["learner_config"]["fp16"]:
-            try:
-                from apex import amp  # type: ignore
-            except ImportError:
-                raise ImportError(
-                    "Please install apex from https://www.github.com/nvidia/apex to "
-                    "use fp16 training."
-                )
-            logger.info(
-                f"Modeling training with 16-bit (mixed) precision "
-                f"and {Meta.config['learner_config']['fp16_opt_level']} opt level."
-            )
-            model, self.optimizer = amp.initialize(
-                model,
-                self.optimizer,
-                opt_level=Meta.config["learner_config"]["fp16_opt_level"],
-            )
+            logger.info("Modeling training with mixed precision.")
+            scaler = GradScaler()
 
-        # Multi-gpu training (after apex fp16 initialization)
+        # Multi-gpu training
         if (
             Meta.config["learner_config"]["local_rank"] == -1
             and Meta.config["model_config"]["dataparallel"]
         ):
             model._to_dataparallel()
 
-        # Distributed training (after apex fp16 initialization)
+        # Distributed training
         if Meta.config["learner_config"]["local_rank"] != -1:
             model._to_distributed_dataparallel()
 
@@ -570,6 +561,10 @@ class EmmentalLearner(object):
 
         # Set gradients of all model parameters to zero
         self.optimizer.zero_grad()
+
+        @contextlib.contextmanager
+        def dummy_context_mgr():  # type: ignore
+            yield None
 
         for epoch_num in range(Meta.config["learner_config"]["n_epochs"]):
             batches = tqdm(
@@ -593,41 +588,43 @@ class EmmentalLearner(object):
                 for uids, X_dict, Y_dict, task_to_label_dict, data_name, split in batch:
                     batch_size += len(next(iter(Y_dict.values())))
 
-                    # Perform forward pass and calcualte the loss and count
-                    uid_dict, loss_dict, prob_dict, gold_dict = model(
-                        uids, X_dict, Y_dict, task_to_label_dict
-                    )
-
-                    # Update running loss and count
-                    for task_name in uid_dict.keys():
-                        identifier = f"{task_name}/{data_name}/{split}"
-                        self.running_uids[identifier].extend(uid_dict[task_name])
-                        self.running_losses[identifier] += (
-                            loss_dict[task_name].item() * len(uid_dict[task_name])
-                            if len(loss_dict[task_name].size()) == 0
-                            else torch.sum(loss_dict[task_name]).item()
+                    with autocast() if Meta.config["learner_config"][  # type: ignore
+                        "fp16"
+                    ] else dummy_context_mgr():
+                        # Perform forward pass and calcualte the loss and count
+                        uid_dict, loss_dict, prob_dict, gold_dict = model(
+                            uids, X_dict, Y_dict, task_to_label_dict
                         )
-                        self.running_probs[identifier].extend(prob_dict[task_name])
-                        self.running_golds[identifier].extend(gold_dict[task_name])
 
-                    # Skip the backward pass if no loss is calcuated
-                    if not loss_dict:
-                        continue
+                        # Update running loss and count
+                        for task_name in uid_dict.keys():
+                            identifier = f"{task_name}/{data_name}/{split}"
+                            self.running_uids[identifier].extend(uid_dict[task_name])
+                            self.running_losses[identifier] += (
+                                loss_dict[task_name].item() * len(uid_dict[task_name])
+                                if len(loss_dict[task_name].size()) == 0
+                                else torch.sum(loss_dict[task_name]).item()
+                            )
+                            self.running_probs[identifier].extend(prob_dict[task_name])
+                            self.running_golds[identifier].extend(gold_dict[task_name])
 
-                    # Calculate the average loss
-                    loss = sum(
-                        [
-                            model.weights[task_name] * task_loss
-                            if len(task_loss.size()) == 0
-                            else torch.mean(model.weights[task_name] * task_loss)
-                            for task_name, task_loss in loss_dict.items()
-                        ]
-                    )
+                        # Skip the backward pass if no loss is calcuated
+                        if not loss_dict:
+                            continue
+
+                        # Calculate the average loss
+                        loss = sum(
+                            [
+                                model.weights[task_name] * task_loss
+                                if len(task_loss.size()) == 0
+                                else torch.mean(model.weights[task_name] * task_loss)
+                                for task_name, task_loss in loss_dict.items()
+                            ]
+                        )
 
                     # Perform backward pass to calculate gradients
                     if Meta.config["learner_config"]["fp16"]:
-                        with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                            scaled_loss.backward()
+                        scaler.scale(loss).backward()
                     else:
                         loss.backward()  # type: ignore
 
@@ -639,23 +636,19 @@ class EmmentalLearner(object):
                 ):
                     # Clip gradient norm
                     if Meta.config["learner_config"]["optimizer_config"]["grad_clip"]:
-                        if Meta.config["learner_config"]["fp16"]:
-                            torch.nn.utils.clip_grad_norm_(
-                                amp.master_params(self.optimizer),
-                                Meta.config["learner_config"]["optimizer_config"][
-                                    "grad_clip"
-                                ],
-                            )
-                        else:
-                            torch.nn.utils.clip_grad_norm_(
-                                model.parameters(),
-                                Meta.config["learner_config"]["optimizer_config"][
-                                    "grad_clip"
-                                ],
-                            )
+                        torch.nn.utils.clip_grad_norm_(
+                            model.parameters(),
+                            Meta.config["learner_config"]["optimizer_config"][
+                                "grad_clip"
+                            ],
+                        )
 
                     # Update the parameters
-                    self.optimizer.step()
+                    if Meta.config["learner_config"]["fp16"]:
+                        scaler.step(self.optimizer)
+                        scaler.update()
+                    else:
+                        self.optimizer.step()
 
                     # Set gradients of all model parameters to zero
                     self.optimizer.zero_grad()

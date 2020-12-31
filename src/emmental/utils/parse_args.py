@@ -112,14 +112,6 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     learner_config.add_argument(
-        "--fp16_opt_level",
-        type=str,
-        default="O1",
-        help="Apex AMP optimization level selected in ['O0', 'O1', 'O2', 'O3']."
-        "See details at https://nvidia.github.io/apex/amp.html",
-    )
-
-    learner_config.add_argument(
         "--local_rank",
         type=int,
         default=-1,
@@ -867,7 +859,6 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
         },
         "learner_config": {
             "fp16": args.fp16,
-            "fp16_opt_level": args.fp16_opt_level,
             "local_rank": args.local_rank,
             "n_epochs": args.n_epochs,
             "train_split": args.train_split,
