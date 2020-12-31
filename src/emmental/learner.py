@@ -16,6 +16,7 @@ import numpy as np
 import torch
 from numpy import ndarray
 from torch import optim as optim
+from torch.cuda.amp import GradScaler, autocast
 from torch.optim.lr_scheduler import _LRScheduler
 
 from emmental import Meta
@@ -536,7 +537,7 @@ class EmmentalLearner(object):
 
         if Meta.config["learner_config"]["fp16"]:
             logger.info("Modeling training with mixed precision.")
-            scaler = torch.cuda.amp.GradScaler()
+            scaler = GradScaler()
 
         # Multi-gpu training
         if (
@@ -587,9 +588,9 @@ class EmmentalLearner(object):
                 for uids, X_dict, Y_dict, task_to_label_dict, data_name, split in batch:
                     batch_size += len(next(iter(Y_dict.values())))
 
-                    with torch.cuda.amp.autocast() if Meta.config["learner_config"][
+                    with autocast() if Meta.config["learner_config"][  # type: ignore
                         "fp16"
-                    ] else dummy_context_mgr():  # type: ignore
+                    ] else dummy_context_mgr():
                         # Perform forward pass and calcualte the loss and count
                         uid_dict, loss_dict, prob_dict, gold_dict = model(
                             uids, X_dict, Y_dict, task_to_label_dict
