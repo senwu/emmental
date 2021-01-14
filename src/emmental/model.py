@@ -251,6 +251,7 @@ class EmmentalModel(nn.Module):
         Y_dict: Dict[str, Tensor],
         task_to_label_dict: Dict[str, str],
         return_action_outputs=False,
+        return_probs=True,
     ) -> Union[
         Tuple[
             Dict[str, List[str]],
@@ -275,6 +276,7 @@ class EmmentalModel(nn.Module):
           task_to_label_dict: The task to label mapping.
           return_action_outputs: Whether return action_outputs or not,
           defaults to False.
+          return_probs: Whether return prob not, defaults to True.
 
         Returns:
           The (active) uids, loss, prob, gold, action_output (optional) in the batch of
@@ -324,16 +326,19 @@ class EmmentalModel(nn.Module):
                         move_to_device(active, Meta.config["model_config"]["device"]),
                     )
 
-                    prob_dict[task_name] = (
-                        self.output_funcs[task_name](output_dict)[
-                            move_to_device(
-                                active, Meta.config["model_config"]["device"]
-                            )
-                        ]
-                        .cpu()
-                        .detach()
-                        .numpy()
-                    )
+                    if return_probs:
+                        prob_dict[task_name] = (
+                            self.output_funcs[task_name](output_dict)[
+                                move_to_device(
+                                    active, Meta.config["model_config"]["device"]
+                                )
+                            ]
+                            .cpu()
+                            .detach()
+                            .numpy()
+                        )
+                    else:
+                        prob_dict = None
 
                     gold_dict[task_name] = Y_dict[label_name][active].cpu().numpy()
 
@@ -356,9 +361,13 @@ class EmmentalModel(nn.Module):
             # Calculate logit for each task
             for task_name in task_to_label_dict:
                 uid_dict[task_name] = uids
-                prob_dict[task_name] = (
-                    self.output_funcs[task_name](output_dict).cpu().detach().numpy()
-                )
+                if return_probs:
+                    prob_dict[task_name] = (
+                        self.output_funcs[task_name](output_dict).cpu().detach().numpy()
+                    )
+                else:
+                    prob_dict = None
+
                 if return_action_outputs and self.action_outputs[task_name] is not None:
                     for action_name, output_index in self.action_outputs[task_name]:
                         out_dict[task_name][f"{action_name}_{output_index}"] = (
@@ -381,6 +390,7 @@ class EmmentalModel(nn.Module):
         dataloader: EmmentalDataLoader,
         return_preds: bool = False,
         return_action_outputs: bool = True,
+        return_probs: bool = True,
     ) -> Dict[str, Any]:
         """Predict from dataloader.
 
@@ -388,6 +398,7 @@ class EmmentalModel(nn.Module):
           dataloader: The dataloader to predict.
           return_preds: Whether return predictions or not, defaults to False.
           return_action_outputs: Whether return action_outputs or not, defaults to True.
+          return_probs: Whether return prob not, defaults to True.
 
         Returns:
           The result dict.
@@ -437,6 +448,7 @@ class EmmentalModel(nn.Module):
                     Y_bdict,
                     task_to_label_dict,
                     return_action_outputs=return_action_outputs,
+                    return_probs=return_probs,
                 )
             else:
                 (
@@ -450,11 +462,13 @@ class EmmentalModel(nn.Module):
                     Y_bdict,
                     task_to_label_dict,
                     return_action_outputs=return_action_outputs,
+                    return_probs=return_probs,
                 )
                 out_bdict = None
             for task_name in uid_bdict.keys():
                 uid_dict[task_name].extend(uid_bdict[task_name])
-                prob_dict[task_name].extend(prob_bdict[task_name])
+                if return_probs:
+                    prob_dict[task_name].extend(prob_bdict[task_name])
                 if dataloader.is_learnable:
                     gold_dict[task_name].extend(gold_bdict[task_name])
                     if len(loss_bdict[task_name].size()) == 0:
@@ -490,7 +504,7 @@ class EmmentalModel(nn.Module):
         if return_action_outputs:
             res["outputs"] = out_dict
 
-        if return_preds:
+        if return_preds and return_probs:
             for task_name, prob in prob_dict.items():
                 pred_dict[task_name] = prob_to_pred(prob)
             res["preds"] = pred_dict

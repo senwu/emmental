@@ -111,9 +111,7 @@ def init_logging(
             )
         else:
             logging.basicConfig(
-                format=format,
-                level=logging.WARN,
-                handlers=[logging.StreamHandler()],
+                format=format, level=logging.WARN, handlers=[logging.StreamHandler()]
             )
 
         # Notify user of log location
