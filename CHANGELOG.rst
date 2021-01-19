@@ -56,6 +56,9 @@ Added
 
 * `@senwu`_: Support action output dict.
   (`#82 <https://github.com/SenWu/emmental/pull/82>`_)
+* `@senwu`_: Add a new argument `online_eval`. If `online_eval` is off, then model won't
+  return `probs`.
+  (`#89 <https://github.com/SenWu/emmental/pull/89>`_)
 
 Fixed
 ^^^^^
