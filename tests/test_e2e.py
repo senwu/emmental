@@ -32,7 +32,7 @@ def test_e2e(caplog):
         "meta_config": {"seed": 0},
         "learner_config": {
             "n_epochs": 3,
-            "online_eval": True,
+            "online_eval": False,
             "optimizer_config": {"lr": 0.01, "grad_clip": 100},
         },
         "logging_config": {
