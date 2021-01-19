@@ -251,6 +251,7 @@ class EmmentalModel(nn.Module):
         Y_dict: Dict[str, Tensor],
         task_to_label_dict: Dict[str, str],
         return_action_outputs=False,
+        return_probs=True,
     ) -> Union[
         Tuple[
             Dict[str, List[str]],
@@ -275,6 +276,7 @@ class EmmentalModel(nn.Module):
           task_to_label_dict: The task to label mapping.
           return_action_outputs: Whether return action_outputs or not,
           defaults to False.
+          return_probs: Whether return prob not, defaults to True.
 
         Returns:
           The (active) uids, loss, prob, gold, action_output (optional) in the batch of
@@ -324,16 +326,19 @@ class EmmentalModel(nn.Module):
                         move_to_device(active, Meta.config["model_config"]["device"]),
                     )
 
-                    prob_dict[task_name] = (
-                        self.output_funcs[task_name](output_dict)[
-                            move_to_device(
-                                active, Meta.config["model_config"]["device"]
-                            )
-                        ]
-                        .cpu()
-                        .detach()
-                        .numpy()
-                    )
+                    if return_probs:
+                        prob_dict[task_name] = (
+                            self.output_funcs[task_name](output_dict)[
+                                move_to_device(
+                                    active, Meta.config["model_config"]["device"]
+                                )
+                            ]
+                            .cpu()
+                            .detach()
+                            .numpy()
+                        )
+                    else:
+                        prob_dict = None
 
                     gold_dict[task_name] = Y_dict[label_name][active].cpu().numpy()
 
@@ -356,9 +361,13 @@ class EmmentalModel(nn.Module):
             # Calculate logit for each task
             for task_name in task_to_label_dict:
                 uid_dict[task_name] = uids
-                prob_dict[task_name] = (
-                    self.output_funcs[task_name](output_dict).cpu().detach().numpy()
-                )
+                if return_probs:
+                    prob_dict[task_name] = (
+                        self.output_funcs[task_name](output_dict).cpu().detach().numpy()
+                    )
+                else:
+                    prob_dict = None
+
                 if return_action_outputs and self.action_outputs[task_name] is not None:
                     for action_name, output_index in self.action_outputs[task_name]:
                         out_dict[task_name][f"{action_name}_{output_index}"] = (
@@ -381,6 +390,7 @@ class EmmentalModel(nn.Module):
         dataloader: EmmentalDataLoader,
         return_preds: bool = False,
         return_action_outputs: bool = True,
+        return_probs: bool = True,
     ) -> Dict[str, Any]:
         """Predict from dataloader.
 
@@ -388,6 +398,7 @@ class EmmentalModel(nn.Module):
           dataloader: The dataloader to predict.
           return_preds: Whether return predictions or not, defaults to False.
           return_action_outputs: Whether return action_outputs or not, defaults to True.
+          return_probs: Whether return prob not, defaults to True.
 
         Returns:
           The result dict.
@@ -411,68 +422,72 @@ class EmmentalModel(nn.Module):
         task_to_label_dict = dataloader.task_to_label_dict
         uid = dataloader.uid
 
-        for batch_num, bdict in tqdm(
-            enumerate(dataloader),
-            total=len(dataloader),
-            desc=f"Evaluating {dataloader.data_name} ({dataloader.split})",
-        ):
-            if isinstance(bdict, dict) == 1:
-                X_bdict = bdict
-                Y_bdict = None
-            else:
-                X_bdict, Y_bdict = bdict
-                if not dataloader.is_learnable:
+        with torch.no_grad():
+            for batch_num, bdict in tqdm(
+                enumerate(dataloader),
+                total=len(dataloader),
+                desc=f"Evaluating {dataloader.data_name} ({dataloader.split})",
+            ):
+                if isinstance(bdict, dict) == 1:
+                    X_bdict = bdict
                     Y_bdict = None
+                else:
+                    X_bdict, Y_bdict = bdict
+                    if not dataloader.is_learnable:
+                        Y_bdict = None
 
-            if return_action_outputs:
-                (
-                    uid_bdict,
-                    loss_bdict,
-                    prob_bdict,
-                    gold_bdict,
-                    out_bdict,
-                ) = self.forward(  # type: ignore
-                    X_bdict[uid],
-                    X_bdict,
-                    Y_bdict,
-                    task_to_label_dict,
-                    return_action_outputs=return_action_outputs,
-                )
-            else:
-                (
-                    uid_bdict,
-                    loss_bdict,
-                    prob_bdict,
-                    gold_bdict,
-                ) = self.forward(  # type: ignore
-                    X_bdict[uid],
-                    X_bdict,
-                    Y_bdict,
-                    task_to_label_dict,
-                    return_action_outputs=return_action_outputs,
-                )
-                out_bdict = None
-            for task_name in uid_bdict.keys():
-                uid_dict[task_name].extend(uid_bdict[task_name])
-                prob_dict[task_name].extend(prob_bdict[task_name])
-                if dataloader.is_learnable:
-                    gold_dict[task_name].extend(gold_bdict[task_name])
-                    if len(loss_bdict[task_name].size()) == 0:
-                        if loss_dict[task_name] == []:
-                            loss_dict[task_name] = 0
-                        loss_dict[task_name] += loss_bdict[task_name].item() * len(
-                            uid_bdict[task_name]
-                        )
-                    else:
-                        loss_dict[task_name].extend(  # type: ignore
-                            loss_bdict[task_name].cpu().numpy()
-                        )
-            if return_action_outputs and out_bdict:
-                for task_name in out_bdict.keys():
-                    for action_name in out_bdict[task_name].keys():
-                        out_dict[task_name][action_name].extend(
-                            out_bdict[task_name][action_name]
-                        )
+                if return_action_outputs:
+                    (
+                        uid_bdict,
+                        loss_bdict,
+                        prob_bdict,
+                        gold_bdict,
+                        out_bdict,
+                    ) = self.forward(  # type: ignore
+                        X_bdict[uid],
+                        X_bdict,
+                        Y_bdict,
+                        task_to_label_dict,
+                        return_action_outputs=return_action_outputs,
+                        return_probs=return_probs,
+                    )
+                else:
+                    (
+                        uid_bdict,
+                        loss_bdict,
+                        prob_bdict,
+                        gold_bdict,
+                    ) = self.forward(  # type: ignore
+                        X_bdict[uid],
+                        X_bdict,
+                        Y_bdict,
+                        task_to_label_dict,
+                        return_action_outputs=return_action_outputs,
+                        return_probs=return_probs,
+                    )
+                    out_bdict = None
+                for task_name in uid_bdict.keys():
+                    uid_dict[task_name].extend(uid_bdict[task_name])
+                    if return_probs:
+                        prob_dict[task_name].extend(prob_bdict[task_name])
+                    if dataloader.is_learnable:
+                        gold_dict[task_name].extend(gold_bdict[task_name])
+                        if len(loss_bdict[task_name].size()) == 0:
+                            if loss_dict[task_name] == []:
+                                loss_dict[task_name] = 0
+                            loss_dict[task_name] += loss_bdict[task_name].item() * len(
+                                uid_bdict[task_name]
+                            )
+                        else:
+                            loss_dict[task_name].extend(  # type: ignore
+                                loss_bdict[task_name].cpu().numpy()
+                            )
+                if return_action_outputs and out_bdict:
+                    for task_name in out_bdict.keys():
+                        for action_name in out_bdict[task_name].keys():
+                            out_dict[task_name][action_name].extend(
+                                out_bdict[task_name][action_name]
+                            )
 
         # Calculate average loss
         if dataloader.is_learnable:
@@ -490,7 +505,7 @@ class EmmentalModel(nn.Module):
         if return_action_outputs:
             res["outputs"] = out_dict
 
-        if return_preds:
+        if return_preds and return_probs:
             for task_name, prob in prob_dict.items():
                 pred_dict[task_name] = prob_to_pred(prob)
             res["preds"] = pred_dict
