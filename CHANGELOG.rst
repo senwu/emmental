@@ -59,6 +59,50 @@ Added
 * `@senwu`_: Add a new argument `online_eval`. If `online_eval` is off, then model won't
   return `probs`.
   (`#89 <https://github.com/SenWu/emmental/pull/89>`_)
+* `@senwu`_: Support multiple device training and inference.
+  (`#91 <https://github.com/SenWu/emmental/pull/91>`_)
+
+.. note::
+
+    To train model on multiple devices such as CPU and GPU, the user needs to specify
+    which module is on which device in `EmmentalTask`'s `module_device`. It's a
+    ditctionary with key as the module_name and value as device number. During the
+    training and inference phrase, the `Emmental` will automatically perform forward
+    pass based on module device information.
+
+    .. code:: python
+
+        task_name = "Task1"
+        EmmentalTask(
+            name=task_name,
+            module_pool=nn.ModuleDict(
+                {
+                    "input_module": nn.Linear(2, 8),
+                    f"{task_name}_pred_head": nn.Linear(8, 2),
+                }
+            ),
+            task_flow=[
+                {
+                    "name": "input",
+                    "module": "input_module",
+                    "inputs": [("_input_", "data")],
+                },
+                {
+                    "name": f"{task_name}_pred_head",
+                    "module": f"{task_name}_pred_head",
+                    "inputs": [("input", 0)],
+                },
+            ],
+            loss_func=partial(ce_loss, task_name),
+            output_func=partial(output, task_name),
+            action_outputs=[
+                (f"{task_name}_pred_head", 0),
+                ("_input_", "data"),
+                (f"{task_name}_pred_head", 0),
+            ],
+            module_device={"input_module": -1, f"{task_name}_pred_head": 0},
+            scorer=Scorer(metrics=task_metrics[task_name]),
+        )
 
 Fixed
 ^^^^^
