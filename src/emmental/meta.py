@@ -111,9 +111,7 @@ def init_logging(
             )
         else:
             logging.basicConfig(
-                format=format,
-                level=logging.WARN,
-                handlers=[logging.StreamHandler()],
+                format=format, level=logging.WARN, handlers=[logging.StreamHandler()]
             )
 
         # Notify user of log location
@@ -209,4 +207,6 @@ class Meta(object):
             Meta.config["model_config"]["device"] = torch.device(
                 "cuda", Meta.config["learner_config"]["local_rank"]
             )
-            torch.distributed.init_process_group(backend="nccl")
+            torch.distributed.init_process_group(
+                backend=Meta.config["model_config"]["distributed_backend"]
+            )

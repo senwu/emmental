@@ -205,16 +205,10 @@ def test_emmental_dataloader(caplog):
     )
     assert torch.equal(y_batch["label2"], torch.Tensor([[2], [2], [2]]))
 
-    dataset = EmmentalDataset(
-        X_dict={"data1": x1},
-        name="new_data",
-    )
+    dataset = EmmentalDataset(X_dict={"data1": x1}, name="new_data")
 
     dataloader3 = EmmentalDataLoader(
-        task_to_label_dict=["task1"],
-        dataset=dataset,
-        split="train",
-        batch_size=2,
+        task_to_label_dict=["task1"], dataset=dataset, split="train", batch_size=2
     )
 
     x_batch = next(iter(dataloader3))

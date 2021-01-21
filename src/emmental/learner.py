@@ -2,6 +2,7 @@
 import collections
 import copy
 import logging
+import math
 import time
 from collections import defaultdict
 from functools import partial
@@ -212,7 +213,7 @@ class EmmentalLearner(object):
                 "warmup_steps"
             ]
             if warmup_steps < 0:
-                raise ValueError("warmup_steps much greater or equal than 0.")
+                raise ValueError("warmup_steps must greater than 0.")
             warmup_unit = Meta.config["learner_config"]["lr_scheduler_config"][
                 "warmup_unit"
             ]
@@ -234,7 +235,7 @@ class EmmentalLearner(object):
             warmup_percentage = Meta.config["learner_config"]["lr_scheduler_config"][
                 "warmup_percentage"
             ]
-            self.warmup_steps = int(
+            self.warmup_steps = math.ceil(
                 warmup_percentage
                 * Meta.config["learner_config"]["n_epochs"]
                 * self.n_batches_per_epoch
@@ -368,7 +369,12 @@ class EmmentalLearner(object):
         trigger_evaluation = self.logging_manager.trigger_evaluation()
 
         # Log the loss and lr
-        metric_dict.update(self._aggregate_running_metrics(model, trigger_evaluation))
+        metric_dict.update(
+            self._aggregate_running_metrics(
+                model,
+                trigger_evaluation and Meta.config["learner_config"]["online_eval"],
+            )
+        )
 
         # Evaluate the model and log the metric
         if trigger_evaluation:
@@ -594,7 +600,12 @@ class EmmentalLearner(object):
 
                     # Perform forward pass and calcualte the loss and count
                     uid_dict, loss_dict, prob_dict, gold_dict = model(
-                        uids, X_dict, Y_dict, task_to_label_dict
+                        uids,
+                        X_dict,
+                        Y_dict,
+                        task_to_label_dict,
+                        return_action_outputs=False,
+                        return_probs=Meta.config["learner_config"]["online_eval"],
                     )
 
                     # Update running loss and count
@@ -606,8 +617,9 @@ class EmmentalLearner(object):
                             if len(loss_dict[task_name].size()) == 0
                             else torch.sum(loss_dict[task_name]).item()
                         )
-                        self.running_probs[identifier].extend(prob_dict[task_name])
-                        self.running_golds[identifier].extend(gold_dict[task_name])
+                        if Meta.config["learner_config"]["online_eval"]:
+                            self.running_probs[identifier].extend(prob_dict[task_name])
+                            self.running_golds[identifier].extend(gold_dict[task_name])
 
                     # Skip the backward pass if no loss is calcuated
                     if not loss_dict:

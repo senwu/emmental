@@ -32,6 +32,7 @@ def test_e2e(caplog):
         "meta_config": {"seed": 0},
         "learner_config": {
             "n_epochs": 3,
+            "online_eval": True,
             "optimizer_config": {"lr": 0.01, "grad_clip": 100},
         },
         "logging_config": {
@@ -147,10 +148,7 @@ def test_e2e(caplog):
     )
 
     test_dataloader3 = EmmentalDataLoader(
-        task_to_label_dict=["task2"],
-        dataset=test_dataset3,
-        split="test",
-        batch_size=10,
+        task_to_label_dict=["task2"], dataset=test_dataset3, split="test", batch_size=10
     )
 
     # Create task

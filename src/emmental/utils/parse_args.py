@@ -93,6 +93,14 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         help="Whether to use dataparallel or not",
     )
 
+    model_config.add_argument(
+        "--distributed_backend",
+        type=str,
+        default="nccl",
+        choices=["nccl", "gloo"],
+        help="Which backend to use for distributed training.",
+    )
+
     # Learning configuration
     learner_config = parser.add_argument_group("Learning configuration")
 
@@ -151,6 +159,13 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         type=nullable_int,
         default=None,
         help="The ignore index, uses for masking samples",
+    )
+
+    learner_config.add_argument(
+        "--online_eval",
+        type=str2bool,
+        default=False,
+        help="Whether to perform online evaluation",
     )
 
     # Optimizer configuration
@@ -855,6 +870,7 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
             "model_path": args.model_path,
             "device": args.device,
             "dataparallel": args.dataparallel,
+            "distributed_backend": args.distributed_backend,
         },
         "learner_config": {
             "fp16": args.fp16,
@@ -865,6 +881,7 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
             "valid_split": args.valid_split,
             "test_split": args.test_split,
             "ignore_index": args.ignore_index,
+            "online_eval": args.online_eval,
             "optimizer_config": {
                 "optimizer": args.optimizer,
                 "lr": args.lr,
