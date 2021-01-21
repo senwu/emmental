@@ -141,7 +141,9 @@ def pred_to_prob(preds: ndarray, n_classes: int) -> ndarray:
     return probs
 
 
-def move_to_device(obj: Any, device: Optional[Union[int, str]] = -1) -> Any:
+def move_to_device(
+    obj: Any, device: Optional[Union[int, str, torch.device]] = -1
+) -> Any:
     """Move object to specified device.
 
     Given a structure (possibly) containing Tensors on the CPU, move all the Tensors
@@ -160,10 +162,12 @@ def move_to_device(obj: Any, device: Optional[Union[int, str]] = -1) -> Any:
     Returns:
       The converted object.
     """
-    if device == -1 or not torch.cuda.is_available():
-        return obj
-    elif isinstance(obj, torch.Tensor):
-        return obj.cuda(device)
+    device = torch.device("cpu") if device == -1 else torch.device(device)
+    if not torch.cuda.is_available():
+        device = torch.device("cpu")
+
+    if isinstance(obj, torch.Tensor):
+        return obj.to(device)
     elif isinstance(obj, dict):
         return {key: move_to_device(value, device) for key, value in obj.items()}
     elif isinstance(obj, list):

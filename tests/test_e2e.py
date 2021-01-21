@@ -199,6 +199,7 @@ def test_e2e(caplog):
                     "inputs": [("input1", 0)],
                 },
             ],
+            module_device={"input_module0": -1},
             loss_func=partial(ce_loss, task_name),
             output_func=partial(output, task_name),
             action_outputs=[
