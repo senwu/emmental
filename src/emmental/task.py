@@ -25,8 +25,8 @@ class EmmentalTask(object):
       action_outputs: The action outputs need to output, defaults to None.
       module_device: The dict of module device specification, defaults to None.
       weight: The weight of the task, defaults to 1.0.
-      require_prob_for_eval: Whether require prob for evaluation.
-      require_pred_for_eval: Whether require pred for evaluation.
+      require_prob_for_eval: Whether require prob for evaluation, defaults to True.
+      require_pred_for_eval: Whether require pred for evaluation, defaults to True.
     """
 
     def __init__(
