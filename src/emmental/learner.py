@@ -604,8 +604,8 @@ class EmmentalLearner(object):
                         X_dict,
                         Y_dict,
                         task_to_label_dict,
-                        return_action_outputs=False,
                         return_probs=Meta.config["learner_config"]["online_eval"],
+                        return_action_outputs=False,
                     )
 
                     # Update running loss and count
