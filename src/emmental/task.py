@@ -25,6 +25,8 @@ class EmmentalTask(object):
       action_outputs: The action outputs need to output, defaults to None.
       module_device: The dict of module device specification, defaults to None.
       weight: The weight of the task, defaults to 1.0.
+      require_prob_for_eval: Whether require prob for evaluation.
+      require_pred_for_eval: Whether require pred for evaluation.
     """
 
     def __init__(
@@ -40,6 +42,8 @@ class EmmentalTask(object):
         action_outputs: Optional[List[Union[Tuple[str, str], Tuple[str, int]]]] = None,
         module_device: Dict[str, Union[int, str, torch.device]] = {},
         weight: Union[float, int] = 1.0,
+        require_prob_for_eval: bool = True,
+        require_pred_for_eval: bool = True,
     ) -> None:
         """Initialize EmmentalTask."""
         self.name = name
@@ -56,7 +60,6 @@ class EmmentalTask(object):
         )
         if action_outputs is not None:
             self.action_outputs = list(set(action_outputs))
-
         self.module_device = {}
         for module_name in module_device.keys():
             if module_name not in self.module_pool:
@@ -67,7 +70,8 @@ class EmmentalTask(object):
                 self.module_device[module_name] = torch.device(
                     module_device[module_name]
                 )
-
+        self.require_prob_for_eval = require_prob_for_eval
+        self.require_pred_for_eval = require_pred_for_eval
         self.weight = weight
 
         if Meta.config["meta_config"]["verbose"]:
