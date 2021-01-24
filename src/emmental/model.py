@@ -17,7 +17,12 @@ from emmental.data import EmmentalDataLoader
 from emmental.meta import Meta
 from emmental.scorer import Scorer
 from emmental.task import EmmentalTask
-from emmental.utils.utils import construct_identifier, move_to_device, prob_to_pred
+from emmental.utils.utils import (
+    array_to_numpy,
+    construct_identifier,
+    move_to_device,
+    prob_to_pred,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -559,9 +564,13 @@ class EmmentalModel(nn.Module):
         }
 
         if return_probs:
+            for task_name in prob_dict.keys():
+                prob_dict[task_name] = array_to_numpy(prob_dict[task_name])
             res["probs"] = prob_dict
 
         if return_preds:
+            for task_name in pred_dict.keys():
+                pred_dict[task_name] = array_to_numpy(pred_dict[task_name])
             res["preds"] = pred_dict
 
         if return_action_outputs:
