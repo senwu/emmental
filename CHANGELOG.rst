@@ -103,6 +103,7 @@ Added
             module_device={"input_module": -1, f"{task_name}_pred_head": 0},
             scorer=Scorer(metrics=task_metrics[task_name]),
         )
+
 * `@senwu`_: Add require_prob_for_eval and require_pred_for_eval to optimize score
   function performance.
   (`#92 <https://github.com/SenWu/emmental/pull/92>`_)
@@ -151,7 +152,6 @@ Added
             require_pred_for_eval=True,
             scorer=Scorer(metrics=task_metrics[task_name]),
         )
-
 
 Fixed
 ^^^^^
