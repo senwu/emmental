@@ -5,10 +5,10 @@ from typing import Dict, Union
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.optim.optimizer import Optimizer
 
-from emmental import Meta
 from emmental.logging.checkpointer import Checkpointer
 from emmental.logging.log_writer import LogWriter
 from emmental.logging.tensorboard_writer import TensorBoardWriter
+from emmental.meta import Meta
 from emmental.model import EmmentalModel
 
 logger = logging.getLogger(__name__)

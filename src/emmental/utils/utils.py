@@ -1,3 +1,6 @@
+# Copyright (c) 2021 Sen Wu. All Rights Reserved.
+
+
 """Emmental utils."""
 import random
 import string

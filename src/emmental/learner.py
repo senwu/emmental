@@ -14,9 +14,9 @@ from numpy import ndarray
 from torch import optim as optim
 from torch.optim.lr_scheduler import _LRScheduler
 
-from emmental import Meta
 from emmental.data import EmmentalDataLoader
 from emmental.logging import LoggingManager
+from emmental.meta import Meta
 from emmental.model import EmmentalModel
 from emmental.optimizers.bert_adam import BertAdam
 from emmental.schedulers import SCHEDULERS
@@ -524,7 +524,7 @@ class EmmentalLearner(object):
         self._set_task_scheduler()
 
         # Calculate the total number of batches per epoch
-        self.n_batches_per_epoch = self.task_scheduler.get_num_batches(
+        self.n_batches_per_epoch: int = self.task_scheduler.get_num_batches(
             train_dataloaders
         )
 
