@@ -7,7 +7,7 @@ import torch
 import emmental
 from emmental.data import EmmentalDataLoader, EmmentalDataset
 from emmental.schedulers.round_robin_scheduler import RoundRobinScheduler
-from emmental.utils.utils import set_random_seed
+from emmental.utils.seed import set_random_seed
 
 logger = logging.getLogger(__name__)
 

@@ -10,7 +10,8 @@ from typing import Any, Dict, Optional, Type
 import torch
 import yaml
 
-from emmental.utils.utils import merge, set_random_seed
+from emmental.utils.seed import set_random_seed
+from emmental.utils.utils import merge
 
 MAX_CONFIG_SEARCH_DEPTH = 25  # Max num of parent directories to look for config
 
