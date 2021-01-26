@@ -4,8 +4,7 @@ import logging
 import numpy as np
 import torch
 
-import emmental
-from emmental.data import EmmentalDataLoader, EmmentalDataset
+from emmental import EmmentalDataLoader, EmmentalDataset, init
 from emmental.schedulers.sequential_scheduler import SequentialScheduler
 
 logger = logging.getLogger(__name__)
@@ -15,7 +14,7 @@ def test_sequential_scheduler(caplog):
     """Unit test of sequential scheduler."""
     caplog.set_level(logging.INFO)
 
-    emmental.Meta.init()
+    init()
 
     task1 = "task1"
     x1 = np.random.rand(20, 2)

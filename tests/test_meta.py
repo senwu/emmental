@@ -3,8 +3,7 @@ import logging
 import os
 import shutil
 
-import emmental
-from emmental import Meta
+from emmental import Meta, init
 
 
 def test_meta(caplog):
@@ -14,7 +13,7 @@ def test_meta(caplog):
     dirpath = "temp_test_meta_log_folder"
 
     Meta.reset()
-    emmental.init(dirpath)
+    init(dirpath)
 
     # Check the log folder is created correctly
     assert os.path.isdir(dirpath) is True
@@ -29,9 +28,7 @@ def test_meta(caplog):
         "use_exact_log_path": False,
     }
 
-    emmental.Meta.update_config(
-        path="tests/shared", filename="emmental-test-config.yaml"
-    )
+    Meta.update_config(path="tests/shared", filename="emmental-test-config.yaml")
     assert Meta.config["meta_config"] == {
         "seed": 1,
         "verbose": False,
@@ -41,9 +38,9 @@ def test_meta(caplog):
 
     # Test unable to find config file
     Meta.reset()
-    emmental.init(dirpath)
+    init(dirpath)
 
-    emmental.Meta.update_config(path=os.path.dirname(__file__))
+    Meta.update_config(path=os.path.dirname(__file__))
     assert Meta.config["meta_config"] == {
         "seed": None,
         "verbose": True,

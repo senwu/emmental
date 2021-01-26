@@ -3,7 +3,7 @@ import logging
 
 import numpy as np
 
-from emmental.scorer import Scorer
+from emmental import Scorer
 
 
 def test_scorer(caplog):
