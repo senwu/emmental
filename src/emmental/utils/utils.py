@@ -9,27 +9,6 @@ from numpy import ndarray
 from torch import Tensor
 
 
-def set_random_seed(seed: int = None) -> None:
-    """Set random seed for random, numpy, and pytorch.
-
-    Args:
-      seed: The random seed, defaults to none.
-    """
-    if seed is not None:
-        seed = int(seed)
-
-    # Set random seed for random
-    random.seed(seed)
-    # Set random seed for all numpy operations
-    np.random.seed(seed=seed)
-
-    # Set random seed for PyTorch
-    if isinstance(seed, int):
-        torch.manual_seed(seed)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
-
-
 def list_to_tensor(
     item_list: List[Tensor], min_len: int = 0, max_len: int = 0
 ) -> Tuple[Tensor, Optional[Tensor]]:
