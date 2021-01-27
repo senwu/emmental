@@ -713,11 +713,20 @@ class EmmentalModel(nn.Module):
 
         return metric_score_dict
 
-    def save(self, model_path: str) -> None:
-        """Save the current model.
+    def save(
+        self,
+        model_path: str,
+        iteration: Optional[Union[float, int]] = None,
+        metric_dict: Optional[Dict[str, float]] = None,
+        verbose: bool = False,
+    ) -> None:
+        """Save model.
 
         Args:
           model_path: Saved model path.
+          iteration: The iteration of the model, defaults to `None`.
+          metric_dict: The metric dict, defaults to `None`.
+          verbose: Whether log the info, defaults to `False`.
         """
         # Check existence of model saving directory and create if does not exist.
         if not os.path.exists(os.path.dirname(model_path)):
@@ -732,7 +741,9 @@ class EmmentalModel(nn.Module):
                 # "loss_funcs": self.loss_funcs,
                 # "output_funcs": self.output_funcs,
                 # "scorers": self.scorers,
-            }
+            },
+            "iteration": iteration,
+            "metric_dict": metric_dict,
         }
 
         try:
@@ -740,14 +751,19 @@ class EmmentalModel(nn.Module):
         except BaseException:
             logger.warning("Saving failed... continuing anyway.")
 
-        if Meta.config["meta_config"]["verbose"]:
+        if Meta.config["meta_config"]["verbose"] or verbose:
             logger.info(f"[{self.name}] Model saved in {model_path}")
 
-    def load(self, model_path: str) -> None:
+    def load(
+        self,
+        model_path: str,
+        verbose: bool = False,
+    ) -> None:
         """Load model state_dict from file and reinitialize the model weights.
 
         Args:
           model_path: Saved model path.
+          verbose: Whether log the info, defaults to `False`.
         """
         if not os.path.exists(model_path):
             logger.error("Loading failed... Model does not exist.")
@@ -760,7 +776,7 @@ class EmmentalModel(nn.Module):
 
         self.load_state_dict(checkpoint["model"]["module_pool"])
 
-        if Meta.config["meta_config"]["verbose"]:
+        if Meta.config["meta_config"]["verbose"] or verbose:
             logger.info(f"[{self.name}] Model loaded from {model_path}")
 
         # Move model to specified device

@@ -1,3 +1,6 @@
+# Copyright (c) 2021 Sen Wu. All Rights Reserved.
+
+
 """Emmental parse_args."""
 import argparse
 from argparse import ArgumentParser, Namespace
@@ -105,6 +108,20 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     learner_config = parser.add_argument_group("Learning configuration")
 
     learner_config.add_argument(
+        "--optimizer_path",
+        type=nullable_string,
+        default=None,
+        help="Path to optimizer state",
+    )
+
+    learner_config.add_argument(
+        "--scheduler_path",
+        type=nullable_string,
+        default=None,
+        help="Path to lr scheduler state",
+    )
+
+    learner_config.add_argument(
         "--fp16",
         action="store_true",
         help="Whether to use 16-bit (mixed) precision (through NVIDIA apex)"
@@ -124,6 +141,10 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         type=int,
         default=-1,
         help="local_rank for distributed training on gpus",
+    )
+
+    learner_config.add_argument(
+        "--start_epoch", type=int, default=0, help="Start learning epoch"
     )
 
     learner_config.add_argument(
@@ -401,6 +422,7 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         type=nullable_string,
         default=None,
         choices=[
+            None,
             "linear",
             "exponential",
             "plateau",
@@ -873,9 +895,12 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
             "distributed_backend": args.distributed_backend,
         },
         "learner_config": {
+            "optimizer_path": args.optimizer_path,
+            "scheduler_path": args.scheduler_path,
             "fp16": args.fp16,
             "fp16_opt_level": args.fp16_opt_level,
             "local_rank": args.local_rank,
+            "start_epoch": args.start_epoch,
             "n_epochs": args.n_epochs,
             "train_split": args.train_split,
             "valid_split": args.valid_split,

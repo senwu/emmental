@@ -1,3 +1,6 @@
+# Copyright (c) 2021 Sen Wu. All Rights Reserved.
+
+
 """Emmental learner."""
 import collections
 import copy
@@ -82,7 +85,7 @@ class EmmentalLearner(object):
             "r_prop": optim.Rprop,
             "sgd": optim.SGD,
             "sparse_adam": optim.SparseAdam,
-            # Customize optimizer
+            # Customized optimizer
             "bert_adam": BertAdam,
         }
 
@@ -111,6 +114,24 @@ class EmmentalLearner(object):
 
         if Meta.config["meta_config"]["verbose"]:
             logger.info(f"Using optimizer {self.optimizer}")
+
+        if Meta.config["learner_config"]["optimizer_path"]:
+            try:
+                self.optimizer.load_state_dict(
+                    torch.load(Meta.config["learner_config"]["optimizer_path"])[
+                        "optimizer"
+                    ]
+                )
+                logger.info(
+                    f"Optimizer state loaded from "
+                    f"{Meta.config['learner_config']['optimizer_path']}"
+                )
+            except BaseException:
+                logger.error(
+                    f"Loading failed... Cannot load optimizer state from "
+                    f"{Meta.config['learner_config']['optimizer_path']}, "
+                    f"continuing anyway."
+                )
 
     def _set_lr_scheduler(self, model: EmmentalModel) -> None:
         """Set learning rate scheduler for learning process.
@@ -200,6 +221,24 @@ class EmmentalLearner(object):
                 f"Using lr_scheduler {repr(self.lr_scheduler)} with step every "
                 f"{self.lr_scheduler_step_freq} {self.lr_scheduler_step_unit}."
             )
+
+        if Meta.config["learner_config"]["scheduler_path"]:
+            try:
+                scheduler_state = torch.load(
+                    Meta.config["learner_config"]["scheduler_path"]
+                )["lr_scheduler"]
+                if scheduler_state:
+                    self.lr_scheduler.load_state_dict(scheduler_state)
+                logger.info(
+                    f"Lr scheduler state loaded from "
+                    f"{Meta.config['learner_config']['scheduler_path']}"
+                )
+            except BaseException:
+                logger.error(
+                    f"Loading failed... Cannot load lr scheduler state from "
+                    f"{Meta.config['learner_config']['scheduler_path']}, "
+                    f"continuing anyway."
+                )
 
     def _set_warmup_scheduler(self, model: EmmentalModel) -> None:
         """Set warmup learning rate scheduler for learning process.
@@ -503,9 +542,9 @@ class EmmentalLearner(object):
           model: The emmental model that needs to learn.
           dataloaders: A list of dataloaders used to learn the model.
         """
-        # Generate the list of dataloaders for learning process
         start_time = time.time()
 
+        # Generate the list of dataloaders for learning process
         train_split = Meta.config["learner_config"]["train_split"]
         if isinstance(train_split, str):
             train_split = [train_split]
@@ -576,7 +615,10 @@ class EmmentalLearner(object):
         # Set gradients of all model parameters to zero
         self.optimizer.zero_grad()
 
-        for epoch_num in range(Meta.config["learner_config"]["n_epochs"]):
+        for epoch_num in range(
+            Meta.config["learner_config"]["start_epoch"],
+            Meta.config["learner_config"]["n_epochs"],
+        ):
             batches = tqdm(
                 enumerate(self.task_scheduler.get_batches(train_dataloaders, model)),
                 total=self.n_batches_per_epoch,
@@ -620,10 +662,6 @@ class EmmentalLearner(object):
                         if Meta.config["learner_config"]["online_eval"]:
                             self.running_probs[identifier].extend(prob_dict[task_name])
                             self.running_golds[identifier].extend(gold_dict[task_name])
-
-                    # Skip the backward pass if no loss is calcuated
-                    if not loss_dict:
-                        continue
 
                     # Calculate the average loss
                     loss = sum(

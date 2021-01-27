@@ -1,3 +1,6 @@
+# Copyright (c) 2021 Sen Wu. All Rights Reserved.
+
+
 """Emmental parsing args unit tests."""
 import logging
 import shutil
@@ -43,9 +46,12 @@ def test_parse_args(caplog):
             "distributed_backend": "nccl",
         },
         "learner_config": {
+            "optimizer_path": None,
+            "scheduler_path": None,
             "fp16": False,
             "fp16_opt_level": "O1",
             "local_rank": -1,
+            "start_epoch": 0,
             "n_epochs": 1,
             "train_split": ["train"],
             "valid_split": ["valid"],
@@ -216,9 +222,12 @@ def test_checkpoint_metric(caplog):
             "distributed_backend": "nccl",
         },
         "learner_config": {
+            "optimizer_path": None,
+            "scheduler_path": None,
             "fp16": False,
             "fp16_opt_level": "O1",
             "local_rank": -1,
+            "start_epoch": 0,
             "n_epochs": 1,
             "train_split": ["train"],
             "valid_split": ["valid"],
