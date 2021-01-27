@@ -19,9 +19,12 @@ model_config:
 
 # Learning configuration
 learner_config:
+    optimizer_path: # path to optimizer state
+    scheduler_path: # path to lr scheduler state
     fp16: False # whether to use 16-bit precision
     fp16_opt_level: O1 # Apex AMP optimization level (e.g., ['O0', 'O1', 'O2', 'O3'])
     local_rank: -1 # local_rank for distributed training on gpus
+    start_epoch: 0 # start learning epoch
     n_epochs: 1 # total number of learning epochs
     train_split: # the split for training, accepts str or list of strs
         - train
