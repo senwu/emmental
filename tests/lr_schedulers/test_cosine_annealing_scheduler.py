@@ -32,6 +32,7 @@ def test_cosine_annealing_scheduler(caplog):
     }
     emmental.Meta.update_config(config)
     emmental_learner.n_batches_per_epoch = 1
+    emmental_learner._set_learning_counter()
     emmental_learner._set_optimizer(model)
     emmental_learner._set_lr_scheduler(model)
 

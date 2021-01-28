@@ -152,6 +152,14 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     learner_config.add_argument(
+        "--start_step", type=int, default=0, help="Start learning step"
+    )
+
+    learner_config.add_argument(
+        "--n_steps", type=int, default=None, help="Total number of learning steps"
+    )
+
+    learner_config.add_argument(
         "--train_split",
         nargs="+",
         type=str,
@@ -902,6 +910,8 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
             "local_rank": args.local_rank,
             "start_epoch": args.start_epoch,
             "n_epochs": args.n_epochs,
+            "start_step": args.start_step,
+            "n_steps": args.n_steps,
             "train_split": args.train_split,
             "valid_split": args.valid_split,
             "test_split": args.test_split,
