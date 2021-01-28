@@ -530,12 +530,12 @@ class EmmentalLearner(object):
         if Meta.config["learner_config"]["n_steps"]:
             self.start_epoch = 0
             self.end_epoch = 1
-            self.start_step = Meta.config["learner_config"]["start_step"]
+            self.start_step = Meta.config["learner_config"]["steps_learned"]
             self.end_step = Meta.config["learner_config"]["n_steps"]
             self.use_step_base_counter = True
             self.total_steps = Meta.config["learner_config"]["n_steps"]
         else:
-            self.start_epoch = Meta.config["learner_config"]["start_epoch"]
+            self.start_epoch = Meta.config["learner_config"]["epochs_learned"]
             self.end_epoch = Meta.config["learner_config"]["n_epochs"]
             self.start_step = 0
             self.end_step = self.n_batches_per_epoch
