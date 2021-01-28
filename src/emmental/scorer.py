@@ -62,8 +62,8 @@ class Scorer(object):
                 continue
 
             golds = array_to_numpy(golds)
-            preds = array_to_numpy(preds)
-            probs = array_to_numpy(probs)
+            probs = array_to_numpy(probs) if probs is not None else probs
+            preds = array_to_numpy(preds) if preds is not None else preds
 
             res = metric(golds, preds, probs, uids)
 

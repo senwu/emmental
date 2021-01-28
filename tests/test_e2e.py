@@ -213,10 +213,11 @@ def test_e2e(caplog):
             if task_name == "task2"
             else None,
             scorer=Scorer(metrics=task_metrics[task_name]),
+            require_prob_for_eval=True if task_name in ["task2"] else False,
+            require_pred_for_eval=True if task_name in ["task1"] else False,
         )
         for task_name in ["task1", "task2"]
     ]
-
     # Build model
 
     mtl_model = EmmentalModel(name="all", tasks=tasks)
@@ -244,8 +245,8 @@ def test_e2e(caplog):
     test3_score = mtl_model.score(test_dataloader3)
     assert test3_score == {}
 
-    test2_pred = mtl_model.predict(test_dataloader2)
-    test3_pred = mtl_model.predict(test_dataloader3)
+    test2_pred = mtl_model.predict(test_dataloader2, return_action_outputs=True)
+    test3_pred = mtl_model.predict(test_dataloader3, return_action_outputs=True)
 
     assert test2_pred["uids"] == test3_pred["uids"]
     assert False not in [
