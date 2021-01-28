@@ -144,7 +144,7 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     learner_config.add_argument(
-        "--start_epoch", type=int, default=0, help="Start learning epoch"
+        "--epochs_learned", type=int, default=0, help="Learning epochs learned"
     )
 
     learner_config.add_argument(
@@ -152,7 +152,7 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     learner_config.add_argument(
-        "--start_step", type=int, default=0, help="Start learning step"
+        "--steps_learned", type=int, default=0, help="Learning steps learned"
     )
 
     learner_config.add_argument(
@@ -908,9 +908,9 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
             "fp16": args.fp16,
             "fp16_opt_level": args.fp16_opt_level,
             "local_rank": args.local_rank,
-            "start_epoch": args.start_epoch,
+            "epochs_learned": args.epochs_learned,
             "n_epochs": args.n_epochs,
-            "start_step": args.start_step,
+            "steps_learned": args.steps_learned,
             "n_steps": args.n_steps,
             "train_split": args.train_split,
             "valid_split": args.valid_split,
