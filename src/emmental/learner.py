@@ -53,7 +53,16 @@ class EmmentalLearner(object):
     def _set_logging_manager(self) -> None:
         """Set logging manager."""
         if Meta.config["learner_config"]["local_rank"] in [-1, 0]:
-            self.logging_manager = LoggingManager(self.n_batches_per_epoch)
+            if self.use_step_base_counter:
+                self.logging_manager = LoggingManager(
+                    self.n_batches_per_epoch, 0, self.start_step
+                )
+            else:
+                self.logging_manager = LoggingManager(
+                    self.n_batches_per_epoch,
+                    self.start_epoch,
+                    self.start_epoch * self.n_batches_per_epoch,
+                )
 
     def _set_optimizer(self, model: EmmentalModel) -> None:
         """Set optimizer for learning process.
@@ -160,11 +169,8 @@ class EmmentalLearner(object):
         if opt is None:
             lr_scheduler = None
         elif opt == "linear":
-            total_steps = (
-                self.n_batches_per_epoch * Meta.config["learner_config"]["n_epochs"]
-            )
-            linear_decay_func = lambda x: (total_steps - self.warmup_steps - x) / (
-                total_steps - self.warmup_steps
+            linear_decay_func = lambda x: (self.total_steps - self.warmup_steps - x) / (
+                self.total_steps - self.warmup_steps
             )
             lr_scheduler = optim.lr_scheduler.LambdaLR(
                 self.optimizer, linear_decay_func
@@ -174,23 +180,21 @@ class EmmentalLearner(object):
                 self.optimizer, **lr_scheduler_config[f"{opt}_config"]
             )
         elif opt == "one_cycle":
-            total_steps = (
-                self.n_batches_per_epoch * Meta.config["learner_config"]["n_epochs"]
-            )
             lr_scheduler = lr_scheduler_dict[opt](
                 self.optimizer,
-                total_steps=total_steps,
-                epochs=Meta.config["learner_config"]["n_epochs"],
-                steps_per_epoch=self.n_batches_per_epoch,
+                total_steps=self.total_steps,
+                epochs=Meta.config["learner_config"]["n_epochs"]
+                if not self.use_step_base_counter
+                else 1,
+                steps_per_epoch=self.n_batches_per_epoch
+                if not self.use_step_base_counter
+                else self.total_steps,
                 **lr_scheduler_config[f"{opt}_config"],
             )
         elif opt == "cosine_annealing":
-            total_steps = (
-                self.n_batches_per_epoch * Meta.config["learner_config"]["n_epochs"]
-            )
             lr_scheduler = lr_scheduler_dict[opt](
                 self.optimizer,
-                total_steps,
+                self.total_steps,
                 eta_min=lr_scheduler_config["min_lr"],
                 **lr_scheduler_config[f"{opt}_config"],
             )
@@ -274,11 +278,7 @@ class EmmentalLearner(object):
             warmup_percentage = Meta.config["learner_config"]["lr_scheduler_config"][
                 "warmup_percentage"
             ]
-            self.warmup_steps = math.ceil(
-                warmup_percentage
-                * Meta.config["learner_config"]["n_epochs"]
-                * self.n_batches_per_epoch
-            )
+            self.warmup_steps = math.ceil(warmup_percentage * self.total_steps)
             linear_warmup_func = lambda x: x / self.warmup_steps
             warmup_scheduler = optim.lr_scheduler.LambdaLR(
                 self.optimizer, linear_warmup_func
@@ -526,6 +526,24 @@ class EmmentalLearner(object):
 
         return metric_dict
 
+    def _set_learning_counter(self) -> None:
+        if Meta.config["learner_config"]["n_steps"]:
+            self.start_epoch = 0
+            self.end_epoch = 1
+            self.start_step = Meta.config["learner_config"]["start_step"]
+            self.end_step = Meta.config["learner_config"]["n_steps"]
+            self.use_step_base_counter = True
+            self.total_steps = Meta.config["learner_config"]["n_steps"]
+        else:
+            self.start_epoch = Meta.config["learner_config"]["start_epoch"]
+            self.end_epoch = Meta.config["learner_config"]["n_epochs"]
+            self.start_step = 0
+            self.end_step = self.n_batches_per_epoch
+            self.use_step_base_counter = False
+            self.total_steps = (
+                Meta.config["learner_config"]["n_epochs"] * self.n_batches_per_epoch
+            )
+
     def _reset_losses(self) -> None:
         """Reset running logs."""
         self.running_uids: Dict[str, List[str]] = defaultdict(list)
@@ -566,6 +584,9 @@ class EmmentalLearner(object):
         self.n_batches_per_epoch: int = self.task_scheduler.get_num_batches(
             train_dataloaders
         )
+
+        # Set up learning counter
+        self._set_learning_counter()
 
         # Set up logging manager
         self._set_logging_manager()
@@ -615,26 +636,33 @@ class EmmentalLearner(object):
         # Set gradients of all model parameters to zero
         self.optimizer.zero_grad()
 
-        for epoch_num in range(
-            Meta.config["learner_config"]["start_epoch"],
-            Meta.config["learner_config"]["n_epochs"],
-        ):
-            batches = tqdm(
-                enumerate(self.task_scheduler.get_batches(train_dataloaders, model)),
-                total=self.n_batches_per_epoch,
-                disable=(
-                    not Meta.config["meta_config"]["verbose"]
-                    or Meta.config["learner_config"]["local_rank"] not in [-1, 0]
-                ),
-                desc=f"Epoch {epoch_num}:",
+        for epoch_num in range(self.start_epoch, self.end_epoch):
+            batch_iterator = self.task_scheduler.get_batches(train_dataloaders, model)
+            step_pbar = tqdm(
+                range(self.start_step, self.end_step),
+                desc=f"Step 0/{self.total_steps}"
+                if self.use_step_base_counter
+                else f"Epoch {epoch_num+1}/{self.end_epoch}",
+                disable=not Meta.config["meta_config"]["verbose"]
+                or Meta.config["learner_config"]["local_rank"] not in [-1, 0],
             )
+            for step_num in step_pbar:
+                if self.use_step_base_counter:
+                    step_pbar.set_description(f"Step {step_num+1}/{self.total_steps}")
+                    step_pbar.refresh()
+                try:
+                    batch = next(batch_iterator)
+                except StopIteration:
+                    batch_iterator = self.task_scheduler.get_batches(
+                        train_dataloaders, model
+                    )
+                    batch = next(batch_iterator)
 
-            for batch_num, batch in batches:
                 # Covert single batch into a batch list
                 if not isinstance(batch, list):
                     batch = [batch]
 
-                total_batch_num = epoch_num * self.n_batches_per_epoch + batch_num
+                total_step_num = epoch_num * self.n_batches_per_epoch + step_num
                 batch_size = 0
 
                 for uids, X_dict, Y_dict, task_to_label_dict, data_name, split in batch:
@@ -680,11 +708,10 @@ class EmmentalLearner(object):
                     else:
                         loss.backward()  # type: ignore
 
-                if (total_batch_num + 1) % Meta.config["learner_config"][
+                if (total_step_num + 1) % Meta.config["learner_config"][
                     "optimizer_config"
                 ]["gradient_accumulation_steps"] == 0 or (
-                    batch_num + 1 == self.n_batches_per_epoch
-                    and epoch_num + 1 == Meta.config["learner_config"]["n_epochs"]
+                    step_num + 1 == self.end_step and epoch_num + 1 == self.end_epoch
                 ):
                     # Clip gradient norm
                     if Meta.config["learner_config"]["optimizer_config"]["grad_clip"]:
@@ -712,10 +739,10 @@ class EmmentalLearner(object):
                 if Meta.config["learner_config"]["local_rank"] in [-1, 0]:
                     self.metrics.update(self._logging(model, dataloaders, batch_size))
 
-                    batches.set_postfix(self.metrics)
+                    step_pbar.set_postfix(self.metrics)
 
                 # Update lr using lr scheduler
-                self._update_lr_scheduler(model, total_batch_num, self.metrics)
+                self._update_lr_scheduler(model, total_step_num, self.metrics)
 
         if Meta.config["learner_config"]["local_rank"] in [-1, 0]:
             model = self.logging_manager.close(model)

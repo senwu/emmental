@@ -26,6 +26,8 @@ learner_config:
     local_rank: -1 # local_rank for distributed training on gpus
     start_epoch: 0 # start learning epoch
     n_epochs: 1 # total number of learning epochs
+    start_step: 0 # start learning step
+    n_steps: # total number of learning steps
     train_split: # the split for training, accepts str or list of strs
         - train
     valid_split: # the split for validation, accepts str or list of strs
