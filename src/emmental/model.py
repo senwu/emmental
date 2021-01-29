@@ -1,4 +1,5 @@
 """Emmental model."""
+import importlib
 import itertools
 import logging
 import os
@@ -11,7 +12,6 @@ import torch
 from numpy import ndarray
 from torch import Tensor, nn
 from torch.nn import ModuleDict
-from tqdm import tqdm
 
 from emmental.data import EmmentalDataLoader
 from emmental.meta import Meta
@@ -23,6 +23,11 @@ from emmental.utils.utils import (
     move_to_device,
     prob_to_pred,
 )
+
+if importlib.util.find_spec("ipywidgets") is not None:
+    from tqdm.auto import tqdm
+else:
+    from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 

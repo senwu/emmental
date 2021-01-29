@@ -4,6 +4,7 @@
 """Emmental learner."""
 import collections
 import copy
+import importlib
 import logging
 import math
 import time
@@ -26,15 +27,10 @@ from emmental.schedulers import SCHEDULERS
 from emmental.schedulers.scheduler import Scheduler
 from emmental.utils.utils import construct_identifier, prob_to_pred
 
-try:
-    from IPython import get_ipython
-
-    if "IPKernelApp" not in get_ipython().config:
-        raise ImportError("console")
-except (AttributeError, ImportError):
-    from tqdm import tqdm
+if importlib.util.find_spec("ipywidgets") is not None:
+    from tqdm.auto import tqdm
 else:
-    from tqdm import tqdm_notebook as tqdm
+    from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
