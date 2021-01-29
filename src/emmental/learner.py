@@ -580,6 +580,9 @@ class EmmentalLearner(object):
         self.n_batches_per_epoch: int = self.task_scheduler.get_num_batches(
             train_dataloaders
         )
+        if self.n_batches_per_epoch == 0:
+            logger.info("No batches in training dataloaders, existing...")
+            return
 
         # Set up learning counter
         self._set_learning_counter()
