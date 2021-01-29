@@ -743,6 +743,7 @@ class EmmentalLearner(object):
 
                 # Update lr using lr scheduler
                 self._update_lr_scheduler(model, total_step_num, self.metrics)
+            step_pbar.close()
 
         if Meta.config["learner_config"]["local_rank"] in [-1, 0]:
             model = self.logging_manager.close(model)
