@@ -635,11 +635,11 @@ class EmmentalLearner(object):
         # Set gradients of all model parameters to zero
         self.optimizer.zero_grad()
 
+        batch_iterator = self.task_scheduler.get_batches(train_dataloaders, model)
         for epoch_num in range(self.start_epoch, self.end_epoch):
-            batch_iterator = self.task_scheduler.get_batches(train_dataloaders, model)
             step_pbar = tqdm(
                 range(self.start_step, self.end_step),
-                desc=f"Step 0/{self.total_steps}"
+                desc=f"Step {self.start_step+1}/{self.end_step}"
                 if self.use_step_base_counter
                 else f"Epoch {epoch_num+1}/{self.end_epoch}",
                 disable=not Meta.config["meta_config"]["verbose"]
