@@ -685,7 +685,7 @@ class EmmentalLearner(object):
                             loss_dict[task_name].item() * len(uid_dict[task_name])
                             if len(loss_dict[task_name].size()) == 0
                             else torch.sum(loss_dict[task_name]).item()
-                        )
+                        ) * model.task_weights[task_name]
                         if Meta.config["learner_config"]["online_eval"]:
                             self.running_probs[identifier].extend(prob_dict[task_name])
                             self.running_golds[identifier].extend(gold_dict[task_name])
@@ -693,9 +693,9 @@ class EmmentalLearner(object):
                     # Calculate the average loss
                     loss = sum(
                         [
-                            model.weights[task_name] * task_loss
+                            model.task_weights[task_name] * task_loss
                             if len(task_loss.size()) == 0
-                            else torch.mean(model.weights[task_name] * task_loss)
+                            else torch.mean(model.task_weights[task_name] * task_loss)
                             for task_name, task_loss in loss_dict.items()
                         ]
                     )

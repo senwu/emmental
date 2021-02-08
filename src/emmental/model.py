@@ -60,7 +60,7 @@ class EmmentalModel(nn.Module):
             str, Optional[List[Union[Tuple[str, str], Tuple[str, int]]]]
         ] = dict()
         self.module_device: Dict[str, Union[int, str, torch.device]] = {}
-        self.weights: Dict[str, float] = dict()
+        self.task_weights: Dict[str, float] = dict()
         self.require_prob_for_evals: Dict[str, bool] = dict()
         self.require_pred_for_evals: Dict[str, bool] = dict()
 
@@ -184,7 +184,7 @@ class EmmentalModel(nn.Module):
         # Collect scorer
         self.scorers[task.name] = task.scorer
         # Collect weight
-        self.weights[task.name] = task.weight
+        self.task_weights[task.name] = task.weight
         # Collect require prob for eval
         self.require_prob_for_evals[task.name] = task.require_prob_for_eval
         # Collect require pred for eval
@@ -216,7 +216,7 @@ class EmmentalModel(nn.Module):
         # Update scorer
         self.scorers[task.name] = task.scorer
         # Update weight
-        self.weights[task.name] = task.weight
+        self.task_weights[task.name] = task.weight
         # Update require prob for eval
         self.require_prob_for_evals[task.name] = task.require_prob_for_eval
         # Update require pred for eval
@@ -246,7 +246,7 @@ class EmmentalModel(nn.Module):
         del self.output_funcs[task_name]
         del self.action_outputs[task_name]
         del self.scorers[task_name]
-        del self.weights[task_name]
+        del self.task_weights[task_name]
         del self.require_prob_for_evals[task_name]
         del self.require_pred_for_evals[task_name]
         # TODO: remove the modules only associate with that task
