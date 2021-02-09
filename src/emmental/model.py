@@ -319,16 +319,16 @@ class EmmentalModel(nn.Module):
     ) -> Union[
         Tuple[
             Dict[str, List[str]],
-            Dict[str, ndarray],
-            Dict[str, ndarray],
-            Dict[str, ndarray],
-            Dict[str, Dict[str, ndarray]],
+            Dict[str, Tensor],
+            Dict[str, Union[ndarray, List[ndarray]]],
+            Dict[str, Union[ndarray, List[ndarray]]],
+            Dict[str, Dict[str, Union[ndarray, List]]],
         ],
         Tuple[
             Dict[str, List[str]],
-            Dict[str, ndarray],
-            Dict[str, ndarray],
-            Dict[str, ndarray],
+            Dict[str, Tensor],
+            Dict[str, Union[ndarray, List[ndarray]]],
+            Dict[str, Union[ndarray, List[ndarray]]],
         ],
     ]:
         """Forward function.
@@ -347,10 +347,13 @@ class EmmentalModel(nn.Module):
           all tasks.
         """
         uid_dict: Dict[str, List[str]] = defaultdict(list)
-        loss_dict: Dict[str, ndarray] = defaultdict(float)
-        gold_dict: Dict[str, ndarray] = defaultdict(list)
-        prob_dict: Dict[str, ndarray] = defaultdict(list)
-        out_dict: Dict[str, Dict[str, ndarray]] = defaultdict(lambda: defaultdict(list))
+        loss_dict: Dict[str, Tensor] = defaultdict(Tensor)
+        gold_dict: Dict[str, Union[ndarray, List[ndarray]]] = defaultdict(list)
+        prob_dict: Dict[str, Union[ndarray, List[ndarray]]] = defaultdict(list)
+        out_dict: Dict[str, Dict[str, Union[ndarray, List]]] = defaultdict(
+            lambda: defaultdict(list)
+        )
+
         task_names = (
             list(task_to_label_dict.keys())
             if isinstance(task_to_label_dict, dict)
@@ -471,8 +474,8 @@ class EmmentalModel(nn.Module):
         self.eval()
 
         uid_dict: Dict[str, List[str]] = defaultdict(list)
-        prob_dict: Dict[str, List[Union[ndarray, int, float]]] = defaultdict(list)
-        pred_dict: Dict[str, List[ndarray]] = defaultdict(list)
+        prob_dict: Dict[str, Union[ndarray, List[ndarray]]] = defaultdict(list)
+        pred_dict: Dict[str, Union[ndarray, List[ndarray]]] = defaultdict(list)
         gold_dict: Dict[str, List[Union[ndarray, int, float]]] = defaultdict(list)
         out_dict: Dict[str, Dict[str, List[Union[ndarray, int, float]]]] = defaultdict(
             lambda: defaultdict(list)
@@ -534,9 +537,13 @@ class EmmentalModel(nn.Module):
                 for task_name in uid_bdict.keys():
                     uid_dict[task_name].extend(uid_bdict[task_name])
                     if return_probs:
-                        prob_dict[task_name].extend(prob_bdict[task_name])
+                        prob_dict[task_name].extend(  # type: ignore
+                            prob_bdict[task_name]
+                        )
                     if return_preds:
-                        pred_dict[task_name].extend(prob_to_pred(prob_bdict[task_name]))
+                        pred_dict[task_name].extend(  # type: ignore
+                            prob_to_pred(prob_bdict[task_name])
+                        )
                     if dataloader.is_learnable:
                         gold_dict[task_name].extend(gold_bdict[task_name])
                         if len(loss_bdict[task_name].size()) == 0:
@@ -647,7 +654,7 @@ class EmmentalModel(nn.Module):
                 identifier = construct_identifier(
                     task_name, dataloader.data_name, dataloader.split, "loss"
                 )
-                metric_score_dict[identifier] = np.mean(
+                metric_score_dict[identifier] = np.mean(  # type: ignore
                     predictions["losses"][task_name]
                 )
 
@@ -656,7 +663,9 @@ class EmmentalModel(nn.Module):
                     identifier = construct_identifier(
                         task_name, dataloader.data_name, dataloader.split, "average"
                     )
-                    metric_score_dict[identifier] = np.mean(list(metric_score.values()))
+                    metric_score_dict[identifier] = np.mean(  # type: ignore
+                        list(metric_score.values())
+                    )
 
                     micro_score_dict[dataloader.split].extend(
                         list(metric_score.values())
@@ -679,32 +688,38 @@ class EmmentalModel(nn.Module):
                 identifier = construct_identifier(
                     "model", "all", split, "micro_average"
                 )
-                metric_score_dict[identifier] = np.mean(micro_score_dict[split])
+                metric_score_dict[identifier] = np.mean(  # type: ignore
+                    micro_score_dict[split]
+                )
                 identifier = construct_identifier(
                     "model", "all", split, "macro_average"
                 )
-                metric_score_dict[identifier] = np.mean(macro_score_dict[split])
+                metric_score_dict[identifier] = np.mean(  # type: ignore
+                    macro_score_dict[split]
+                )
                 identifier = construct_identifier("model", "all", split, "loss")
-                metric_score_dict[identifier] = np.mean(macro_loss_dict[split])
+                metric_score_dict[identifier] = np.mean(  # type: ignore
+                    macro_loss_dict[split]
+                )
 
             # Collect overall micro/macro average score/loss
             if len(micro_score_dict):
                 identifier = construct_identifier(
                     "model", "all", "all", "micro_average"
                 )
-                metric_score_dict[identifier] = np.mean(
+                metric_score_dict[identifier] = np.mean(  # type: ignore
                     list(itertools.chain.from_iterable(micro_score_dict.values()))
                 )
             if len(macro_score_dict):
                 identifier = construct_identifier(
                     "model", "all", "all", "macro_average"
                 )
-                metric_score_dict[identifier] = np.mean(
+                metric_score_dict[identifier] = np.mean(  # type: ignore
                     list(itertools.chain.from_iterable(macro_score_dict.values()))
                 )
             if len(macro_loss_dict):
                 identifier = construct_identifier("model", "all", "all", "loss")
-                metric_score_dict[identifier] = np.mean(
+                metric_score_dict[identifier] = np.mean(  # type: ignore
                     list(itertools.chain.from_iterable(macro_loss_dict.values()))
                 )
 

@@ -25,7 +25,7 @@ def spearman_correlation_scorer(
     Returns:
       Spearman rank-order correlation coefficient with pvalue if return_pvalue is True.
     """
-    probs = np.vstack(probs).squeeze()
+    probs = np.vstack(probs).squeeze()  # type: ignore
     correlation, pvalue = spearmanr(golds, probs)
 
     if return_pvalue:

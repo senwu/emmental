@@ -87,7 +87,7 @@ def pad_batch(
     return padded_batch, mask_batch
 
 
-def prob_to_pred(probs: ndarray) -> ndarray:
+def prob_to_pred(probs: Union[ndarray, List[ndarray]]) -> ndarray:
     """Identify the class with the maximum probability.
 
     Args:
@@ -97,7 +97,7 @@ def prob_to_pred(probs: ndarray) -> ndarray:
       predicted labels.
     """
     if isinstance(probs, ndarray):
-        return np.argmax(probs, axis=-1)
+        return np.array(np.argmax(probs, axis=-1))
     elif isinstance(probs, list):
         return np.array([np.argmax(prob, axis=-1) for prob in probs])
     else:
@@ -182,9 +182,9 @@ def array_to_numpy(
         raise ValueError(f"Unrecognized type {type(array)} to convert to ndarray")
 
     if flatten:
-        array = array.reshape(-1)
+        array = array.reshape(-1)  # type: ignore
 
-    return array
+    return array  # type: ignore
 
 
 def merge(

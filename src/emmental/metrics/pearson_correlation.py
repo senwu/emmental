@@ -25,7 +25,7 @@ def pearson_correlation_scorer(
     Returns:
       Pearson correlation coefficient with pvalue if return_pvalue is True.
     """
-    probs = np.vstack(probs).squeeze()
+    probs = np.vstack(probs).squeeze()  # type: ignore
     correlation, pvalue = pearsonr(golds, probs)
 
     if return_pvalue:

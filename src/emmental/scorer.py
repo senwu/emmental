@@ -1,7 +1,7 @@
 """Emmental scorer."""
 import logging
 from functools import partial
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Union
 
 from numpy import ndarray
 
@@ -40,7 +40,11 @@ class Scorer(object):
         self.metrics.update(customize_metric_funcs)
 
     def score(
-        self, golds: ndarray, preds: ndarray, probs: ndarray, uids: List[str] = None
+        self,
+        golds: Union[ndarray, List[ndarray]],
+        preds: Union[ndarray, List[ndarray]],
+        probs: Union[ndarray, List[ndarray]],
+        uids: List[str] = None,
     ) -> Dict[str, float]:
         """Calculate the score.
 

@@ -55,6 +55,6 @@ class slicing_function:
                 f" examples are "
                 f"in slice {f.__name__}"
             )
-            return inds
+            return inds  # type: ignore
 
         return wrapped_f
