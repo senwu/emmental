@@ -503,7 +503,9 @@ class EmmentalLearner(object):
 
                 metric_dict[identifier] = np.mean(list(metric_score.values()))
 
-                micro_score_dict[split].extend(list(metric_score.values()))
+                micro_score_dict[split].extend(
+                    list(metric_score.values())  # type: ignore
+                )
                 macro_score_dict[split].append(metric_dict[identifier])
 
             # Collect split-wise micro/macro average score
@@ -511,11 +513,15 @@ class EmmentalLearner(object):
                 identifier = construct_identifier(
                     "model", "all", split, "micro_average"
                 )
-                metric_dict[identifier] = np.mean(micro_score_dict[split])
+                metric_dict[identifier] = np.mean(
+                    micro_score_dict[split]  # type: ignore
+                )
                 identifier = construct_identifier(
                     "model", "all", split, "macro_average"
                 )
-                metric_dict[identifier] = np.mean(macro_score_dict[split])
+                metric_dict[identifier] = np.mean(
+                    macro_score_dict[split]  # type: ignore
+                )
 
         # Log the learning rate
         metric_dict["model/all/train/lr"] = self.optimizer.param_groups[0]["lr"]
@@ -543,7 +549,7 @@ class EmmentalLearner(object):
     def _reset_losses(self) -> None:
         """Reset running logs."""
         self.running_uids: Dict[str, List[str]] = defaultdict(list)
-        self.running_losses: Dict[str, ndarray] = defaultdict(float)
+        self.running_losses: Dict[str, ndarray] = defaultdict(float)  # type: ignore
         self.running_probs: Dict[str, List[ndarray]] = defaultdict(list)
         self.running_golds: Dict[str, List[ndarray]] = defaultdict(list)
 
