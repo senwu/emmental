@@ -46,7 +46,7 @@ def init(
     init_logging(log_dir, log_name, use_exact_log_path, format, level, local_rank)
     init_config()
     if config or config_dir is not None:
-        Meta.update_config(config, config_dir, config_name)
+        Meta.update_config(config, config_dir, config_name, update_random_seed=False)
 
     set_random_seed(Meta.config["meta_config"]["seed"])
 
@@ -152,6 +152,7 @@ class Meta(object):
         config: Optional[Dict[Any, Any]] = {},
         path: Optional[str] = None,
         filename: Optional[str] = "emmental-config.yaml",
+        update_random_seed: Optional[bool] = True,
     ) -> None:
         """Update the config with the configs in root of project and its parents.
 
@@ -163,6 +164,7 @@ class Meta(object):
           config: The new configuration, defaults to {}.
           path: The path to the config file, defaults to os.getcwd().
           filename: The config file name, defaults to "emmental-config.yaml".
+          update_random_seed: Whether update the random seed or not.
         """
         if config != {}:
             Meta.config = merge(Meta.config, config, specical_keys="checkpoint_metric")
@@ -189,7 +191,8 @@ class Meta(object):
                     break
                 current_dir = new_dir
                 tries += 1
-        set_random_seed(Meta.config["meta_config"]["seed"])
+        if update_random_seed:
+            set_random_seed(Meta.config["meta_config"]["seed"])
 
     @staticmethod
     def reset() -> None:
