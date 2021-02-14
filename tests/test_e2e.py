@@ -8,13 +8,16 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-import emmental
-from emmental import Meta
-from emmental.data import EmmentalDataLoader, EmmentalDataset
-from emmental.learner import EmmentalLearner
-from emmental.model import EmmentalModel
-from emmental.scorer import Scorer
-from emmental.task import EmmentalTask
+from emmental import (
+    EmmentalDataLoader,
+    EmmentalDataset,
+    EmmentalLearner,
+    EmmentalModel,
+    EmmentalTask,
+    Meta,
+    Scorer,
+    init,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +29,7 @@ def test_e2e(caplog):
     dirpath = "temp_test_e2e"
     use_exact_log_path = False
     Meta.reset()
-    emmental.init(dirpath, use_exact_log_path=use_exact_log_path)
+    init(dirpath, use_exact_log_path=use_exact_log_path)
 
     config = {
         "meta_config": {"seed": 0},
@@ -52,7 +55,7 @@ def test_e2e(caplog):
             },
         },
     }
-    emmental.Meta.update_config(config)
+    Meta.update_config(config)
 
     # Generate synthetic data
     N = 500
@@ -210,10 +213,11 @@ def test_e2e(caplog):
             if task_name == "task2"
             else None,
             scorer=Scorer(metrics=task_metrics[task_name]),
+            require_prob_for_eval=True if task_name in ["task2"] else False,
+            require_pred_for_eval=True if task_name in ["task1"] else False,
         )
         for task_name in ["task1", "task2"]
     ]
-
     # Build model
 
     mtl_model = EmmentalModel(name="all", tasks=tasks)
@@ -241,8 +245,8 @@ def test_e2e(caplog):
     test3_score = mtl_model.score(test_dataloader3)
     assert test3_score == {}
 
-    test2_pred = mtl_model.predict(test_dataloader2)
-    test3_pred = mtl_model.predict(test_dataloader3)
+    test2_pred = mtl_model.predict(test_dataloader2, return_action_outputs=True)
+    test3_pred = mtl_model.predict(test_dataloader3, return_action_outputs=True)
 
     assert test2_pred["uids"] == test3_pred["uids"]
     assert False not in [

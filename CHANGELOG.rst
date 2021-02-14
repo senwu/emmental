@@ -1,5 +1,5 @@
-Unreleased_
------------
+0.0.8_ - 2021-02-14
+-------------------
 
 Added
 ^^^^^
@@ -104,10 +104,68 @@ Added
             scorer=Scorer(metrics=task_metrics[task_name]),
         )
 
+* `@senwu`_: Add require_prob_for_eval and require_pred_for_eval to optimize score
+  function performance.
+  (`#92 <https://github.com/SenWu/emmental/pull/92>`_)
+
+.. note::
+
+    The current approach during score the model will store probs and preds which might
+    require a lot of memory resources especially for large datasets. The score function
+    is also used in training. To optimize the score function performance, this PR
+    introduces two new arguments in `EmmentalTask`: `require_prob_for_eval` and
+    `require_pred_for_eval` which automatically selects whether `return_probs` or
+    `return_preds`.
+
+    .. code:: python
+
+        task_name = "Task1"
+        EmmentalTask(
+            name=task_name,
+            module_pool=nn.ModuleDict(
+                {
+                    "input_module": nn.Linear(2, 8),
+                    f"{task_name}_pred_head": nn.Linear(8, 2),
+                }
+            ),
+            task_flow=[
+                {
+                    "name": "input",
+                    "module": "input_module",
+                    "inputs": [("_input_", "data")],
+                },
+                {
+                    "name": f"{task_name}_pred_head",
+                    "module": f"{task_name}_pred_head",
+                    "inputs": [("input", 0)],
+                },
+            ],
+            loss_func=partial(ce_loss, task_name),
+            output_func=partial(output, task_name),
+            action_outputs=[
+                (f"{task_name}_pred_head", 0),
+                ("_input_", "data"),
+                (f"{task_name}_pred_head", 0),
+            ],
+            module_device={"input_module": -1, f"{task_name}_pred_head": 0},
+            require_prob_for_eval=True,
+            require_pred_for_eval=True,
+            scorer=Scorer(metrics=task_metrics[task_name]),
+        )
+
+* `@senwu`_: Support save and load optimizer and lr_scheduler checkpoints.
+  (`#93 <https://github.com/SenWu/emmental/pull/93>`_)
+* `@senwu`_: Support step based learning and add argument `start_step` and `n_steps` to
+  set starting step and total step size.
+  (`#93 <https://github.com/SenWu/emmental/pull/93>`_)
+
+
 Fixed
 ^^^^^
 * `@senwu`_: Fix customized optimizer support issue.
   (`#81 <https://github.com/SenWu/emmental/pull/81>`_)
+* `@senwu`_: Fix loss logging didn't count task weight.
+  (`#93 <https://github.com/SenWu/emmental/pull/93>`_)
 
 
 0.0.7_ - 2020-06-03
@@ -263,12 +321,12 @@ Removed
 ^^^^^^^
 * `@senwu`_: Remove `checkpoint_clear` argument.
 
-.. _Unreleased: https://github.com/senwu/emmental/compare/v0.0.7...master
+.. _Unreleased: https://github.com/senwu/emmental/compare/v0.0.8...master
 .. _0.0.4: https://github.com/senwu/emmental/compare/v0.0.3...v0.0.4
 .. _0.0.5: https://github.com/senwu/emmental/compare/v0.0.4...v0.0.5
 .. _0.0.6: https://github.com/senwu/emmental/compare/v0.0.5...v0.0.6
 .. _0.0.7: https://github.com/senwu/emmental/compare/v0.0.6...v0.0.7
-
+.. _0.0.8: https://github.com/senwu/emmental/compare/v0.0.7...v0.0.8
 ..
   For convenience, all username links for contributors can be listed here
 

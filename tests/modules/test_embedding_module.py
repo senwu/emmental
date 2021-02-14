@@ -4,7 +4,7 @@ import logging
 import torch
 
 from emmental.modules.embedding_module import EmbeddingModule
-from emmental.utils.utils import set_random_seed
+from emmental.utils.seed import set_random_seed
 
 logger = logging.getLogger(__name__)
 

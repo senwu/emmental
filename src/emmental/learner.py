@@ -1,6 +1,10 @@
+# Copyright (c) 2021 Sen Wu. All Rights Reserved.
+
+
 """Emmental learner."""
 import collections
 import copy
+import importlib
 import logging
 import math
 import time
@@ -14,24 +18,19 @@ from numpy import ndarray
 from torch import optim as optim
 from torch.optim.lr_scheduler import _LRScheduler
 
-from emmental import Meta
 from emmental.data import EmmentalDataLoader
 from emmental.logging import LoggingManager
+from emmental.meta import Meta
 from emmental.model import EmmentalModel
 from emmental.optimizers.bert_adam import BertAdam
 from emmental.schedulers import SCHEDULERS
 from emmental.schedulers.scheduler import Scheduler
 from emmental.utils.utils import construct_identifier, prob_to_pred
 
-try:
-    from IPython import get_ipython
-
-    if "IPKernelApp" not in get_ipython().config:
-        raise ImportError("console")
-except (AttributeError, ImportError):
-    from tqdm import tqdm
+if importlib.util.find_spec("ipywidgets") is not None:
+    from tqdm.auto import tqdm
 else:
-    from tqdm import tqdm_notebook as tqdm
+    from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +49,16 @@ class EmmentalLearner(object):
     def _set_logging_manager(self) -> None:
         """Set logging manager."""
         if Meta.config["learner_config"]["local_rank"] in [-1, 0]:
-            self.logging_manager = LoggingManager(self.n_batches_per_epoch)
+            if self.use_step_base_counter:
+                self.logging_manager = LoggingManager(
+                    self.n_batches_per_epoch, 0, self.start_step
+                )
+            else:
+                self.logging_manager = LoggingManager(
+                    self.n_batches_per_epoch,
+                    self.start_epoch,
+                    self.start_epoch * self.n_batches_per_epoch,
+                )
 
     def _set_optimizer(self, model: EmmentalModel) -> None:
         """Set optimizer for learning process.
@@ -82,7 +90,7 @@ class EmmentalLearner(object):
             "r_prop": optim.Rprop,
             "sgd": optim.SGD,
             "sparse_adam": optim.SparseAdam,
-            # Customize optimizer
+            # Customized optimizer
             "bert_adam": BertAdam,
         }
 
@@ -112,6 +120,24 @@ class EmmentalLearner(object):
         if Meta.config["meta_config"]["verbose"]:
             logger.info(f"Using optimizer {self.optimizer}")
 
+        if Meta.config["learner_config"]["optimizer_path"]:
+            try:
+                self.optimizer.load_state_dict(
+                    torch.load(Meta.config["learner_config"]["optimizer_path"])[
+                        "optimizer"
+                    ]
+                )
+                logger.info(
+                    f"Optimizer state loaded from "
+                    f"{Meta.config['learner_config']['optimizer_path']}"
+                )
+            except BaseException:
+                logger.error(
+                    f"Loading failed... Cannot load optimizer state from "
+                    f"{Meta.config['learner_config']['optimizer_path']}, "
+                    f"continuing anyway."
+                )
+
     def _set_lr_scheduler(self, model: EmmentalModel) -> None:
         """Set learning rate scheduler for learning process.
 
@@ -139,11 +165,8 @@ class EmmentalLearner(object):
         if opt is None:
             lr_scheduler = None
         elif opt == "linear":
-            total_steps = (
-                self.n_batches_per_epoch * Meta.config["learner_config"]["n_epochs"]
-            )
-            linear_decay_func = lambda x: (total_steps - self.warmup_steps - x) / (
-                total_steps - self.warmup_steps
+            linear_decay_func = lambda x: (self.total_steps - self.warmup_steps - x) / (
+                self.total_steps - self.warmup_steps
             )
             lr_scheduler = optim.lr_scheduler.LambdaLR(
                 self.optimizer, linear_decay_func
@@ -153,23 +176,21 @@ class EmmentalLearner(object):
                 self.optimizer, **lr_scheduler_config[f"{opt}_config"]
             )
         elif opt == "one_cycle":
-            total_steps = (
-                self.n_batches_per_epoch * Meta.config["learner_config"]["n_epochs"]
-            )
             lr_scheduler = lr_scheduler_dict[opt](
                 self.optimizer,
-                total_steps=total_steps,
-                epochs=Meta.config["learner_config"]["n_epochs"],
-                steps_per_epoch=self.n_batches_per_epoch,
+                total_steps=self.total_steps,
+                epochs=Meta.config["learner_config"]["n_epochs"]
+                if not self.use_step_base_counter
+                else 1,
+                steps_per_epoch=self.n_batches_per_epoch
+                if not self.use_step_base_counter
+                else self.total_steps,
                 **lr_scheduler_config[f"{opt}_config"],
             )
         elif opt == "cosine_annealing":
-            total_steps = (
-                self.n_batches_per_epoch * Meta.config["learner_config"]["n_epochs"]
-            )
             lr_scheduler = lr_scheduler_dict[opt](
                 self.optimizer,
-                total_steps,
+                self.total_steps,
                 eta_min=lr_scheduler_config["min_lr"],
                 **lr_scheduler_config[f"{opt}_config"],
             )
@@ -200,6 +221,24 @@ class EmmentalLearner(object):
                 f"Using lr_scheduler {repr(self.lr_scheduler)} with step every "
                 f"{self.lr_scheduler_step_freq} {self.lr_scheduler_step_unit}."
             )
+
+        if Meta.config["learner_config"]["scheduler_path"]:
+            try:
+                scheduler_state = torch.load(
+                    Meta.config["learner_config"]["scheduler_path"]
+                )["lr_scheduler"]
+                if scheduler_state:
+                    self.lr_scheduler.load_state_dict(scheduler_state)
+                logger.info(
+                    f"Lr scheduler state loaded from "
+                    f"{Meta.config['learner_config']['scheduler_path']}"
+                )
+            except BaseException:
+                logger.error(
+                    f"Loading failed... Cannot load lr scheduler state from "
+                    f"{Meta.config['learner_config']['scheduler_path']}, "
+                    f"continuing anyway."
+                )
 
     def _set_warmup_scheduler(self, model: EmmentalModel) -> None:
         """Set warmup learning rate scheduler for learning process.
@@ -235,11 +274,7 @@ class EmmentalLearner(object):
             warmup_percentage = Meta.config["learner_config"]["lr_scheduler_config"][
                 "warmup_percentage"
             ]
-            self.warmup_steps = math.ceil(
-                warmup_percentage
-                * Meta.config["learner_config"]["n_epochs"]
-                * self.n_batches_per_epoch
-            )
+            self.warmup_steps = math.ceil(warmup_percentage * self.total_steps)
             linear_warmup_func = lambda x: x / self.warmup_steps
             warmup_scheduler = optim.lr_scheduler.LambdaLR(
                 self.optimizer, linear_warmup_func
@@ -468,7 +503,9 @@ class EmmentalLearner(object):
 
                 metric_dict[identifier] = np.mean(list(metric_score.values()))
 
-                micro_score_dict[split].extend(list(metric_score.values()))
+                micro_score_dict[split].extend(
+                    list(metric_score.values())  # type: ignore
+                )
                 macro_score_dict[split].append(metric_dict[identifier])
 
             # Collect split-wise micro/macro average score
@@ -476,21 +513,43 @@ class EmmentalLearner(object):
                 identifier = construct_identifier(
                     "model", "all", split, "micro_average"
                 )
-                metric_dict[identifier] = np.mean(micro_score_dict[split])
+                metric_dict[identifier] = np.mean(
+                    micro_score_dict[split]  # type: ignore
+                )
                 identifier = construct_identifier(
                     "model", "all", split, "macro_average"
                 )
-                metric_dict[identifier] = np.mean(macro_score_dict[split])
+                metric_dict[identifier] = np.mean(
+                    macro_score_dict[split]  # type: ignore
+                )
 
         # Log the learning rate
         metric_dict["model/all/train/lr"] = self.optimizer.param_groups[0]["lr"]
 
         return metric_dict
 
+    def _set_learning_counter(self) -> None:
+        if Meta.config["learner_config"]["n_steps"]:
+            self.start_epoch = 0
+            self.end_epoch = 1
+            self.start_step = Meta.config["learner_config"]["steps_learned"]
+            self.end_step = Meta.config["learner_config"]["n_steps"]
+            self.use_step_base_counter = True
+            self.total_steps = Meta.config["learner_config"]["n_steps"]
+        else:
+            self.start_epoch = Meta.config["learner_config"]["epochs_learned"]
+            self.end_epoch = Meta.config["learner_config"]["n_epochs"]
+            self.start_step = 0
+            self.end_step = self.n_batches_per_epoch
+            self.use_step_base_counter = False
+            self.total_steps = (
+                Meta.config["learner_config"]["n_epochs"] * self.n_batches_per_epoch
+            )
+
     def _reset_losses(self) -> None:
         """Reset running logs."""
         self.running_uids: Dict[str, List[str]] = defaultdict(list)
-        self.running_losses: Dict[str, ndarray] = defaultdict(float)
+        self.running_losses: Dict[str, ndarray] = defaultdict(float)  # type: ignore
         self.running_probs: Dict[str, List[ndarray]] = defaultdict(list)
         self.running_golds: Dict[str, List[ndarray]] = defaultdict(list)
 
@@ -503,9 +562,9 @@ class EmmentalLearner(object):
           model: The emmental model that needs to learn.
           dataloaders: A list of dataloaders used to learn the model.
         """
-        # Generate the list of dataloaders for learning process
         start_time = time.time()
 
+        # Generate the list of dataloaders for learning process
         train_split = Meta.config["learner_config"]["train_split"]
         if isinstance(train_split, str):
             train_split = [train_split]
@@ -524,9 +583,15 @@ class EmmentalLearner(object):
         self._set_task_scheduler()
 
         # Calculate the total number of batches per epoch
-        self.n_batches_per_epoch = self.task_scheduler.get_num_batches(
+        self.n_batches_per_epoch: int = self.task_scheduler.get_num_batches(
             train_dataloaders
         )
+        if self.n_batches_per_epoch == 0:
+            logger.info("No batches in training dataloaders, existing...")
+            return
+
+        # Set up learning counter
+        self._set_learning_counter()
 
         # Set up logging manager
         self._set_logging_manager()
@@ -576,23 +641,33 @@ class EmmentalLearner(object):
         # Set gradients of all model parameters to zero
         self.optimizer.zero_grad()
 
-        for epoch_num in range(Meta.config["learner_config"]["n_epochs"]):
-            batches = tqdm(
-                enumerate(self.task_scheduler.get_batches(train_dataloaders, model)),
-                total=self.n_batches_per_epoch,
-                disable=(
-                    not Meta.config["meta_config"]["verbose"]
-                    or Meta.config["learner_config"]["local_rank"] not in [-1, 0]
-                ),
-                desc=f"Epoch {epoch_num}:",
+        batch_iterator = self.task_scheduler.get_batches(train_dataloaders, model)
+        for epoch_num in range(self.start_epoch, self.end_epoch):
+            step_pbar = tqdm(
+                range(self.start_step, self.end_step),
+                desc=f"Step {self.start_step+1}/{self.end_step}"
+                if self.use_step_base_counter
+                else f"Epoch {epoch_num+1}/{self.end_epoch}",
+                disable=not Meta.config["meta_config"]["verbose"]
+                or Meta.config["learner_config"]["local_rank"] not in [-1, 0],
             )
+            for step_num in step_pbar:
+                if self.use_step_base_counter:
+                    step_pbar.set_description(f"Step {step_num+1}/{self.total_steps}")
+                    step_pbar.refresh()
+                try:
+                    batch = next(batch_iterator)
+                except StopIteration:
+                    batch_iterator = self.task_scheduler.get_batches(
+                        train_dataloaders, model
+                    )
+                    batch = next(batch_iterator)
 
-            for batch_num, batch in batches:
                 # Covert single batch into a batch list
                 if not isinstance(batch, list):
                     batch = [batch]
 
-                total_batch_num = epoch_num * self.n_batches_per_epoch + batch_num
+                total_step_num = epoch_num * self.n_batches_per_epoch + step_num
                 batch_size = 0
 
                 for uids, X_dict, Y_dict, task_to_label_dict, data_name, split in batch:
@@ -604,8 +679,8 @@ class EmmentalLearner(object):
                         X_dict,
                         Y_dict,
                         task_to_label_dict,
-                        return_action_outputs=False,
                         return_probs=Meta.config["learner_config"]["online_eval"],
+                        return_action_outputs=False,
                     )
 
                     # Update running loss and count
@@ -616,21 +691,17 @@ class EmmentalLearner(object):
                             loss_dict[task_name].item() * len(uid_dict[task_name])
                             if len(loss_dict[task_name].size()) == 0
                             else torch.sum(loss_dict[task_name]).item()
-                        )
+                        ) * model.task_weights[task_name]
                         if Meta.config["learner_config"]["online_eval"]:
                             self.running_probs[identifier].extend(prob_dict[task_name])
                             self.running_golds[identifier].extend(gold_dict[task_name])
 
-                    # Skip the backward pass if no loss is calcuated
-                    if not loss_dict:
-                        continue
-
                     # Calculate the average loss
                     loss = sum(
                         [
-                            model.weights[task_name] * task_loss
+                            model.task_weights[task_name] * task_loss
                             if len(task_loss.size()) == 0
-                            else torch.mean(model.weights[task_name] * task_loss)
+                            else torch.mean(model.task_weights[task_name] * task_loss)
                             for task_name, task_loss in loss_dict.items()
                         ]
                     )
@@ -642,11 +713,10 @@ class EmmentalLearner(object):
                     else:
                         loss.backward()  # type: ignore
 
-                if (total_batch_num + 1) % Meta.config["learner_config"][
+                if (total_step_num + 1) % Meta.config["learner_config"][
                     "optimizer_config"
                 ]["gradient_accumulation_steps"] == 0 or (
-                    batch_num + 1 == self.n_batches_per_epoch
-                    and epoch_num + 1 == Meta.config["learner_config"]["n_epochs"]
+                    step_num + 1 == self.end_step and epoch_num + 1 == self.end_epoch
                 ):
                     # Clip gradient norm
                     if Meta.config["learner_config"]["optimizer_config"]["grad_clip"]:
@@ -674,10 +744,11 @@ class EmmentalLearner(object):
                 if Meta.config["learner_config"]["local_rank"] in [-1, 0]:
                     self.metrics.update(self._logging(model, dataloaders, batch_size))
 
-                    batches.set_postfix(self.metrics)
+                    step_pbar.set_postfix(self.metrics)
 
                 # Update lr using lr scheduler
-                self._update_lr_scheduler(model, total_batch_num, self.metrics)
+                self._update_lr_scheduler(model, total_step_num, self.metrics)
+            step_pbar.close()
 
         if Meta.config["learner_config"]["local_rank"] in [-1, 0]:
             model = self.logging_manager.close(model)
