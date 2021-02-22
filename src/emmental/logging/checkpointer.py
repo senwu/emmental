@@ -3,7 +3,7 @@ import glob
 import logging
 import os
 from shutil import copyfile
-from typing import Any, Dict, List, Set, Union
+from typing import Dict, List, Set, Union
 
 import torch
 from torch.optim.lr_scheduler import _LRScheduler
@@ -127,38 +127,63 @@ class Checkpointer(object):
             self.checkpoint_condition_met = True
             logger.info("checkpoint_runway condition has been met. Start checkpoining.")
 
-        state_dict = self.collect_state_dict(
-            iteration, model, optimizer, lr_scheduler, metric_dict
-        )
-        checkpoint_path = f"{self.checkpoint_path}/checkpoint_{iteration}.pth"
-        torch.save(state_dict, checkpoint_path)
+        # Save model state
+        model_path = f"{self.checkpoint_path}/checkpoint_{iteration}.model.pth"
+        model.save(model_path, verbose=False)
         logger.info(
             f"Save checkpoint of {iteration} {self.checkpoint_unit} "
-            f"at {checkpoint_path}."
+            f"at {model_path}."
         )
+
+        # Save optimizer state
+        optimizer_path = f"{self.checkpoint_path}/checkpoint_{iteration}.optimizer.pth"
+        optimizer_dict = {
+            "optimizer": optimizer.state_dict(),
+        }
+        torch.save(optimizer_dict, optimizer_path)
+
+        # Save lr_scheduler state
+        scheduler_path = f"{self.checkpoint_path}/checkpoint_{iteration}.scheduler.pth"
+        scheduler_dict = {
+            "lr_scheduler": lr_scheduler.state_dict() if lr_scheduler else None
+        }
+        torch.save(scheduler_dict, scheduler_path)
 
         if self.checkpoint_all is False:
             for path in self.checkpoint_paths:
                 if os.path.exists(path):
                     os.remove(path)
 
-        self.checkpoint_paths.append(checkpoint_path)
+        self.checkpoint_paths.extend([model_path, optimizer_path, scheduler_path])
 
         if not set(self.checkpoint_all_metrics.keys()).isdisjoint(
             set(metric_dict.keys())
         ):
             new_best_metrics = self.is_new_best(metric_dict)
             for metric in new_best_metrics:
-                copyfile(
-                    checkpoint_path,
+                best_metric_model_path = (
                     f"{self.checkpoint_path}/best_model_"
-                    f"{metric.replace('/', '_')}.pth",
+                    f"{metric.replace('/', '_')}.model.pth"
+                )
+                copyfile(
+                    model_path,
+                    best_metric_model_path,
+                )
+                logger.info(
+                    f"Save best model of metric {metric} to {best_metric_model_path}"
                 )
 
-                logger.info(
-                    f"Save best model of metric {metric} at {self.checkpoint_path}"
-                    f"/best_model_{metric.replace('/', '_')}.pth"
+                best_metric_optimizer_path = (
+                    f"{self.checkpoint_path}/best_model_"
+                    f"{metric.replace('/', '_')}.optimizer.pth"
                 )
+                copyfile(optimizer_path, best_metric_optimizer_path)
+
+                best_metric_scheduler_path = (
+                    f"{self.checkpoint_path}/best_model_"
+                    f"{metric.replace('/', '_')}.scheduler.pth"
+                )
+                copyfile(scheduler_path, best_metric_scheduler_path)
 
     def is_new_best(self, metric_dict: Dict[str, float]) -> Set[str]:
         """Update the best score.
@@ -205,46 +230,6 @@ class Checkpointer(object):
             for file in file_list:
                 os.remove(file)
 
-    def collect_state_dict(
-        self,
-        iteration: Union[float, int],
-        model: EmmentalModel,
-        optimizer: Optimizer,
-        lr_scheduler: _LRScheduler,
-        metric_dict: Dict[str, float],
-    ) -> Dict[str, Any]:
-        """Collect the state dict of the model.
-
-        Args:
-          iteration: The current iteration.
-          model: The model to checkpoint.
-          optimizer: The optimizer used during training process.
-          lr_scheduler: Learning rate scheduler.
-          metric_dict: the metric dict.
-
-        Returns:
-          The state dict.
-        """
-        model_params = {
-            "name": model.name,
-            "module_pool": model.collect_state_dict(),
-            # "task_names": model.task_names,
-            # "task_flows": model.task_flows,
-            # "loss_funcs": model.loss_funcs,
-            # "output_funcs": model.output_funcs,
-            # "scorers": model.scorers,
-        }
-
-        state_dict = {
-            "iteration": iteration,
-            "model": model_params,
-            "optimizer": optimizer.state_dict(),
-            "lr_scheduler": lr_scheduler.state_dict() if lr_scheduler else None,
-            "metric_dict": metric_dict,
-        }
-
-        return state_dict
-
     def load_best_model(self, model: EmmentalModel) -> EmmentalModel:
         """Load the best model from the checkpoint.
 
@@ -260,18 +245,10 @@ class Checkpointer(object):
             # Load the best model of checkpoint_metric
             metric = list(self.checkpoint_metric.keys())[0]
             best_model_path = (
-                f"{self.checkpoint_path}/best_model_{metric.replace('/', '_')}.pth"
+                f"{self.checkpoint_path}/best_model_"
+                f"{metric.replace('/', '_')}.model.pth"
             )
+            model.load(best_model_path, verbose=False)
             logger.info(f"Loading the best model from {best_model_path}.")
-            checkpoint = torch.load(best_model_path, map_location=torch.device("cpu"))
-            model.name = checkpoint["model"]["name"]
-            model.load_state_dict(checkpoint["model"]["module_pool"])
-            # model.task_names = checkpoint["model"]["task_names"]
-            # model.task_flows = checkpoint["model"]["task_flows"]
-            # model.loss_funcs = checkpoint["model"]["loss_funcs"]
-            # model.output_funcs = checkpoint["model"]["output_funcs"]
-            # model.scorers = checkpoint["model"]["scorers"]
-
-            model._move_to_device()
 
         return model

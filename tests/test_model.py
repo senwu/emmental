@@ -6,11 +6,7 @@ from functools import partial
 from torch import nn as nn
 from torch.nn import functional as F
 
-import emmental
-from emmental import Meta
-from emmental.model import EmmentalModel
-from emmental.scorer import Scorer
-from emmental.task import EmmentalTask
+from emmental import EmmentalModel, EmmentalTask, Meta, Scorer, init
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +18,7 @@ def test_model(caplog):
     dirpath = "temp_test_model"
 
     Meta.reset()
-    emmental.init(dirpath)
+    init(dirpath)
 
     def ce_loss(module_name, immediate_output_dict, Y, active):
         return F.cross_entropy(
@@ -75,7 +71,7 @@ def test_model(caplog):
     )
 
     config = {"model_config": {"dataparallel": False}}
-    emmental.Meta.update_config(config)
+    Meta.update_config(config)
 
     model = EmmentalModel(name="test", tasks=task1)
 

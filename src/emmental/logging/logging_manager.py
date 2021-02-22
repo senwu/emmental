@@ -5,10 +5,10 @@ from typing import Dict, Union
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.optim.optimizer import Optimizer
 
-from emmental import Meta
 from emmental.logging.checkpointer import Checkpointer
 from emmental.logging.log_writer import LogWriter
 from emmental.logging.tensorboard_writer import TensorBoardWriter
+from emmental.meta import Meta
 from emmental.model import EmmentalModel
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,9 @@ class LoggingManager(object):
       n_batches_per_epoch: Total number batches per epoch.
     """
 
-    def __init__(self, n_batches_per_epoch: int) -> None:
+    def __init__(
+        self, n_batches_per_epoch: int, epoch_count: int = 0, batch_count: int = 0
+    ) -> None:
         """Initialize LoggingManager."""
         self.n_batches_per_epoch = n_batches_per_epoch
 
@@ -66,13 +68,31 @@ class LoggingManager(object):
 
         # Set up number of batches passed since last evaluation/checkpointing and
         # total number of batches passed since learning process
-        self.batch_count: int = 0
-        self.batch_total: int = 0
+        self.batch_count: int = batch_count
+        self.batch_total: int = batch_count
+        if self.batch_count != 0:
+            if self.counter_unit == "batch":
+                while self.batch_count >= self.evaluation_freq:
+                    self.batch_count -= self.evaluation_freq
+            elif self.counter_unit == "epoch":
+                while (
+                    self.batch_count >= self.evaluation_freq * self.n_batches_per_epoch
+                ):
+                    self.batch_count -= self.evaluation_freq * self.n_batches_per_epoch
 
         # Set up number of epochs passed since last evaluation/checkpointing and
         # total number of epochs passed since learning process
-        self.epoch_count: Union[float, int] = 0
-        self.epoch_total: Union[float, int] = 0
+        self.epoch_count: Union[float, int] = epoch_count
+        self.epoch_total: Union[float, int] = epoch_count
+        if self.epoch_count != 0:
+            if self.counter_unit == "epoch":
+                while self.epoch_count >= self.evaluation_freq:
+                    self.epoch_count -= self.evaluation_freq
+            elif self.counter_unit == "batch":
+                while (
+                    self.epoch_count >= self.evaluation_freq / self.n_batches_per_epoch
+                ):
+                    self.epoch_count -= self.evaluation_freq / self.n_batches_per_epoch
 
         # Set up number of unit passed since last evaluation/checkpointing and
         # total number of unit passed since learning process

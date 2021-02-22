@@ -1,4 +1,5 @@
 """Emmental model."""
+import importlib
 import itertools
 import logging
 import os
@@ -9,9 +10,8 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 import numpy as np
 import torch
 from numpy import ndarray
-from torch import Tensor, nn as nn
+from torch import Tensor, nn
 from torch.nn import ModuleDict
-from tqdm import tqdm
 
 from emmental.data import EmmentalDataLoader
 from emmental.meta import Meta
@@ -23,6 +23,11 @@ from emmental.utils.utils import (
     move_to_device,
     prob_to_pred,
 )
+
+if importlib.util.find_spec("ipywidgets") is not None:
+    from tqdm.auto import tqdm
+else:
+    from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +60,7 @@ class EmmentalModel(nn.Module):
             str, Optional[List[Union[Tuple[str, str], Tuple[str, int]]]]
         ] = dict()
         self.module_device: Dict[str, Union[int, str, torch.device]] = {}
-        self.weights: Dict[str, float] = dict()
+        self.task_weights: Dict[str, float] = dict()
         self.require_prob_for_evals: Dict[str, bool] = dict()
         self.require_pred_for_evals: Dict[str, bool] = dict()
 
@@ -179,7 +184,7 @@ class EmmentalModel(nn.Module):
         # Collect scorer
         self.scorers[task.name] = task.scorer
         # Collect weight
-        self.weights[task.name] = task.weight
+        self.task_weights[task.name] = task.weight
         # Collect require prob for eval
         self.require_prob_for_evals[task.name] = task.require_prob_for_eval
         # Collect require pred for eval
@@ -211,7 +216,7 @@ class EmmentalModel(nn.Module):
         # Update scorer
         self.scorers[task.name] = task.scorer
         # Update weight
-        self.weights[task.name] = task.weight
+        self.task_weights[task.name] = task.weight
         # Update require prob for eval
         self.require_prob_for_evals[task.name] = task.require_prob_for_eval
         # Update require pred for eval
@@ -241,7 +246,7 @@ class EmmentalModel(nn.Module):
         del self.output_funcs[task_name]
         del self.action_outputs[task_name]
         del self.scorers[task_name]
-        del self.weights[task_name]
+        del self.task_weights[task_name]
         del self.require_prob_for_evals[task_name]
         del self.require_pred_for_evals[task_name]
         # TODO: remove the modules only associate with that task
@@ -314,16 +319,16 @@ class EmmentalModel(nn.Module):
     ) -> Union[
         Tuple[
             Dict[str, List[str]],
-            Dict[str, ndarray],
-            Dict[str, ndarray],
-            Dict[str, ndarray],
-            Dict[str, Dict[str, ndarray]],
+            Dict[str, Tensor],
+            Dict[str, Union[ndarray, List[ndarray]]],
+            Dict[str, Union[ndarray, List[ndarray]]],
+            Dict[str, Dict[str, Union[ndarray, List]]],
         ],
         Tuple[
             Dict[str, List[str]],
-            Dict[str, ndarray],
-            Dict[str, ndarray],
-            Dict[str, ndarray],
+            Dict[str, Tensor],
+            Dict[str, Union[ndarray, List[ndarray]]],
+            Dict[str, Union[ndarray, List[ndarray]]],
         ],
     ]:
         """Forward function.
@@ -342,10 +347,13 @@ class EmmentalModel(nn.Module):
           all tasks.
         """
         uid_dict: Dict[str, List[str]] = defaultdict(list)
-        loss_dict: Dict[str, ndarray] = defaultdict(float)
-        gold_dict: Dict[str, ndarray] = defaultdict(list)
-        prob_dict: Dict[str, ndarray] = defaultdict(list)
-        out_dict: Dict[str, Dict[str, ndarray]] = defaultdict(lambda: defaultdict(list))
+        loss_dict: Dict[str, Tensor] = defaultdict(Tensor)
+        gold_dict: Dict[str, Union[ndarray, List[ndarray]]] = defaultdict(list)
+        prob_dict: Dict[str, Union[ndarray, List[ndarray]]] = defaultdict(list)
+        out_dict: Dict[str, Dict[str, Union[ndarray, List]]] = defaultdict(
+            lambda: defaultdict(list)
+        )
+
         task_names = (
             list(task_to_label_dict.keys())
             if isinstance(task_to_label_dict, dict)
@@ -466,8 +474,8 @@ class EmmentalModel(nn.Module):
         self.eval()
 
         uid_dict: Dict[str, List[str]] = defaultdict(list)
-        prob_dict: Dict[str, List[Union[ndarray, int, float]]] = defaultdict(list)
-        pred_dict: Dict[str, List[ndarray]] = defaultdict(list)
+        prob_dict: Dict[str, Union[ndarray, List[ndarray]]] = defaultdict(list)
+        pred_dict: Dict[str, Union[ndarray, List[ndarray]]] = defaultdict(list)
         gold_dict: Dict[str, List[Union[ndarray, int, float]]] = defaultdict(list)
         out_dict: Dict[str, Dict[str, List[Union[ndarray, int, float]]]] = defaultdict(
             lambda: defaultdict(list)
@@ -529,9 +537,13 @@ class EmmentalModel(nn.Module):
                 for task_name in uid_bdict.keys():
                     uid_dict[task_name].extend(uid_bdict[task_name])
                     if return_probs:
-                        prob_dict[task_name].extend(prob_bdict[task_name])
+                        prob_dict[task_name].extend(  # type: ignore
+                            prob_bdict[task_name]
+                        )
                     if return_preds:
-                        pred_dict[task_name].extend(prob_to_pred(prob_bdict[task_name]))
+                        pred_dict[task_name].extend(  # type: ignore
+                            prob_to_pred(prob_bdict[task_name])
+                        )
                     if dataloader.is_learnable:
                         gold_dict[task_name].extend(gold_bdict[task_name])
                         if len(loss_bdict[task_name].size()) == 0:
@@ -642,7 +654,7 @@ class EmmentalModel(nn.Module):
                 identifier = construct_identifier(
                     task_name, dataloader.data_name, dataloader.split, "loss"
                 )
-                metric_score_dict[identifier] = np.mean(
+                metric_score_dict[identifier] = np.mean(  # type: ignore
                     predictions["losses"][task_name]
                 )
 
@@ -651,7 +663,9 @@ class EmmentalModel(nn.Module):
                     identifier = construct_identifier(
                         task_name, dataloader.data_name, dataloader.split, "average"
                     )
-                    metric_score_dict[identifier] = np.mean(list(metric_score.values()))
+                    metric_score_dict[identifier] = np.mean(  # type: ignore
+                        list(metric_score.values())
+                    )
 
                     micro_score_dict[dataloader.split].extend(
                         list(metric_score.values())
@@ -674,32 +688,38 @@ class EmmentalModel(nn.Module):
                 identifier = construct_identifier(
                     "model", "all", split, "micro_average"
                 )
-                metric_score_dict[identifier] = np.mean(micro_score_dict[split])
+                metric_score_dict[identifier] = np.mean(  # type: ignore
+                    micro_score_dict[split]
+                )
                 identifier = construct_identifier(
                     "model", "all", split, "macro_average"
                 )
-                metric_score_dict[identifier] = np.mean(macro_score_dict[split])
+                metric_score_dict[identifier] = np.mean(  # type: ignore
+                    macro_score_dict[split]
+                )
                 identifier = construct_identifier("model", "all", split, "loss")
-                metric_score_dict[identifier] = np.mean(macro_loss_dict[split])
+                metric_score_dict[identifier] = np.mean(  # type: ignore
+                    macro_loss_dict[split]
+                )
 
             # Collect overall micro/macro average score/loss
             if len(micro_score_dict):
                 identifier = construct_identifier(
                     "model", "all", "all", "micro_average"
                 )
-                metric_score_dict[identifier] = np.mean(
+                metric_score_dict[identifier] = np.mean(  # type: ignore
                     list(itertools.chain.from_iterable(micro_score_dict.values()))
                 )
             if len(macro_score_dict):
                 identifier = construct_identifier(
                     "model", "all", "all", "macro_average"
                 )
-                metric_score_dict[identifier] = np.mean(
+                metric_score_dict[identifier] = np.mean(  # type: ignore
                     list(itertools.chain.from_iterable(macro_score_dict.values()))
                 )
             if len(macro_loss_dict):
                 identifier = construct_identifier("model", "all", "all", "loss")
-                metric_score_dict[identifier] = np.mean(
+                metric_score_dict[identifier] = np.mean(  # type: ignore
                     list(itertools.chain.from_iterable(macro_loss_dict.values()))
                 )
 
@@ -713,11 +733,20 @@ class EmmentalModel(nn.Module):
 
         return metric_score_dict
 
-    def save(self, model_path: str) -> None:
-        """Save the current model.
+    def save(
+        self,
+        model_path: str,
+        iteration: Optional[Union[float, int]] = None,
+        metric_dict: Optional[Dict[str, float]] = None,
+        verbose: bool = True,
+    ) -> None:
+        """Save model.
 
         Args:
           model_path: Saved model path.
+          iteration: The iteration of the model, defaults to `None`.
+          metric_dict: The metric dict, defaults to `None`.
+          verbose: Whether log the info, defaults to `True`.
         """
         # Check existence of model saving directory and create if does not exist.
         if not os.path.exists(os.path.dirname(model_path)):
@@ -732,7 +761,9 @@ class EmmentalModel(nn.Module):
                 # "loss_funcs": self.loss_funcs,
                 # "output_funcs": self.output_funcs,
                 # "scorers": self.scorers,
-            }
+            },
+            "iteration": iteration,
+            "metric_dict": metric_dict,
         }
 
         try:
@@ -740,14 +771,19 @@ class EmmentalModel(nn.Module):
         except BaseException:
             logger.warning("Saving failed... continuing anyway.")
 
-        if Meta.config["meta_config"]["verbose"]:
+        if Meta.config["meta_config"]["verbose"] and verbose:
             logger.info(f"[{self.name}] Model saved in {model_path}")
 
-    def load(self, model_path: str) -> None:
+    def load(
+        self,
+        model_path: str,
+        verbose: bool = True,
+    ) -> None:
         """Load model state_dict from file and reinitialize the model weights.
 
         Args:
           model_path: Saved model path.
+          verbose: Whether log the info, defaults to `True`.
         """
         if not os.path.exists(model_path):
             logger.error("Loading failed... Model does not exist.")
@@ -760,7 +796,7 @@ class EmmentalModel(nn.Module):
 
         self.load_state_dict(checkpoint["model"]["module_pool"])
 
-        if Meta.config["meta_config"]["verbose"]:
+        if Meta.config["meta_config"]["verbose"] and verbose:
             logger.info(f"[{self.name}] Model loaded from {model_path}")
 
         # Move model to specified device

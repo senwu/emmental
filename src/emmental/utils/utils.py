@@ -1,3 +1,6 @@
+# Copyright (c) 2021 Sen Wu. All Rights Reserved.
+
+
 """Emmental utils."""
 import random
 import string
@@ -7,27 +10,6 @@ import numpy as np
 import torch
 from numpy import ndarray
 from torch import Tensor
-
-
-def set_random_seed(seed: int = None) -> None:
-    """Set random seed for random, numpy, and pytorch.
-
-    Args:
-      seed: The random seed, defaults to none.
-    """
-    if seed is not None:
-        seed = int(seed)
-
-    # Set random seed for random
-    random.seed(seed)
-    # Set random seed for all numpy operations
-    np.random.seed(seed=seed)
-
-    # Set random seed for PyTorch
-    if isinstance(seed, int):
-        torch.manual_seed(seed)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
 
 
 def list_to_tensor(
@@ -105,7 +87,7 @@ def pad_batch(
     return padded_batch, mask_batch
 
 
-def prob_to_pred(probs: ndarray) -> ndarray:
+def prob_to_pred(probs: Union[ndarray, List[ndarray]]) -> ndarray:
     """Identify the class with the maximum probability.
 
     Args:
@@ -115,7 +97,7 @@ def prob_to_pred(probs: ndarray) -> ndarray:
       predicted labels.
     """
     if isinstance(probs, ndarray):
-        return np.argmax(probs, axis=-1)
+        return np.array(np.argmax(probs, axis=-1))
     elif isinstance(probs, list):
         return np.array([np.argmax(prob, axis=-1) for prob in probs])
     else:
@@ -200,9 +182,9 @@ def array_to_numpy(
         raise ValueError(f"Unrecognized type {type(array)} to convert to ndarray")
 
     if flatten:
-        array = array.reshape(-1)
+        array = array.reshape(-1)  # type: ignore
 
-    return array
+    return array  # type: ignore
 
 
 def merge(

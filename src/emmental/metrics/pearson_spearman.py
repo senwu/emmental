@@ -1,7 +1,7 @@
 """Emmental pearson spearman scorer."""
+from statistics import mean
 from typing import Dict, List, Optional
 
-import numpy as np
 from numpy import ndarray
 
 from emmental.metrics.pearson_correlation import pearson_correlation_scorer
@@ -29,7 +29,7 @@ def pearson_spearman_scorer(
     metrics = dict()
     pearson_correlation = pearson_correlation_scorer(golds, probs, preds, uids)
     spearman_correlation = spearman_correlation_scorer(golds, probs, preds, uids)
-    metrics["pearson_spearman"] = np.mean(
+    metrics["pearson_spearman"] = mean(
         [
             pearson_correlation["pearson_correlation"],
             spearman_correlation["spearman_correlation"],

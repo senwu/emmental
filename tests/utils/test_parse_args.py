@@ -1,9 +1,11 @@
+# Copyright (c) 2021 Sen Wu. All Rights Reserved.
+
+
 """Emmental parsing args unit tests."""
 import logging
 import shutil
 
-import emmental
-from emmental import Meta
+from emmental import Meta, init
 from emmental.utils.parse_args import parse_args, parse_args_to_config
 
 logger = logging.getLogger(__name__)
@@ -44,10 +46,15 @@ def test_parse_args(caplog):
             "distributed_backend": "nccl",
         },
         "learner_config": {
+            "optimizer_path": None,
+            "scheduler_path": None,
             "fp16": False,
             "fp16_opt_level": "O1",
             "local_rank": -1,
+            "epochs_learned": 0,
             "n_epochs": 1,
+            "steps_learned": 0,
+            "n_steps": None,
             "train_split": ["train"],
             "valid_split": ["valid"],
             "test_split": ["test"],
@@ -169,12 +176,12 @@ def test_parse_args(caplog):
     # Test default and default args are the same
     dirpath = "temp_parse_args"
     Meta.reset()
-    emmental.init(dirpath)
+    init(dirpath)
 
     parser = parse_args()
     args = parser.parse_args([])
     config1 = parse_args_to_config(args)
-    config2 = emmental.Meta.config
+    config2 = Meta.config
 
     del config2["learner_config"]["global_evaluation_metric_dict"]
     del config2["learner_config"]["optimizer_config"]["parameters"]
@@ -191,7 +198,7 @@ def test_checkpoint_metric(caplog):
     dirpath = "temp_parse_args"
     Meta.reset()
 
-    emmental.init(
+    init(
         log_dir=dirpath,
         config={
             "logging_config": {
@@ -202,7 +209,7 @@ def test_checkpoint_metric(caplog):
         },
     )
 
-    assert emmental.Meta.config == {
+    assert Meta.config == {
         "meta_config": {
             "seed": None,
             "verbose": True,
@@ -217,10 +224,15 @@ def test_checkpoint_metric(caplog):
             "distributed_backend": "nccl",
         },
         "learner_config": {
+            "optimizer_path": None,
+            "scheduler_path": None,
             "fp16": False,
             "fp16_opt_level": "O1",
             "local_rank": -1,
+            "epochs_learned": 0,
             "n_epochs": 1,
+            "steps_learned": 0,
+            "n_steps": None,
             "train_split": ["train"],
             "valid_split": ["valid"],
             "test_split": ["test"],

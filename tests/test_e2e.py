@@ -8,13 +8,16 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-import emmental
-from emmental import Meta
-from emmental.data import EmmentalDataLoader, EmmentalDataset
-from emmental.learner import EmmentalLearner
-from emmental.model import EmmentalModel
-from emmental.scorer import Scorer
-from emmental.task import EmmentalTask
+from emmental import (
+    EmmentalDataLoader,
+    EmmentalDataset,
+    EmmentalLearner,
+    EmmentalModel,
+    EmmentalTask,
+    Meta,
+    Scorer,
+    init,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +29,7 @@ def test_e2e(caplog):
     dirpath = "temp_test_e2e"
     use_exact_log_path = False
     Meta.reset()
-    emmental.init(dirpath, use_exact_log_path=use_exact_log_path)
+    init(dirpath, use_exact_log_path=use_exact_log_path)
 
     config = {
         "meta_config": {"seed": 0},
@@ -52,7 +55,7 @@ def test_e2e(caplog):
             },
         },
     }
-    emmental.Meta.update_config(config)
+    Meta.update_config(config)
 
     # Generate synthetic data
     N = 500
