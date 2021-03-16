@@ -66,15 +66,15 @@ class Scorer(object):
                 continue
             try:
                 golds = array_to_numpy(golds)
-            except TypeError:
+            except ValueError:
                 pass
             try:
                 probs = array_to_numpy(probs) if probs is not None else probs
-            except TypeError:
+            except ValueError:
                 pass
             try:
                 preds = array_to_numpy(preds) if preds is not None else preds
-            except TypeError:
+            except ValueError:
                 pass
             res = metric(golds, preds, probs, uids)
 
