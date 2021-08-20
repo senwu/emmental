@@ -64,11 +64,18 @@ class Scorer(object):
             if len(golds) == 0:
                 metric_dict[metric_name] = float("nan")
                 continue
-
-            golds = array_to_numpy(golds)
-            probs = array_to_numpy(probs) if probs is not None else probs
-            preds = array_to_numpy(preds) if preds is not None else preds
-
+            try:
+                golds = array_to_numpy(golds)
+            except ValueError:
+                pass
+            try:
+                probs = array_to_numpy(probs) if probs is not None else probs
+            except ValueError:
+                pass
+            try:
+                preds = array_to_numpy(preds) if preds is not None else preds
+            except ValueError:
+                pass
             res = metric(golds, preds, probs, uids)
 
             if isinstance(res, dict):
