@@ -123,9 +123,10 @@ class EmmentalLearner(object):
         if Meta.config["learner_config"]["optimizer_path"]:
             try:
                 self.optimizer.load_state_dict(
-                    torch.load(Meta.config["learner_config"]["optimizer_path"])[
-                        "optimizer"
-                    ]
+                    torch.load(
+                        Meta.config["learner_config"]["optimizer_path"],
+                        map_location=torch.device("cpu"),
+                    )["optimizer"]
                 )
                 logger.info(
                     f"Optimizer state loaded from "
