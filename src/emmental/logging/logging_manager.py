@@ -114,6 +114,8 @@ class LoggingManager(object):
         else:
             raise ValueError(f"Unrecognized writer option '{writer_opt}'")
 
+        self.log_unit_sanity_check = False
+
     def update(self, batch_size: int) -> None:
         """Update the counter.
 
@@ -173,8 +175,22 @@ class LoggingManager(object):
         Args:
           metric_dict: The metric dict.
         """
+        unit_total: Union[float, int] = self.unit_total
+        if (
+            Meta.config["logging_config"]["writer_config"]["writer"] == "tensorboard"
+            and self.counter_unit == "epoch"
+            and int(self.evaluation_freq) != self.evaluation_freq
+        ):
+            if not self.log_unit_sanity_check:
+                logger.warning(
+                    "Cannot use float value for evaluation_freq when counter_unit "
+                    "uses epoch with tensorboard writer, switch to batch as "
+                    "count_unit."
+                )
+                self.log_unit_sanity_check = True
+            unit_total = self.batch_total
         for metric_name, metric_value in metric_dict.items():
-            self.writer.add_scalar(metric_name, metric_value, self.unit_total)
+            self.writer.add_scalar(metric_name, metric_value, unit_total)
 
     def checkpoint_model(
         self,
