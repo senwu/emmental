@@ -173,13 +173,8 @@ class LoggingManager(object):
         Args:
           metric_dict: The metric dict.
         """
-        # As Tensorboard only allows integer values,
-        # we cast epochs back to batches for logging
-        log_unit = self.unit_total
-        if self.counter_unit == "epoch":
-            log_unit *= self.n_batches_per_epoch
         for metric_name, metric_value in metric_dict.items():
-            self.writer.add_scalar(metric_name, metric_value, log_unit)
+            self.writer.add_scalar(metric_name, metric_value, self.unit_total)
 
     def checkpoint_model(
         self,
