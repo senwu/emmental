@@ -176,6 +176,8 @@ class LoggingManager(object):
           metric_dict: The metric dict.
         """
         unit_total: Union[float, int] = self.unit_total
+        # As Tensorboard only allow integer values for unit count, emmental casts non
+        # integer value to integer and switch the counter unit from epoch to batch.
         if (
             Meta.config["logging_config"]["writer_config"]["writer"] == "tensorboard"
             and self.counter_unit == "epoch"
