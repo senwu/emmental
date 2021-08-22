@@ -18,6 +18,7 @@ from numpy import ndarray
 from torch import optim as optim
 from torch.optim.lr_scheduler import _LRScheduler
 
+import wandb
 from emmental.data import EmmentalDataLoader
 from emmental.logging import LoggingManager
 from emmental.meta import Meta
@@ -593,9 +594,22 @@ class EmmentalLearner(object):
 
         # Set up learning counter
         self._set_learning_counter()
-
         # Set up logging manager
         self._set_logging_manager()
+        # Set up wandb watch model
+        if (
+            Meta.config["logging_config"]["writer_config"]["writer"] == "wandb"
+            and Meta.config["logging_config"]["writer_config"]["wandb_watch_model"]
+        ):
+            if Meta.config["logging_config"]["writer_config"]["wandb_model_watch_freq"]:
+                wandb.watch(
+                    model,
+                    log_freq=Meta.config["logging_config"]["writer_config"][
+                        "wandb_model_watch_freq"
+                    ],
+                )
+            else:
+                wandb.watch(model)
         # Set up optimizer
         self._set_optimizer(model)
         # Set up lr_scheduler

@@ -803,8 +803,36 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
         "--writer",
         type=str,
         default="tensorboard",
-        choices=["json", "tensorboard"],
-        help="The writer format (json, tensorboard)",
+        choices=["json", "tensorboard", "wandb"],
+        help="The writer format (json, tensorboard, wandb)",
+    )
+
+    logging_config.add_argument(
+        "--wandb_project_name",
+        type=nullable_string,
+        default=None,
+        help="Wandb project name",
+    )
+
+    logging_config.add_argument(
+        "--wandb_run_name",
+        type=nullable_string,
+        default=None,
+        help="Wandb run name",
+    )
+
+    logging_config.add_argument(
+        "--wandb_watch_model",
+        type=bool,
+        default=False,
+        help="Whether use wandb to watch model",
+    )
+
+    logging_config.add_argument(
+        "--wandb_model_watch_freq",
+        type=nullable_int,
+        default=None,
+        help="Wandb model watch frequency",
     )
 
     logging_config.add_argument(
@@ -1050,7 +1078,14 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
         "logging_config": {
             "counter_unit": args.counter_unit,
             "evaluation_freq": args.evaluation_freq,
-            "writer_config": {"writer": args.writer, "verbose": True},
+            "writer_config": {
+                "writer": args.writer,
+                "verbose": True,
+                "wandb_project_name": args.wandb_project_name,
+                "wandb_run_name": args.wandb_run_name,
+                "wandb_watch_model": args.wandb_watch_model,
+                "wandb_model_watch_freq": args.wandb_model_watch_freq,
+            },
             "checkpointing": args.checkpointing,
             "checkpointer_config": {
                 "checkpoint_path": args.checkpoint_path,

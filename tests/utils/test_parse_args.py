@@ -158,7 +158,14 @@ def test_parse_args(caplog):
         "logging_config": {
             "counter_unit": "epoch",
             "evaluation_freq": 1,
-            "writer_config": {"writer": "tensorboard", "verbose": True},
+            "writer_config": {
+                "writer": "tensorboard",
+                "verbose": True,
+                "wandb_model_watch_freq": None,
+                "wandb_project_name": None,
+                "wandb_run_name": None,
+                "wandb_watch_model": False,
+            },
             "checkpointing": False,
             "checkpointer_config": {
                 "checkpoint_path": None,
@@ -338,7 +345,14 @@ def test_checkpoint_metric(caplog):
         "logging_config": {
             "counter_unit": "epoch",
             "evaluation_freq": 1,
-            "writer_config": {"writer": "tensorboard", "verbose": True},
+            "writer_config": {
+                "writer": "tensorboard",
+                "verbose": True,
+                "wandb_model_watch_freq": None,
+                "wandb_project_name": None,
+                "wandb_run_name": None,
+                "wandb_watch_model": False,
+            },
             "checkpointing": False,
             "checkpointer_config": {
                 "checkpoint_path": None,
