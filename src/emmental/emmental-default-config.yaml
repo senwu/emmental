@@ -159,8 +159,12 @@ logging_config:
     counter_unit: epoch # [epoch, batch]
     evaluation_freq: 1
     writer_config:
-        writer: tensorboard # [json, tensorboard]
+        writer: tensorboard # [json, tensorboard, wandb]
         verbose: True
+        wandb_project_name:
+        wandb_run_name:
+        wandb_watch_model: False
+        wandb_model_watch_freq:
     checkpointing: False
     checkpointer_config:
         checkpoint_path:

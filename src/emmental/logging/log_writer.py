@@ -2,7 +2,7 @@
 import json
 import os
 from collections import defaultdict
-from typing import Any, Dict, Union
+from typing import Dict, Union
 
 import yaml
 
@@ -16,13 +16,17 @@ class LogWriter(object):
         """Initialize the log writer."""
         self.run_log: defaultdict = defaultdict(list)
 
-    def add_config(self, config: Dict[str, Any]) -> None:
-        """Log config.
+    def add_scalar_dict(
+        self, metric_dict: Dict[str, Union[float, int]], step: Union[float, int]
+    ) -> None:
+        """Log a scalar variable.
 
         Args:
-          config: The current config.
+          metric_dict: The metric dict.
+          step: The current step.
         """
-        self.config = config
+        for name, value in metric_dict.items():
+            self.add_scalar(name, value, step)
 
     def add_scalar(
         self, name: str, value: Union[float, int], step: Union[float, int]
@@ -44,7 +48,7 @@ class LogWriter(object):
         """
         config_path = os.path.join(Meta.log_path, config_filename)
         with open(config_path, "w") as yml:
-            yaml.dump(self.config, yml, default_flow_style=False, allow_unicode=True)
+            yaml.dump(Meta.config, yml, default_flow_style=False, allow_unicode=True)
 
     def write_log(self, log_filename: str = "log.json") -> None:
         """Dump the log to file.
