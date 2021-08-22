@@ -25,7 +25,7 @@ class WandbWriter(LogWriter):
           metric_dict: The metric dict.
           step: The current step.
         """
-        wandb.log(metric_dict)
+        wandb.log(metric_dict, step=step)
 
     def write_config(self, config_filename: str = "config.yaml") -> None:
         """Write the config to wandb and dump it to file.
