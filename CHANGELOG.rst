@@ -1,6 +1,12 @@
 Unreleased_
 -----------
 
+Added
+^^^^^
+
+* `@senwu`_: Support wandb logging.
+  (`#99 <https://github.com/senwu/emmental/pull/99>`_)
+
 0.0.8_ - 2021-02-14
 -------------------
 
