@@ -22,6 +22,7 @@ setup(
         "tensorboard>=1.15.0, <3.0.0",
         "torch>=1.3.1, <2.0.0",
         "tqdm>=4.41.0, <5.0.0",
+        "wandb>=0.10.0, <1.0.0",
     ],
     keywords=["emmental", "multi task learning", "deep learing"],
     include_package_data=True,
