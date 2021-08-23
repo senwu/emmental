@@ -5,7 +5,7 @@ seed-isort-config>=2.2.0
 mypy
 types-PyYAML
 isort>=5.9.3
-pre-commit
+pre-commit>=2.14.0
 pytest
 sphinx>=3.0.0
 sphinx_rtd_theme
