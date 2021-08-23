@@ -1,9 +1,10 @@
-black>=18.9b0
-flake8>=3.8.0
+black>=21.7b0
+flake8>=3.9.2
 flake8-docstrings
+seed-isort-config>=2.2.0
 mypy
 types-PyYAML
-isort>=5.0.0
+isort>=5.9.3
 pre-commit
 pytest
 sphinx>=3.0.0
