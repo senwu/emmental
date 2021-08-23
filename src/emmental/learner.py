@@ -14,11 +14,11 @@ from typing import Dict, List, Optional, Union
 
 import numpy as np
 import torch
-import wandb
 from numpy import ndarray
 from torch import optim as optim
 from torch.optim.lr_scheduler import _LRScheduler
 
+import wandb
 from emmental.data import EmmentalDataLoader
 from emmental.logging import LoggingManager
 from emmental.meta import Meta
