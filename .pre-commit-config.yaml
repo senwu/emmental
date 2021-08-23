@@ -1,5 +1,5 @@
 repos:
-  - repo: https://github.com/pycqa/isort
+  - repo: https://github.com/timothycrosley/isort
     rev: 5.9.3
     hooks:
       - id: isort
