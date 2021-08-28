@@ -123,9 +123,10 @@ class EmmentalLearner(object):
         if Meta.config["learner_config"]["optimizer_path"]:
             try:
                 self.optimizer.load_state_dict(
-                    torch.load(Meta.config["learner_config"]["optimizer_path"])[
-                        "optimizer"
-                    ]
+                    torch.load(
+                        Meta.config["learner_config"]["optimizer_path"],
+                        map_location=torch.device("cpu"),
+                    )["optimizer"]
                 )
                 logger.info(
                     f"Optimizer state loaded from "
@@ -462,14 +463,14 @@ class EmmentalLearner(object):
         Returns:
           The score dict.
         """
-        metric_dict = dict()
+        metric_dict: Dict[str, float] = dict()
 
         total_count = 0
         # Log task specific loss
         for identifier in self.running_uids.keys():
             count = len(self.running_uids[identifier])
             if count > 0:
-                metric_dict[identifier + "/loss"] = (
+                metric_dict[identifier + "/loss"] = float(
                     self.running_losses[identifier] / count
                 )
             total_count += count
@@ -477,11 +478,11 @@ class EmmentalLearner(object):
         # Calculate average micro loss
         if total_count > 0:
             total_loss = sum(self.running_losses.values())
-            metric_dict["model/all/train/loss"] = total_loss / total_count
+            metric_dict["model/all/train/loss"] = float(total_loss / total_count)
 
         if calc_running_scores:
-            micro_score_dict: Dict[str, List[ndarray]] = defaultdict(list)
-            macro_score_dict: Dict[str, List[ndarray]] = defaultdict(list)
+            micro_score_dict: Dict[str, List[float]] = defaultdict(list)
+            macro_score_dict: Dict[str, List[float]] = defaultdict(list)
 
             # Calculate training metric
             for identifier in self.running_uids.keys():
