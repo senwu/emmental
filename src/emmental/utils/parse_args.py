@@ -808,6 +808,13 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     logging_config.add_argument(
+        "--write_loss_per_step",
+        type=bool,
+        default=False,
+        help="Whether to log loss per step",
+    )
+
+    logging_config.add_argument(
         "--wandb_project_name",
         type=nullable_string,
         default=None,
@@ -1079,8 +1086,9 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
             "counter_unit": args.counter_unit,
             "evaluation_freq": args.evaluation_freq,
             "writer_config": {
-                "writer": args.writer,
                 "verbose": True,
+                "writer": args.writer,
+                "write_loss_per_step": args.write_loss_per_step,
                 "wandb_project_name": args.wandb_project_name,
                 "wandb_run_name": args.wandb_run_name,
                 "wandb_watch_model": args.wandb_watch_model,

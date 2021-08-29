@@ -165,6 +165,7 @@ logging_config:
         wandb_run_name:
         wandb_watch_model: False
         wandb_model_watch_freq:
+        write_loss_per_step: False
     checkpointing: False
     checkpointer_config:
         checkpoint_path:

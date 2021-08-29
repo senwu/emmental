@@ -2,7 +2,6 @@
 from typing import Dict, Union
 
 import wandb
-
 from emmental.logging.log_writer import LogWriter
 from emmental.meta import Meta
 

@@ -161,6 +161,7 @@ def test_parse_args(caplog):
             "writer_config": {
                 "writer": "tensorboard",
                 "verbose": True,
+                "write_loss_per_step": False,
                 "wandb_model_watch_freq": None,
                 "wandb_project_name": None,
                 "wandb_run_name": None,
@@ -347,6 +348,7 @@ def test_checkpoint_metric(caplog):
             "evaluation_freq": 1,
             "writer_config": {
                 "writer": "tensorboard",
+                "write_loss_per_step": False,
                 "verbose": True,
                 "wandb_model_watch_freq": None,
                 "wandb_project_name": None,

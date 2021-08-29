@@ -14,11 +14,11 @@ from typing import Dict, List, Optional, Union
 
 import numpy as np
 import torch
-import wandb
 from numpy import ndarray
 from torch import optim as optim
 from torch.optim.lr_scheduler import _LRScheduler
 
+import wandb
 from emmental.data import EmmentalDataLoader
 from emmental.logging import LoggingManager
 from emmental.meta import Meta
@@ -426,6 +426,8 @@ class EmmentalLearner(object):
             self.logging_manager.write_log(metric_dict)
 
             self._reset_losses()
+        elif Meta.config["logging_config"]["writer_config"]["write_loss_per_step"]:
+            self.logging_manager.write_log(metric_dict)
 
         # Log metric dict every trigger evaluation time or full epoch
         if Meta.config["meta_config"]["verbose"] and (
