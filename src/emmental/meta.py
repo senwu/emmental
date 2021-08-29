@@ -223,6 +223,13 @@ class Meta(object):
     @staticmethod
     def check_config() -> None:
         """Sanity check the config."""
+        if Meta.config["logging_config"]["evaluation_freq"] == int(
+            Meta.config["logging_config"]["evaluation_freq"]
+        ):
+            Meta.config["logging_config"]["evaluation_freq"] = int(
+                Meta.config["logging_config"]["evaluation_freq"]
+            )
+
         if (
             Meta.config["logging_config"]["counter_unit"]
             in [
@@ -240,4 +247,22 @@ class Meta(object):
                 "counter_unit uses ['sample', 'batch'], switch "
                 f"{original_evaluation_freq} to {new_evaluation_freq}."
             )
+
             Meta.config["logging_config"]["evaluation_freq"] = new_evaluation_freq
+
+        if (
+            Meta.config["logging_config"]["counter_unit"]
+            in [
+                "epoch",
+            ]
+            and isinstance(Meta.config["logging_config"]["evaluation_freq"], int)
+            and Meta.config["logging_config"]["writer_config"]["write_loss_per_step"]
+        ):
+            logger.warning(
+                "Cannot log loss per step when count_unit is epoch and "
+                "evaluation_freq is int, switch write_loss_per_step to False."
+            )
+
+            Meta.config["logging_config"]["writer_config"][
+                "write_loss_per_step"
+            ] = False

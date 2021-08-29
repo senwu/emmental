@@ -136,6 +136,10 @@ class LoggingManager(object):
         # Update number of epochs
         self.epoch_count = self.batch_count / self.n_batches_per_epoch
         self.epoch_total = self.batch_total / self.n_batches_per_epoch
+        if self.epoch_count == int(self.epoch_count):
+            self.epoch_count = int(self.epoch_count)
+        if self.epoch_total == int(self.epoch_total):
+            self.epoch_total = int(self.epoch_total)
 
         # Update number of units
         if self.counter_unit == "sample":
