@@ -40,7 +40,7 @@ def test_e2e(caplog):
         },
         "logging_config": {
             "counter_unit": "epoch",
-            "evaluation_freq": 1,
+            "evaluation_freq": 0.2,
             "writer_config": {"writer": "tensorboard", "verbose": True},
             "checkpointing": True,
             "checkpointer_config": {

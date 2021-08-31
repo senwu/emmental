@@ -14,6 +14,7 @@ from typing import Dict, List, Optional, Union
 
 import numpy as np
 import torch
+import wandb
 from numpy import ndarray
 from torch import optim as optim
 from torch.optim.lr_scheduler import _LRScheduler
@@ -425,6 +426,8 @@ class EmmentalLearner(object):
             self.logging_manager.write_log(metric_dict)
 
             self._reset_losses()
+        elif Meta.config["logging_config"]["writer_config"]["write_loss_per_step"]:
+            self.logging_manager.write_log(metric_dict)
 
         # Log metric dict every trigger evaluation time or full epoch
         if Meta.config["meta_config"]["verbose"] and (
@@ -593,9 +596,22 @@ class EmmentalLearner(object):
 
         # Set up learning counter
         self._set_learning_counter()
-
         # Set up logging manager
         self._set_logging_manager()
+        # Set up wandb watch model
+        if (
+            Meta.config["logging_config"]["writer_config"]["writer"] == "wandb"
+            and Meta.config["logging_config"]["writer_config"]["wandb_watch_model"]
+        ):
+            if Meta.config["logging_config"]["writer_config"]["wandb_model_watch_freq"]:
+                wandb.watch(
+                    model,
+                    log_freq=Meta.config["logging_config"]["writer_config"][
+                        "wandb_model_watch_freq"
+                    ],
+                )
+            else:
+                wandb.watch(model)
         # Set up optimizer
         self._set_optimizer(model)
         # Set up lr_scheduler

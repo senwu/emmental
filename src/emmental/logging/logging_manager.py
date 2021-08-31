@@ -8,6 +8,7 @@ from torch.optim.optimizer import Optimizer
 from emmental.logging.checkpointer import Checkpointer
 from emmental.logging.log_writer import LogWriter
 from emmental.logging.tensorboard_writer import TensorBoardWriter
+from emmental.logging.wandb_writer import WandbWriter
 from emmental.meta import Meta
 from emmental.model import EmmentalModel
 
@@ -111,8 +112,12 @@ class LoggingManager(object):
             self.writer = LogWriter()
         elif writer_opt == "tensorboard":
             self.writer = TensorBoardWriter()
+        elif writer_opt == "wandb":
+            self.writer = WandbWriter()
         else:
             raise ValueError(f"Unrecognized writer option '{writer_opt}'")
+
+        self.log_unit_sanity_check = False
 
     def update(self, batch_size: int) -> None:
         """Update the counter.
@@ -131,6 +136,10 @@ class LoggingManager(object):
         # Update number of epochs
         self.epoch_count = self.batch_count / self.n_batches_per_epoch
         self.epoch_total = self.batch_total / self.n_batches_per_epoch
+        if self.epoch_count == int(self.epoch_count):
+            self.epoch_count = int(self.epoch_count)
+        if self.epoch_total == int(self.epoch_total):
+            self.epoch_total = int(self.epoch_total)
 
         # Update number of units
         if self.counter_unit == "sample":
@@ -173,13 +182,24 @@ class LoggingManager(object):
         Args:
           metric_dict: The metric dict.
         """
-        # As Tensorboard only allows integer values,
-        # we cast epochs back to batches for logging
-        log_unit = self.unit_total
-        if self.counter_unit == "epoch":
-            log_unit *= self.n_batches_per_epoch
-        for metric_name, metric_value in metric_dict.items():
-            self.writer.add_scalar(metric_name, metric_value, log_unit)
+        unit_total: Union[float, int] = self.unit_total
+        # As Tensorboard/Wandb only allow integer values for unit count, emmental casts
+        # non integer value to integer and switch the counter unit from epoch to batch.
+        if (
+            Meta.config["logging_config"]["writer_config"]["writer"]
+            in ["tensorboard", "wandb"]
+            and self.counter_unit == "epoch"
+            and int(self.evaluation_freq) != self.evaluation_freq
+        ):
+            if not self.log_unit_sanity_check:
+                logger.warning(
+                    "Cannot use float value for evaluation_freq when counter_unit "
+                    "uses epoch with tensorboard writer, switch to batch as "
+                    "count_unit."
+                )
+                self.log_unit_sanity_check = True
+            unit_total = self.batch_total
+        self.writer.add_scalar_dict(metric_dict, unit_total)
 
     def checkpoint_model(
         self,

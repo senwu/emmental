@@ -1,5 +1,6 @@
 """Emmental meta."""
 import logging
+import math
 import os
 import tempfile
 import uuid
@@ -49,6 +50,7 @@ def init(
         Meta.update_config(config, config_dir, config_name, update_random_seed=False)
 
     set_random_seed(Meta.config["meta_config"]["seed"])
+    Meta.check_config()
 
 
 def init_config() -> None:
@@ -62,6 +64,7 @@ def init_config() -> None:
     logger.info(f"Loading Emmental default config from {default_config_path}.")
 
     Meta.config = config
+    Meta.check_config()
 
 
 def init_logging(
@@ -194,6 +197,8 @@ class Meta(object):
         if update_random_seed:
             set_random_seed(Meta.config["meta_config"]["seed"])
 
+        Meta.check_config()
+
     @staticmethod
     def reset() -> None:
         """Clear shared variables of shared, global singleton."""
@@ -214,3 +219,50 @@ class Meta(object):
             torch.distributed.init_process_group(
                 backend=Meta.config["model_config"]["distributed_backend"]
             )
+
+    @staticmethod
+    def check_config() -> None:
+        """Sanity check the config."""
+        if Meta.config["logging_config"]["evaluation_freq"] == int(
+            Meta.config["logging_config"]["evaluation_freq"]
+        ):
+            Meta.config["logging_config"]["evaluation_freq"] = int(
+                Meta.config["logging_config"]["evaluation_freq"]
+            )
+
+        if (
+            Meta.config["logging_config"]["counter_unit"]
+            in [
+                "sample",
+                "batch",
+            ]
+            and isinstance(Meta.config["logging_config"]["evaluation_freq"], float)
+        ):
+            original_evaluation_freq = Meta.config["logging_config"]["evaluation_freq"]
+            new_evaluation_freq = max(
+                1, math.ceil(Meta.config["logging_config"]["evaluation_freq"])
+            )
+            logger.warning(
+                f"Cannot use float value for evaluation_freq when "
+                "counter_unit uses ['sample', 'batch'], switch "
+                f"{original_evaluation_freq} to {new_evaluation_freq}."
+            )
+
+            Meta.config["logging_config"]["evaluation_freq"] = new_evaluation_freq
+
+        if (
+            Meta.config["logging_config"]["counter_unit"]
+            in [
+                "epoch",
+            ]
+            and isinstance(Meta.config["logging_config"]["evaluation_freq"], int)
+            and Meta.config["logging_config"]["writer_config"]["write_loss_per_step"]
+        ):
+            logger.warning(
+                "Cannot log loss per step when count_unit is epoch and "
+                "evaluation_freq is int, switch write_loss_per_step to False."
+            )
+
+            Meta.config["logging_config"]["writer_config"][
+                "write_loss_per_step"
+            ] = False

@@ -30,7 +30,6 @@ def test_log_writer(caplog):
 
     log_writer = LogWriter()
 
-    log_writer.add_config(emmental.Meta.config)
     log_writer.add_scalar(name="step 1", value=0.1, step=1)
     log_writer.add_scalar(name="step 2", value=0.2, step=2)
 
@@ -67,7 +66,6 @@ def test_tensorboard_writer(caplog):
 
     log_writer = TensorBoardWriter()
 
-    log_writer.add_config(emmental.Meta.config)
     log_writer.add_scalar(name="step 1", value=0.1, step=1)
     log_writer.add_scalar(name="step 2", value=0.2, step=2)
 
