@@ -49,10 +49,13 @@ class TensorBoardWriter(LogWriter):
         Args:
           config_filename: The config filename, defaults to "config.yaml".
         """
+        saved = Meta.config["learner_config"]["optimizer_config"]
+        del Meta.config["learner_config"]["optimizer_config"]
         config = json.dumps(Meta.config)
         self.writer.add_text(tag="config", text_string=config)
 
         super().write_config(config_filename)
+        Meta.config["learner_config"]["optimizer_config"] = saved
 
     def write_log(self, log_filename: str = "log.json") -> None:
         """Dump the log to file.

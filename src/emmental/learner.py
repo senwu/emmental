@@ -536,7 +536,12 @@ class EmmentalLearner(object):
         if Meta.config["learner_config"]["n_steps"]:
             self.start_epoch = 0
             self.end_epoch = 1
-            self.start_step = Meta.config["learner_config"]["steps_learned"]
+            if Meta.config["learner_config"]["skip_learned_data"]:
+                self.start_step = 0
+                self.start_train_step = Meta.config["learner_config"]["steps_learned"]
+            else:
+                self.start_step = Meta.config["learner_config"]["steps_learned"]
+                self.start_train_step = Meta.config["learner_config"]["steps_learned"]
             self.end_step = Meta.config["learner_config"]["n_steps"]
             self.use_step_base_counter = True
             self.total_steps = Meta.config["learner_config"]["n_steps"]
@@ -544,6 +549,7 @@ class EmmentalLearner(object):
             self.start_epoch = Meta.config["learner_config"]["epochs_learned"]
             self.end_epoch = Meta.config["learner_config"]["n_epochs"]
             self.start_step = 0
+            self.start_train_step = 0
             self.end_step = self.n_batches_per_epoch
             self.use_step_base_counter = False
             self.total_steps = (
@@ -660,17 +666,22 @@ class EmmentalLearner(object):
 
         batch_iterator = self.task_scheduler.get_batches(train_dataloaders, model)
         for epoch_num in range(self.start_epoch, self.end_epoch):
+            # for train_dataloader in train_dataloaders:
+            # Set epoch for distributed sampler
+            # if isinstance(train_dataloader, DataLoader) and \
+            #         isinstance(train_dataloader.sampler, DistributedSampler):
+            #     train_dataloader.sampler.set_epoch(epoch_num)
             step_pbar = tqdm(
                 range(self.start_step, self.end_step),
-                desc=f"Step {self.start_step+1}/{self.end_step}"
+                desc=f"Step {self.start_step + 1}/{self.end_step}"
                 if self.use_step_base_counter
-                else f"Epoch {epoch_num+1}/{self.end_epoch}",
+                else f"Epoch {epoch_num + 1}/{self.end_epoch}",
                 disable=not Meta.config["meta_config"]["verbose"]
                 or Meta.config["learner_config"]["local_rank"] not in [-1, 0],
             )
             for step_num in step_pbar:
                 if self.use_step_base_counter:
-                    step_pbar.set_description(f"Step {step_num+1}/{self.total_steps}")
+                    step_pbar.set_description(f"Step {step_num + 1}/{self.total_steps}")
                     step_pbar.refresh()
                 try:
                     batch = next(batch_iterator)
@@ -679,6 +690,9 @@ class EmmentalLearner(object):
                         train_dataloaders, model
                     )
                     batch = next(batch_iterator)
+
+                if step_num < self.start_train_step:
+                    continue
 
                 # Covert single batch into a batch list
                 if not isinstance(batch, list):

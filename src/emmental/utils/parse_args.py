@@ -160,6 +160,13 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     learner_config.add_argument(
+        "--skip_learned_data",
+        type=str2bool,
+        default=False,
+        help="Iterate through dataloader when steps or epochs learned is true",
+    )
+
+    learner_config.add_argument(
         "--train_split",
         nargs="+",
         type=str,
@@ -947,6 +954,7 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
             "n_epochs": args.n_epochs,
             "steps_learned": args.steps_learned,
             "n_steps": args.n_steps,
+            "skip_learned_data": args.skip_learned_data,
             "train_split": args.train_split,
             "valid_split": args.valid_split,
             "test_split": args.test_split,
