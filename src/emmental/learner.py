@@ -18,6 +18,7 @@ import wandb
 from numpy import ndarray
 from torch import optim as optim
 from torch.optim.lr_scheduler import _LRScheduler
+from torch.utils.data import DataLoader, DistributedSampler
 
 from emmental.data import EmmentalDataLoader
 from emmental.logging import LoggingManager
@@ -666,11 +667,12 @@ class EmmentalLearner(object):
 
         batch_iterator = self.task_scheduler.get_batches(train_dataloaders, model)
         for epoch_num in range(self.start_epoch, self.end_epoch):
-            # for train_dataloader in train_dataloaders:
-            # Set epoch for distributed sampler
-            # if isinstance(train_dataloader, DataLoader) and \
-            #         isinstance(train_dataloader.sampler, DistributedSampler):
-            #     train_dataloader.sampler.set_epoch(epoch_num)
+            for train_dataloader in train_dataloaders:
+                # Set epoch for distributed sampler
+                if isinstance(train_dataloader, DataLoader) and isinstance(
+                    train_dataloader.sampler, DistributedSampler
+                ):
+                    train_dataloader.sampler.set_epoch(epoch_num)
             step_pbar = tqdm(
                 range(self.start_step, self.end_step),
                 desc=f"Step {self.start_step + 1}/{self.end_step}"
