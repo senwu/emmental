@@ -17,6 +17,7 @@ setup(
     install_requires=[
         "numpy>=1.11, <2.0",
         "pyyaml>=5.1, <6.0",
+        "rich>=10.0.0, <30.0.0",
         "scikit-learn>=0.20.0, <0.30.0",
         "scipy>=1.1.0, <2.0.0",
         "tensorboard>=1.15.0, <3.0.0",

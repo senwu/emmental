@@ -1,5 +1,4 @@
 """Emmental model."""
-import importlib
 import itertools
 import logging
 import os
@@ -10,6 +9,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 import numpy as np
 import torch
 from numpy import ndarray
+from rich.progress import BarColumn, Progress, TimeElapsedColumn
 from torch import Tensor, nn
 from torch.nn import ModuleDict
 
@@ -23,11 +23,6 @@ from emmental.utils.utils import (
     move_to_device,
     prob_to_pred,
 )
-
-if importlib.util.find_spec("ipywidgets") is not None:
-    from tqdm.auto import tqdm
-else:
-    from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -490,12 +485,21 @@ class EmmentalModel(nn.Module):
         task_to_label_dict = dataloader.task_to_label_dict
         uid = dataloader.uid
 
-        with torch.no_grad():
-            for batch_num, bdict in tqdm(
-                enumerate(dataloader),
+        # Set progress bar
+        progress = Progress(
+            "[progress.description]{task.description}",
+            "[magenta]{task.completed}/{task.total}",
+            BarColumn(),
+            TimeElapsedColumn(),
+            disable=not Meta.config["meta_config"]["verbose"],
+        )
+
+        with torch.no_grad(), progress:
+            task = progress.add_task(
+                f"Evaluating {dataloader.data_name} ({dataloader.split})",
                 total=len(dataloader),
-                desc=f"Evaluating {dataloader.data_name} ({dataloader.split})",
-            ):
+            )
+            for bdict in dataloader:
                 if isinstance(bdict, dict) == 1:
                     X_bdict = bdict
                     Y_bdict = None
@@ -562,6 +566,7 @@ class EmmentalModel(nn.Module):
                             out_dict[task_name][action_name].extend(
                                 out_bdict[task_name][action_name]
                             )
+                progress.update(task, advance=1)
 
         # Calculate average loss
         if dataloader.is_learnable:
