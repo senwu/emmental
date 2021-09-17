@@ -1,4 +1,5 @@
 """Emmental log writer."""
+import copy
 import json
 import os
 from collections import defaultdict
@@ -7,6 +8,7 @@ from typing import Dict, Union
 import yaml
 
 from emmental.meta import Meta
+from emmental.utils.utils import convert_to_serializable_json
 
 
 class LogWriter(object):
@@ -15,6 +17,7 @@ class LogWriter(object):
     def __init__(self) -> None:
         """Initialize the log writer."""
         self.run_log: defaultdict = defaultdict(list)
+        self.write_config()
 
     def add_scalar_dict(
         self, metric_dict: Dict[str, Union[float, int]], step: Union[float, int]
@@ -48,7 +51,12 @@ class LogWriter(object):
         """
         config_path = os.path.join(Meta.log_path, config_filename)
         with open(config_path, "w") as yml:
-            yaml.dump(Meta.config, yml, default_flow_style=False, allow_unicode=True)
+            yaml.dump(
+                convert_to_serializable_json(copy.deepcopy(Meta.config)),
+                yml,
+                default_flow_style=False,
+                allow_unicode=True,
+            )
 
     def write_log(self, log_filename: str = "log.json") -> None:
         """Dump the log to file.

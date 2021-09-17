@@ -1,10 +1,11 @@
 """Emmental tensor board writer."""
+import copy
 from typing import Dict, Union
 
 import wandb
-
 from emmental.logging.log_writer import LogWriter
 from emmental.meta import Meta
+from emmental.utils.utils import convert_to_serializable_json
 
 
 class WandbWriter(LogWriter):
@@ -39,7 +40,7 @@ class WandbWriter(LogWriter):
                 "wandb_project_name"
             ],
             name=Meta.config["logging_config"]["writer_config"]["wandb_run_name"],
-            config=Meta.config,
+            config=convert_to_serializable_json(copy.deepcopy(Meta.config)),
         )
 
     def write_log(self, log_filename: str = "log.json") -> None:

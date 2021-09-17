@@ -1,4 +1,5 @@
 """Emmental tensor board writer."""
+import copy
 import json
 from typing import Dict, Union
 
@@ -6,6 +7,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from emmental.logging.log_writer import LogWriter
 from emmental.meta import Meta
+from emmental.utils.utils import convert_to_serializable_json
 
 
 class TensorBoardWriter(LogWriter):
@@ -49,11 +51,8 @@ class TensorBoardWriter(LogWriter):
         Args:
           config_filename: The config filename, defaults to "config.yaml".
         """
-        try:
-            config = json.dumps(Meta.config)
-            self.writer.add_text(tag="config", text_string=config)
-        except TypeError:
-            pass
+        config = json.dumps(convert_to_serializable_json(copy.deepcopy(Meta.config)))
+        self.writer.add_text(tag="config", text_string=config)
         super().write_config(config_filename)
 
     def write_log(self, log_filename: str = "log.json") -> None:
