@@ -1,6 +1,7 @@
 """Emmental logging manager."""
 import logging
 from typing import Dict, Union
+from emmental.logging.log_writer import LogWriter
 
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.optim.optimizer import Optimizer
@@ -9,6 +10,7 @@ from emmental.logging.checkpointer import Checkpointer
 from emmental.logging.json_writer import JsonWriter
 from emmental.logging.tensorboard_writer import TensorBoardWriter
 from emmental.logging.wandb_writer import WandbWriter
+from emmental.logging.log_writer import LogWriter
 from emmental.meta import Meta
 from emmental.model import EmmentalModel
 
@@ -106,10 +108,8 @@ class LoggingManager(object):
         # Set up log writer
         writer_opt = Meta.config["logging_config"]["writer_config"]["writer"]
 
-        if writer_opt is None:
-            self.writer = None
-        elif writer_opt == "json":
-            self.writer = JsonWriter()
+        if writer_opt == "json":
+            self.writer: LogWriter = JsonWriter()
         elif writer_opt == "tensorboard":
             self.writer = TensorBoardWriter()
         elif writer_opt == "wandb":
