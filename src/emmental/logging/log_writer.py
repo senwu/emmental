@@ -17,7 +17,6 @@ class LogWriter(object):
     def __init__(self) -> None:
         """Initialize the log writer."""
         self.run_log: defaultdict = defaultdict(list)
-        self.write_config()
 
     def add_scalar_dict(
         self, metric_dict: Dict[str, Union[float, int]], step: Union[float, int]
