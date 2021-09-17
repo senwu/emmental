@@ -1,16 +1,15 @@
 """Emmental logging manager."""
 import logging
 from typing import Dict, Union
-from emmental.logging.log_writer import LogWriter
 
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.optim.optimizer import Optimizer
 
 from emmental.logging.checkpointer import Checkpointer
 from emmental.logging.json_writer import JsonWriter
+from emmental.logging.log_writer import LogWriter
 from emmental.logging.tensorboard_writer import TensorBoardWriter
 from emmental.logging.wandb_writer import WandbWriter
-from emmental.logging.log_writer import LogWriter
 from emmental.meta import Meta
 from emmental.model import EmmentalModel
 

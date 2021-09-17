@@ -6,6 +6,8 @@ Added
 
 * `@senwu`_: Support wandb logging.
   (`#99 <https://github.com/senwu/emmental/pull/99>`_)
+* `@senwu`_: Fix log writer cannot dump functions in Meta.config issue.
+  (`#103 <https://github.com/senwu/emmental/pull/103>`_)
 
 0.0.8_ - 2021-02-14
 -------------------
