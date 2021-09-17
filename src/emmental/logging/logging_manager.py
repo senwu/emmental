@@ -107,8 +107,10 @@ class LoggingManager(object):
         # Set up log writer
         writer_opt = Meta.config["logging_config"]["writer_config"]["writer"]
 
-        if writer_opt == "json":
-            self.writer: LogWriter = JsonWriter()
+        if writer_opt is None:
+            self.writer = LogWriter()
+        elif writer_opt == "json":
+            self.writer = JsonWriter()
         elif writer_opt == "tensorboard":
             self.writer = TensorBoardWriter()
         elif writer_opt == "wandb":
