@@ -3,6 +3,7 @@ import copy
 from typing import Dict, Union
 
 import wandb
+
 from emmental.logging.log_writer import LogWriter
 from emmental.meta import Meta
 from emmental.utils.utils import convert_to_serializable_json
