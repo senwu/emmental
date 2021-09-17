@@ -1,8 +1,6 @@
 """Emmental log writer."""
 import copy
-import json
 import os
-from collections import defaultdict
 from typing import Dict, Union
 
 import yaml
@@ -16,7 +14,7 @@ class LogWriter(object):
 
     def __init__(self) -> None:
         """Initialize the log writer."""
-        self.run_log: defaultdict = defaultdict(list)
+        pass
 
     def add_scalar_dict(
         self, metric_dict: Dict[str, Union[float, int]], step: Union[float, int]
@@ -40,7 +38,7 @@ class LogWriter(object):
           value: The value of the scalar.
           step: The current step.
         """
-        self.run_log[name].append((step, value))
+        pass
 
     def write_config(self, config_filename: str = "config.yaml") -> None:
         """Dump the config to file.
@@ -63,9 +61,7 @@ class LogWriter(object):
         Args:
           log_filename: The log filename, defaults to "log.json".
         """
-        log_path = os.path.join(Meta.log_path, log_filename)
-        with open(log_path, "w") as f:
-            json.dump(self.run_log, f)
+        pass
 
     def close(self) -> None:
         """Close the log writer."""

@@ -6,7 +6,7 @@ from torch.optim.lr_scheduler import _LRScheduler
 from torch.optim.optimizer import Optimizer
 
 from emmental.logging.checkpointer import Checkpointer
-from emmental.logging.log_writer import LogWriter
+from emmental.logging.json_writer import JsonWriter
 from emmental.logging.tensorboard_writer import TensorBoardWriter
 from emmental.logging.wandb_writer import WandbWriter
 from emmental.meta import Meta
@@ -109,7 +109,7 @@ class LoggingManager(object):
         if writer_opt is None:
             self.writer = None
         elif writer_opt == "json":
-            self.writer = LogWriter()
+            self.writer = JsonWriter()
         elif writer_opt == "tensorboard":
             self.writer = TensorBoardWriter()
         elif writer_opt == "wandb":

@@ -4,7 +4,7 @@ import logging
 import pytest
 
 import emmental
-from emmental.logging.log_writer import LogWriter
+from emmental.logging.json_writer import JsonWriter
 from emmental.logging.logging_manager import LoggingManager
 from emmental.logging.tensorboard_writer import TensorBoardWriter
 from emmental.meta import Meta
@@ -205,7 +205,7 @@ def test_logging_manager_json(caplog):
 
     logging_manager.update(5)
 
-    assert type(logging_manager.writer) == LogWriter
+    assert type(logging_manager.writer) == JsonWriter
 
 
 def test_logging_manager_tensorboard(caplog):

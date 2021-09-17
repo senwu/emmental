@@ -1,7 +1,7 @@
 """Emmental tensor board writer."""
 import copy
 import json
-from typing import Dict, Union
+from typing import Union
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -17,21 +17,9 @@ class TensorBoardWriter(LogWriter):
         """Initialize TensorBoardWriter."""
         super().__init__()
 
-        # Set up tensorboard summary writer
+        # Set up tensorboard summary writer and save config
         self.writer = SummaryWriter(Meta.log_path)
         self.write_config()
-
-    def add_scalar_dict(
-        self, metric_dict: Dict[str, Union[float, int]], step: Union[float, int]
-    ) -> None:
-        """Log a scalar variable.
-
-        Args:
-          metric_dict: The metric dict.
-          step: The current step.
-        """
-        for name, value in metric_dict.items():
-            self.add_scalar(name, value, step)
 
     def add_scalar(
         self, name: str, value: Union[float, int], step: Union[float, int]
