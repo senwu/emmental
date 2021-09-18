@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional, Type
 
 import torch
 import yaml
+from rich.logging import RichHandler
 
 from emmental.utils.seed import set_random_seed
 from emmental.utils.utils import merge
@@ -110,12 +111,12 @@ def init_logging(
                 level=level,
                 handlers=[
                     logging.FileHandler(os.path.join(log_path, log_name)),
-                    logging.StreamHandler(),
+                    RichHandler(),
                 ],
             )
         else:
             logging.basicConfig(
-                format=format, level=logging.WARN, handlers=[logging.StreamHandler()]
+                format=format, level=logging.WARN, handlers=[RichHandler()]
             )
 
         # Notify user of log location
