@@ -125,7 +125,7 @@ def init_logging(
         logger.info(
             f"Logging was already initialized to use {Meta.log_path}.  "
             "To configure logging manually, call emmental.init_logging before "
-            "initialiting Meta."
+            "initializing Meta."
         )
 
 

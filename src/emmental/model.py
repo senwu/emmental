@@ -482,27 +482,22 @@ class EmmentalModel(nn.Module):
         )
         loss_dict: Dict[str, Union[ndarray, float]] = defaultdict(list)  # type: ignore
 
-        if not dataloader.is_learnable:
+        has_y_dict = False if isinstance(dataloader.dataset[0], dict) else True
+        if not has_y_dict:
             gold_dict = None
             loss_dict = None
 
-        # Collect dataloader information
-        task_to_label_dict = dataloader.task_to_label_dict
-        uid = dataloader.uid
-
         with torch.no_grad():
-            for batch_num, bdict in tqdm(
-                enumerate(dataloader),
+            for bdict in tqdm(
+                dataloader,
                 total=len(dataloader),
                 desc=f"Evaluating {dataloader.data_name} ({dataloader.split})",
             ):
-                if isinstance(bdict, dict) == 1:
+                if has_y_dict:
+                    X_bdict, Y_bdict = bdict
+                else:
                     X_bdict = bdict
                     Y_bdict = None
-                else:
-                    X_bdict, Y_bdict = bdict
-                    if not dataloader.is_learnable:
-                        Y_bdict = None
 
                 if return_action_outputs:
                     (
@@ -512,10 +507,10 @@ class EmmentalModel(nn.Module):
                         gold_bdict,
                         out_bdict,
                     ) = self.forward(  # type: ignore
-                        X_bdict[uid],
+                        X_bdict[dataloader.uid],
                         X_bdict,
                         Y_bdict,
-                        task_to_label_dict,
+                        dataloader.task_to_label_dict,
                         return_action_outputs=return_action_outputs,
                         return_probs=return_probs or return_preds,
                     )
@@ -526,10 +521,10 @@ class EmmentalModel(nn.Module):
                         prob_bdict,
                         gold_bdict,
                     ) = self.forward(  # type: ignore
-                        X_bdict[uid],
+                        X_bdict[dataloader.uid],
                         X_bdict,
                         Y_bdict,
-                        task_to_label_dict,
+                        dataloader.task_to_label_dict,
                         return_action_outputs=return_action_outputs,
                         return_probs=return_probs or return_preds,
                     )
@@ -544,7 +539,7 @@ class EmmentalModel(nn.Module):
                         pred_dict[task_name].extend(  # type: ignore
                             prob_to_pred(prob_bdict[task_name])
                         )
-                    if dataloader.is_learnable:
+                    if has_y_dict:
                         gold_dict[task_name].extend(gold_bdict[task_name])
                         if len(loss_bdict[task_name].size()) == 0:
                             if loss_dict[task_name] == []:
@@ -564,7 +559,7 @@ class EmmentalModel(nn.Module):
                             )
 
         # Calculate average loss
-        if dataloader.is_learnable:
+        if has_y_dict:
             for task_name in uid_dict.keys():
                 if not isinstance(loss_dict[task_name], list):
                     loss_dict[task_name] /= len(uid_dict[task_name])
@@ -618,18 +613,23 @@ class EmmentalModel(nn.Module):
             macro_loss_dict: defaultdict = defaultdict(list)
 
         for dataloader in dataloaders:
-            if not dataloader.is_learnable:
-                logger.warning(
-                    f"Dataloader {dataloader.data_name} doesn't have gold data, "
-                    f"continue..."
-                )
-                continue
-
             return_probs = False
             return_preds = False
+            has_scorer = False
+
             for task_name in dataloader.task_to_label_dict:
                 return_probs = return_probs or self.require_prob_for_evals[task_name]
                 return_preds = return_preds or self.require_pred_for_evals[task_name]
+                if self.scorers[task_name]:
+                    has_scorer = True
+            has_y_dict = False if isinstance(dataloader.dataset[0], dict) else True
+
+            if not has_scorer or not has_y_dict:
+                logger.warning(
+                    f"Dataloader {dataloader.data_name} doesn't have scorer or gold "
+                    f"label, continue..."
+                )
+                continue
 
             predictions = self.predict(
                 dataloader,
