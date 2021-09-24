@@ -363,7 +363,7 @@ class EmmentalModel(nn.Module):
         output_dict = self.flow(X_dict, task_names)
 
         if Y_dict is not None:
-            # Calculate logit and loss for each task
+            # Calculate logits and loss for each task
             for task_name, label_name in task_to_label_dict.items():
                 Y = Y_dict[label_name]
 
