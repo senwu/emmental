@@ -78,10 +78,16 @@ class MixedScheduler(Scheduler):
                 zip(task_to_label_dicts, data_names, batch_counts, splits, uid_names)
             ):
                 try:
-                    X_dict, Y_dict = next(data_loaders[data_loader_idx])
+                    batch = next(data_loaders[data_loader_idx])
                 except StopIteration:
                     data_loaders[data_loader_idx] = iter(dataloaders[data_loader_idx])
-                    X_dict, Y_dict = next(data_loaders[data_loader_idx])
+                    batch = next(data_loaders[data_loader_idx])
+
+                if not isinstance(batch, dict):
+                    X_dict, Y_dict = batch
+                else:
+                    X_dict = batch
+                    Y_dict = None
 
                 mixed_batch.append(
                     (
