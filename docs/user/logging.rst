@@ -27,8 +27,13 @@ The logging parameters of Emmental are described below::
         counter_unit: epoch # [epoch, batch]
         evaluation_freq: 1
         writer_config:
-            writer: tensorboard # [json, tensorboard]
+            writer: tensorboard # [json, tensorboard, wandb]
             verbose: True
+            wandb_project_name:
+            wandb_run_name:
+            wandb_watch_model: False
+            wandb_model_watch_freq:
+            write_loss_per_step: False
         checkpointing: False
         checkpointer_config:
             checkpoint_path:
@@ -37,8 +42,10 @@ The logging parameters of Emmental are described below::
                 model/train/all/loss: min # metric_name: mode, where mode in [min, max]
             checkpoint_task_metrics: # task_metric_name: mode
             checkpoint_runway: 0 # checkpointing runway (no checkpointing before k unit)
+            checkpoint_all: False # checkpointing all checkpoints
             clear_intermediate_checkpoints: True # whether to clear intermediate checkpoints
             clear_all_checkpoints: False # whether to clear all checkpoints
+
 
 .. _Configuring Emmental: config.html
 .. _Emmental: https://github.com/SenWu/Emmental

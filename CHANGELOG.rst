@@ -6,6 +6,16 @@ Added
 
 * `@senwu`_: Support wandb logging.
   (`#99 <https://github.com/senwu/emmental/pull/99>`_)
+* `@senwu`_: Add `return_loss` argument model predict and forward to support the case
+  when no loss calculation can be done or needed.
+  (`#105 <https://github.com/senwu/emmental/pull/105>`_)
+
+Fixed
+^^^^^
+
+* `@senwu`_: Fix model learning that cannot handle task doesn't have Y_dict from
+  dataloasder such as contrastive learning.
+  (`#105 <https://github.com/senwu/emmental/pull/105>`_)
 
 0.0.8_ - 2021-02-14
 -------------------
@@ -171,6 +181,7 @@ Added
 
 Fixed
 ^^^^^
+
 * `@senwu`_: Fix customized optimizer support issue.
   (`#81 <https://github.com/SenWu/emmental/pull/81>`_)
 * `@senwu`_: Fix loss logging didn't count task weight.
@@ -227,6 +238,7 @@ Added
 
 Changed
 ^^^^^^^
+
 * `@senwu`_: Enabled "Type hints (PEP 484) support for the Sphinx autodoc extension."
   (`#69 <https://github.com/SenWu/emmental/pull/69>`_)
 * `@senwu`_: Refactor docstrings and enforce using flake8-docstrings.
@@ -237,6 +249,7 @@ Changed
 
 Added
 ^^^^^
+
 * `@senwu`_: Support probabilistic gold label in scorer.
 * `@senwu`_: Add `add_tasks` to support adding one task or mulitple tasks into model.
 * `@senwu`_: Add `use_exact_log_path` to support using exact log path.
@@ -252,6 +265,7 @@ Added
 
 Changed
 ^^^^^^^
+
 * `@senwu`_: Change running evaluation only when evaluation is triggered.
 
 
@@ -260,6 +274,7 @@ Changed
 
 Added
 ^^^^^
+
 * `@senwu`_: Add `checkpoint_all` to controll whether to save all checkpoints.
 * `@senwu`_: Support `CosineAnnealingLR`, `CyclicLR`, `OneCycleLR`, `ReduceLROnPlateau`
   lr scheduler.
@@ -270,6 +285,7 @@ Added
 
 Fixed
 ^^^^^
+
 * `@senwu`_: Fix multiple checkpoint_metric issue.
 
 0.0.4_ - 2019-11-11
@@ -277,6 +293,7 @@ Fixed
 
 Added
 ^^^^^
+
 * `@senwu`_: Log metric dict into log file every trigger evaluation time or full epoch.
 * `@senwu`_: Add `get_num_batches` to calculate the total number batches from all
   dataloaders.
@@ -308,6 +325,7 @@ Added
 
 Fixed
 ^^^^^
+
 * `@senwu`_: Correct lr update for epoch-wised scheduler.
 * `@senwu`_: Add type for class.
 * `@senwu`_: Add warning for one class in ROC AUC metric.
@@ -319,6 +337,7 @@ Fixed
 
 Changed
 ^^^^^^^
+
 * `@senwu`_: Change default grad clip to None.
 * `@senwu`_: Update seed and grad_clip to nullable.
 * `@senwu`_: Change default class index to 0-index.
@@ -328,6 +347,7 @@ Changed
 
 Removed
 ^^^^^^^
+
 * `@senwu`_: Remove `checkpoint_clear` argument.
 
 .. _Unreleased: https://github.com/senwu/emmental/compare/v0.0.8...master

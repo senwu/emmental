@@ -19,6 +19,7 @@ The default ``.emmental-config.yaml`` configuration file is shown below::
         seed: # random seed for all numpy/torch/cuda operations in model and learning
         verbose: True # whether to print the log information
         log_path: logs # log directory
+        use_exact_log_path: False # whether to use the exact log directory
 
     # Data configuration
     data_config:
@@ -30,11 +31,19 @@ The default ``.emmental-config.yaml`` configuration file is shown below::
         model_path: # path to pretrained model
         device: 0 # -1 for cpu or gpu id (e.g., 0 for cuda:0)
         dataparallel: True # whether to use dataparallel or not
+        distributed_backend: nccl # what distributed backend to use for DDP [nccl, gloo]
 
     # Learning configuration
     learner_config:
-        fp16: False # whether to use half precision
+        optimizer_path: # path to optimizer state
+        scheduler_path: # path to lr scheduler state
+        fp16: False # whether to use 16-bit precision
+        fp16_opt_level: O1 # Apex AMP optimization level (e.g., ['O0', 'O1', 'O2', 'O3'])
+        local_rank: -1 # local_rank for distributed training on gpus
+        epochs_learned: 0 # learning epochs learned
         n_epochs: 1 # total number of learning epochs
+        steps_learned: 0 # learning steps learned
+        n_steps: # total number of learning steps
         train_split: # the split for training, accepts str or list of strs
             - train
         valid_split: # the split for validation, accepts str or list of strs
@@ -42,11 +51,14 @@ The default ``.emmental-config.yaml`` configuration file is shown below::
         test_split: # the split for testing, accepts str or list of strs
             - test
         ignore_index: # the ignore index, uses for masking samples
+        online_eval: 0 # whether to perform online evaluation
         optimizer_config:
             optimizer: adam # [sgd, adam, adamax, bert_adam]
+            parameters: # parameters to optimize
             lr: 0.001 # Learing rate
             l2: 0.0 # l2 regularization
             grad_clip: # gradient clipping
+            gradient_accumulation_steps: 1 # gradient accumulation steps
             asgd_config:
                 lambd: 0.0001
                 alpha: 0.75
@@ -102,6 +114,7 @@ The default ``.emmental-config.yaml`` configuration file is shown below::
             warmup_unit: batch # [epoch, batch]
             warmup_percentage: # warm up percentage
             min_lr: 0.0 # minimum learning rate
+            reset_state: False # reset the state of the optimizer
             exponential_config:
                 gamma: 0.9
             plateau_config:
@@ -162,8 +175,13 @@ The default ``.emmental-config.yaml`` configuration file is shown below::
         counter_unit: epoch # [epoch, batch]
         evaluation_freq: 1
         writer_config:
-            writer: tensorboard # [json, tensorboard]
+            writer: tensorboard # [json, tensorboard, wandb]
             verbose: True
+            wandb_project_name:
+            wandb_run_name:
+            wandb_watch_model: False
+            wandb_model_watch_freq:
+            write_loss_per_step: False
         checkpointing: False
         checkpointer_config:
             checkpoint_path:
@@ -172,8 +190,10 @@ The default ``.emmental-config.yaml`` configuration file is shown below::
                 model/train/all/loss: min # metric_name: mode, where mode in [min, max]
             checkpoint_task_metrics: # task_metric_name: mode
             checkpoint_runway: 0 # checkpointing runway (no checkpointing before k unit)
+            checkpoint_all: False # checkpointing all checkpoints
             clear_intermediate_checkpoints: True # whether to clear intermediate checkpoints
             clear_all_checkpoints: False # whether to clear all checkpoints
+
 
 User can also use the Emmental_ utility function ``parse_arg`` and
 ``parse_arg_to_config`` from ``emmental.utils`` to generate the config object.
