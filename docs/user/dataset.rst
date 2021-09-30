@@ -26,5 +26,6 @@ The parameters of data are described below::
         min_data_len: 0 # min data length
         max_data_len: 0 # max data length (e.g., 0 for no max_len)
 
+
 .. _Configuring Emmental: config.html
 .. _Emmental: https://github.com/SenWu/Emmental

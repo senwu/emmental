@@ -24,6 +24,7 @@ The model parameters are described below::
         model_path: # path to pretrained model
         device: 0 # -1 for cpu or gpu id (e.g., 0 for cuda:0)
         dataparallel: True # whether to use dataparallel or not
+        distributed_backend: nccl # what distributed backend to use for DDP [nccl, gloo]
 
 
 .. _Configuring Emmental: config.html

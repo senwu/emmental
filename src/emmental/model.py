@@ -314,6 +314,7 @@ class EmmentalModel(nn.Module):
         X_dict: Dict[str, Any],
         Y_dict: Dict[str, Tensor],
         task_to_label_dict: Dict[str, str],
+        return_loss=True,
         return_probs=True,
         return_action_outputs=False,
     ) -> Union[
@@ -338,7 +339,8 @@ class EmmentalModel(nn.Module):
           X_dict: The input data.
           Y_dict: The output data.
           task_to_label_dict: The task to label mapping.
-          return_probs: Whether return prob not, defaults to True.
+          return_loss: Whether return loss or not, defaults to True.
+          return_probs: Whether return probs or not, defaults to True.
           return_action_outputs: Whether return action_outputs or not,
           defaults to False.
 
@@ -347,11 +349,15 @@ class EmmentalModel(nn.Module):
           all tasks.
         """
         uid_dict: Dict[str, List[str]] = defaultdict(list)
-        loss_dict: Dict[str, Tensor] = defaultdict(Tensor)
-        gold_dict: Dict[str, Union[ndarray, List[ndarray]]] = defaultdict(list)
-        prob_dict: Dict[str, Union[ndarray, List[ndarray]]] = defaultdict(list)
-        out_dict: Dict[str, Dict[str, Union[ndarray, List]]] = defaultdict(
-            lambda: defaultdict(list)
+        loss_dict: Dict[str, Tensor] = defaultdict(Tensor) if return_loss else None
+        gold_dict: Dict[str, Union[ndarray, List[ndarray]]] = (
+            defaultdict(list) if Y_dict is not None else None
+        )
+        prob_dict: Dict[str, Union[ndarray, List[ndarray]]] = (
+            defaultdict(list) if return_probs else None
+        )
+        out_dict: Dict[str, Dict[str, Union[ndarray, List]]] = (
+            defaultdict(lambda: defaultdict(list)) if return_action_outputs else None
         )
 
         task_names = (
@@ -384,16 +390,27 @@ class EmmentalModel(nn.Module):
                 # Only calculate the loss when active example exists
                 if active.any():
                     uid_dict[task_name] = [*itertools.compress(uids, active.numpy())]
+                    if (
+                        return_loss
+                        and task_name in self.loss_funcs
+                        and self.loss_funcs[task_name] is not None
+                    ):
+                        loss_dict[task_name] = self.loss_funcs[task_name](
+                            output_dict,
+                            move_to_device(
+                                Y_dict[label_name],
+                                Meta.config["model_config"]["device"],
+                            ),
+                            move_to_device(
+                                active, Meta.config["model_config"]["device"]
+                            ),
+                        )
 
-                    loss_dict[task_name] = self.loss_funcs[task_name](
-                        output_dict,
-                        move_to_device(
-                            Y_dict[label_name], Meta.config["model_config"]["device"]
-                        ),
-                        move_to_device(active, Meta.config["model_config"]["device"]),
-                    )
-
-                    if return_probs:
+                    if (
+                        return_probs
+                        and task_name in self.output_funcs
+                        and self.output_funcs[task_name] is not None
+                    ):
                         prob_dict[task_name] = (
                             self.output_funcs[task_name](output_dict)[
                                 move_to_device(
@@ -404,13 +421,12 @@ class EmmentalModel(nn.Module):
                             .detach()
                             .numpy()
                         )
-                    else:
-                        prob_dict[task_name] = None
 
                     gold_dict[task_name] = Y_dict[label_name][active].cpu().numpy()
 
                     if (
                         return_action_outputs
+                        and task_name in self.action_outputs
                         and self.action_outputs[task_name] is not None
                     ):
                         for action_name, output_index in self.action_outputs[task_name]:
@@ -425,17 +441,37 @@ class EmmentalModel(nn.Module):
                                 .numpy()
                             )
         else:
-            # Calculate logit for each task
+            # Calculate logits for each task
             for task_name in task_to_label_dict:
                 uid_dict[task_name] = uids
-                if return_probs:
+                if (
+                    return_loss
+                    and task_name in self.loss_funcs
+                    and self.loss_funcs[task_name] is not None
+                ):
+                    loss_dict[task_name] = self.loss_funcs[task_name](
+                        output_dict,
+                        None,
+                        move_to_device(
+                            torch.BoolTensor([True] * len(uids)),
+                            Meta.config["model_config"]["device"],
+                        ),
+                    )
+
+                if (
+                    return_probs
+                    and task_name in self.output_funcs
+                    and self.output_funcs[task_name] is not None
+                ):
                     prob_dict[task_name] = (
                         self.output_funcs[task_name](output_dict).cpu().detach().numpy()
                     )
-                else:
-                    prob_dict[task_name] = None
 
-                if return_action_outputs and self.action_outputs[task_name] is not None:
+                if (
+                    return_action_outputs
+                    and task_name in self.action_outputs
+                    and self.action_outputs[task_name] is not None
+                ):
                     for action_name, output_index in self.action_outputs[task_name]:
                         out_dict[task_name][f"{action_name}_{output_index}"] = (
                             output_dict[action_name][output_index]
@@ -443,8 +479,6 @@ class EmmentalModel(nn.Module):
                             .detach()
                             .numpy()
                         )
-                loss_dict[task_name] = None
-                gold_dict[task_name] = None
 
         if return_action_outputs:
             return uid_dict, loss_dict, prob_dict, gold_dict, out_dict
@@ -455,6 +489,7 @@ class EmmentalModel(nn.Module):
     def predict(
         self,
         dataloader: EmmentalDataLoader,
+        return_loss: bool = True,
         return_probs: bool = True,
         return_preds: bool = False,
         return_action_outputs: bool = False,
@@ -463,7 +498,8 @@ class EmmentalModel(nn.Module):
 
         Args:
           dataloader: The dataloader to predict.
-          return_probs: Whether return prob not, defaults to True.
+          return_loss: Whether return loss or not, defaults to True.
+          return_probs: Whether return probs or not, defaults to True.
           return_preds: Whether return predictions or not, defaults to False.
           return_action_outputs: Whether return action_outputs or not,
           defaults to False.
@@ -473,19 +509,25 @@ class EmmentalModel(nn.Module):
         """
         self.eval()
 
-        uid_dict: Dict[str, List[str]] = defaultdict(list)
-        prob_dict: Dict[str, Union[ndarray, List[ndarray]]] = defaultdict(list)
-        pred_dict: Dict[str, Union[ndarray, List[ndarray]]] = defaultdict(list)
-        gold_dict: Dict[str, List[Union[ndarray, int, float]]] = defaultdict(list)
-        out_dict: Dict[str, Dict[str, List[Union[ndarray, int, float]]]] = defaultdict(
-            lambda: defaultdict(list)
-        )
-        loss_dict: Dict[str, Union[ndarray, float]] = defaultdict(list)  # type: ignore
-
+        # Check if Y_dict exists
         has_y_dict = False if isinstance(dataloader.dataset[0], dict) else True
-        if not has_y_dict:
-            gold_dict = None
-            loss_dict = None
+
+        uid_dict: Dict[str, List[str]] = defaultdict(list)
+        prob_dict: Dict[str, Union[ndarray, List[ndarray]]] = (
+            defaultdict(list) if return_probs else None
+        )
+        pred_dict: Dict[str, Union[ndarray, List[ndarray]]] = (
+            defaultdict(list) if return_preds else None
+        )
+        out_dict: Dict[str, Dict[str, List[Union[ndarray, int, float]]]] = (
+            defaultdict(lambda: defaultdict(list)) if return_action_outputs else None
+        )
+        loss_dict: Dict[str, Union[ndarray, float]] = (
+            defaultdict(list) if return_loss else None  # type: ignore
+        )
+        gold_dict: Dict[str, List[Union[ndarray, int, float]]] = (
+            defaultdict(list) if has_y_dict else None
+        )
 
         with torch.no_grad():
             for bdict in tqdm(
@@ -511,6 +553,7 @@ class EmmentalModel(nn.Module):
                         X_bdict,
                         Y_bdict,
                         dataloader.task_to_label_dict,
+                        return_loss=return_loss,
                         return_action_outputs=return_action_outputs,
                         return_probs=return_probs or return_preds,
                     )
@@ -525,22 +568,14 @@ class EmmentalModel(nn.Module):
                         X_bdict,
                         Y_bdict,
                         dataloader.task_to_label_dict,
+                        return_loss=return_loss,
                         return_action_outputs=return_action_outputs,
                         return_probs=return_probs or return_preds,
                     )
                     out_bdict = None
                 for task_name in uid_bdict.keys():
                     uid_dict[task_name].extend(uid_bdict[task_name])
-                    if return_probs:
-                        prob_dict[task_name].extend(  # type: ignore
-                            prob_bdict[task_name]
-                        )
-                    if return_preds:
-                        pred_dict[task_name].extend(  # type: ignore
-                            prob_to_pred(prob_bdict[task_name])
-                        )
-                    if has_y_dict:
-                        gold_dict[task_name].extend(gold_bdict[task_name])
+                    if return_loss:
                         if len(loss_bdict[task_name].size()) == 0:
                             if loss_dict[task_name] == []:
                                 loss_dict[task_name] = 0
@@ -551,6 +586,16 @@ class EmmentalModel(nn.Module):
                             loss_dict[task_name].extend(  # type: ignore
                                 loss_bdict[task_name].cpu().numpy()
                             )
+                    if return_probs:
+                        prob_dict[task_name].extend(  # type: ignore
+                            prob_bdict[task_name]
+                        )
+                    if return_preds:
+                        pred_dict[task_name].extend(  # type: ignore
+                            prob_to_pred(prob_bdict[task_name])
+                        )
+                    if has_y_dict:
+                        gold_dict[task_name].extend(gold_bdict[task_name])
                 if return_action_outputs and out_bdict:
                     for task_name in out_bdict.keys():
                         for action_name in out_bdict[task_name].keys():
@@ -559,7 +604,7 @@ class EmmentalModel(nn.Module):
                             )
 
         # Calculate average loss
-        if has_y_dict:
+        if return_loss:
             for task_name in uid_dict.keys():
                 if not isinstance(loss_dict[task_name], list):
                     loss_dict[task_name] /= len(uid_dict[task_name])
@@ -622,12 +667,11 @@ class EmmentalModel(nn.Module):
                 return_preds = return_preds or self.require_pred_for_evals[task_name]
                 if self.scorers[task_name]:
                     has_scorer = True
-            has_y_dict = False if isinstance(dataloader.dataset[0], dict) else True
 
-            if not has_scorer or not has_y_dict:
+            if not has_scorer:
                 logger.warning(
-                    f"Dataloader {dataloader.data_name} doesn't have scorer or gold "
-                    f"label, continue..."
+                    f"Task(s) used in dataloader {dataloader.data_name} do(es)n't "
+                    "have scorer, continue..."
                 )
                 continue
 
