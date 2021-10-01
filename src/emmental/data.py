@@ -164,29 +164,23 @@ def emmental_collate_fn(
     X_batch: defaultdict = defaultdict(list)
     Y_batch: defaultdict = defaultdict(list)
 
-    # Learnable batch should be a pair of dict, while non learnable batch is a dict
-    is_learnable = True if not isinstance(batch[0], dict) else False
-
-    if is_learnable:
-        for x_dict, y_dict in batch:
-            if isinstance(x_dict, dict) and isinstance(y_dict, dict):
-                for field_name, value in x_dict.items():
-                    if isinstance(value, list):
-                        X_batch[field_name] += value
-                    else:
-                        X_batch[field_name].append(value)
-                for label_name, value in y_dict.items():
-                    if isinstance(value, list):
-                        Y_batch[label_name] += value
-                    else:
-                        Y_batch[label_name].append(value)
-    else:
-        for x_dict in batch:  # type: ignore
-            for field_name, value in x_dict.items():  # type: ignore
-                if isinstance(value, list):
-                    X_batch[field_name] += value
-                else:
-                    X_batch[field_name].append(value)
+    for item in batch:
+        # Check if batch is (x_dict, y_dict) pair
+        if isinstance(item, dict):
+            x_dict = item
+            y_dict: Dict[str, Any] = {}
+        else:
+            x_dict, y_dict = item
+        for field_name, value in x_dict.items():
+            if isinstance(value, list):
+                X_batch[field_name] += value
+            else:
+                X_batch[field_name].append(value)
+        for label_name, value in y_dict.items():
+            if isinstance(value, list):
+                Y_batch[label_name] += value
+            else:
+                Y_batch[label_name].append(value)
 
     field_names = copy.deepcopy(list(X_batch.keys()))
 
@@ -203,15 +197,14 @@ def emmental_collate_fn(
             if item_mask_tensor is not None:
                 X_batch[f"{field_name}_mask"] = item_mask_tensor
 
-    if is_learnable:
-        for label_name, values in Y_batch.items():
-            Y_batch[label_name] = list_to_tensor(
-                values,
-                min_len=Meta.config["data_config"]["min_data_len"],
-                max_len=Meta.config["data_config"]["max_data_len"],
-            )[0]
+    for label_name, values in Y_batch.items():
+        Y_batch[label_name] = list_to_tensor(
+            values,
+            min_len=Meta.config["data_config"]["min_data_len"],
+            max_len=Meta.config["data_config"]["max_data_len"],
+        )[0]
 
-    if is_learnable:
+    if len(Y_batch) != 0:
         return dict(X_batch), dict(Y_batch)
     else:
         return dict(X_batch)
@@ -253,19 +246,27 @@ class EmmentalDataLoader(DataLoader):
         self.uid = dataset.uid
         self.split = split
         self.n_batches = n_batches
-        self.is_learnable = True if not isinstance(dataset[0], dict) else False
 
-        if self.is_learnable:
-            for task_name, label_names in task_to_label_dict.items():
-                if not isinstance(label_names, list):
-                    label_names = [label_names]  # type: ignore
-                unrecognized_labels = set(label_names) - set(
-                    dataset[0][1].keys()  # type: ignore
+        if isinstance(self.task_to_label_dict, dict):
+            if isinstance(dataset[0], dict):
+                msg = (
+                    f"Dataset {dataset.name} doesn't have Y_dict while "
+                    f"task_to_label_dict has {self.task_to_label_dict}, "
+                    "please check..."
                 )
-                if len(unrecognized_labels) > 0:
-                    msg = (
-                        f"Unrecognized Label {unrecognized_labels} of Task {task_name} "
-                        f"in dataset {dataset.name}."
+                logger.error(msg)
+                raise ValueError(msg)
+            else:
+                for task_name, label_names in task_to_label_dict.items():
+                    if not isinstance(label_names, list):
+                        label_names = [label_names]  # type: ignore
+                    unrecognized_labels = set(label_names) - set(
+                        dataset[0][1].keys()  # type: ignore
                     )
-                    logger.warn(msg)
-                    raise ValueError(msg)
+                    if len(unrecognized_labels) > 0:
+                        msg = (
+                            f"Unrecognized Label {unrecognized_labels} of Task "
+                            f"{task_name} in dataset {dataset.name}."
+                        )
+                        logger.error(msg)
+                        raise ValueError(msg)

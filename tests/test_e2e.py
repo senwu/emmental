@@ -265,11 +265,12 @@ def test_e2e(caplog):
     assert test2_score["task2/synthetic/test/accuracy"] >= 0.7
     assert test2_score["task2/synthetic/test/roc_auc"] >= 0.7
 
-    test3_score = mtl_model.score(test_dataloader3)
-    assert test3_score == {}
-
     test2_pred = mtl_model.predict(test_dataloader2, return_action_outputs=True)
-    test3_pred = mtl_model.predict(test_dataloader3, return_action_outputs=True)
+    test3_pred = mtl_model.predict(
+        test_dataloader3,
+        return_action_outputs=True,
+        return_loss=False,
+    )
 
     assert test2_pred["uids"] == test3_pred["uids"]
     assert False not in [

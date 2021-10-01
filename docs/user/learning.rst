@@ -33,8 +33,15 @@ The learning parameters of the model are described below::
 
     # Learning configuration
     learner_config:
-        fp16: False # whether to use half precision
+        optimizer_path: # path to optimizer state
+        scheduler_path: # path to lr scheduler state
+        fp16: False # whether to use 16-bit precision
+        fp16_opt_level: O1 # Apex AMP optimization level (e.g., ['O0', 'O1', 'O2', 'O3'])
+        local_rank: -1 # local_rank for distributed training on gpus
+        epochs_learned: 0 # learning epochs learned
         n_epochs: 1 # total number of learning epochs
+        steps_learned: 0 # learning steps learned
+        n_steps: # total number of learning steps
         train_split: # the split for training, accepts str or list of strs
             - train
         valid_split: # the split for validation, accepts str or list of strs
@@ -42,11 +49,14 @@ The learning parameters of the model are described below::
         test_split: # the split for testing, accepts str or list of strs
             - test
         ignore_index: # the ignore index, uses for masking samples
+        online_eval: 0 # whether to perform online evaluation
         optimizer_config:
             optimizer: adam # [sgd, adam, adamax, bert_adam]
+            parameters: # parameters to optimize
             lr: 0.001 # Learing rate
             l2: 0.0 # l2 regularization
             grad_clip: # gradient clipping
+            gradient_accumulation_steps: 1 # gradient accumulation steps
             asgd_config:
                 lambd: 0.0001
                 alpha: 0.75
@@ -102,6 +112,7 @@ The learning parameters of the model are described below::
             warmup_unit: batch # [epoch, batch]
             warmup_percentage: # warm up percentage
             min_lr: 0.0 # minimum learning rate
+            reset_state: False # reset the state of the optimizer
             exponential_config:
                 gamma: 0.9
             plateau_config:
@@ -156,6 +167,7 @@ The learning parameters of the model are described below::
             mixed_scheduler_config:
                 fillup: False
         global_evaluation_metric_dict: # global evaluation metric dict
+
 
 .. _Configuring Emmental: config.html
 .. _Emmental: https://github.com/SenWu/Emmental
