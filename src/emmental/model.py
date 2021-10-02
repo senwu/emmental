@@ -313,7 +313,7 @@ class EmmentalModel(nn.Module):
         uids: List[str],
         X_dict: Dict[str, Any],
         Y_dict: Dict[str, Tensor],
-        task_to_label_dict: Dict[str, Union[str, None]],
+        task_to_label_dict: Dict[str, str],
         return_loss=True,
         return_probs=True,
         return_action_outputs=False,
