@@ -366,6 +366,7 @@ class EmmentalModel(nn.Module):
             # Calculate logits and loss for each task
             for task_name, label_name in task_to_label_dict.items():
                 uid_dict[task_name] = uids
+
                 if (
                     return_loss
                     and task_name in self.loss_funcs
@@ -380,6 +381,7 @@ class EmmentalModel(nn.Module):
                         if label_name is not None
                         else None,
                     )
+
                 if (
                     return_probs
                     and task_name in self.output_funcs
@@ -410,7 +412,9 @@ class EmmentalModel(nn.Module):
                 assert (
                     label_name is None
                 ), f"Task {task_name} has not {label_name} label."
+
                 uid_dict[task_name] = uids
+
                 if (
                     return_loss
                     and task_name in self.loss_funcs
