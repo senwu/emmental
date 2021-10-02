@@ -230,7 +230,7 @@ class EmmentalDataLoader(DataLoader):
 
     def __init__(
         self,
-        task_to_label_dict: Dict[str, Union[str, None]],
+        task_to_label_dict: Dict[str, str],
         dataset: EmmentalDataset,
         split: str = "train",
         collate_fn: Callable = emmental_collate_fn,
