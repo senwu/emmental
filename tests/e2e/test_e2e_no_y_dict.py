@@ -32,7 +32,7 @@ def test_e2e_no_y_dict(caplog):
     init(dirpath, use_exact_log_path=use_exact_log_path)
 
     config = {
-        "meta_config": {"seed": 0},
+        "meta_config": {"seed": 0, "verbose": False},
         "learner_config": {
             "n_epochs": 5,
             "online_eval": True,
