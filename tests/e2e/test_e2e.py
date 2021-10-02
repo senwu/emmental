@@ -172,19 +172,22 @@ def test_e2e(caplog):
     )
 
     test_dataloader3 = EmmentalDataLoader(
-        task_to_label_dict=["task2"], dataset=test_dataset3, split="test", batch_size=10
+        task_to_label_dict={"task2": None},
+        dataset=test_dataset3,
+        split="test",
+        batch_size=10,
     )
 
     # Create task
-    def ce_loss(task_name, immediate_ouput_dict, Y, active):
+    def ce_loss(task_name, immediate_output_dict, Y, active):
         module_name = f"{task_name}_pred_head"
         return F.cross_entropy(
-            immediate_ouput_dict[module_name][0][active], (Y.view(-1))[active]
+            immediate_output_dict[module_name][0][active], (Y.view(-1))[active]
         )
 
-    def output(task_name, immediate_ouput_dict):
+    def output(task_name, immediate_output_dict):
         module_name = f"{task_name}_pred_head"
-        return F.softmax(immediate_ouput_dict[module_name][0], dim=1)
+        return F.softmax(immediate_output_dict[module_name][0], dim=1)
 
     task_metrics = {"task1": ["accuracy"], "task2": ["accuracy", "roc_auc"]}
 
