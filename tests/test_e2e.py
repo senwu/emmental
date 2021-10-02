@@ -57,6 +57,27 @@ def test_e2e(caplog):
     }
     Meta.update_config(config)
 
+    def grouped_parameters(model):
+        no_decay = ["bias", "LayerNorm.weight"]
+        return [
+            {
+                "params": [
+                    p
+                    for n, p in model.named_parameters()
+                    if not any(nd in n for nd in no_decay)
+                ],
+                "weight_decay": 0.0,
+            },
+            {
+                "params": [
+                    p
+                    for n, p in model.named_parameters()
+                    if any(nd in n for nd in no_decay)
+                ],
+                "weight_decay": 0.0,
+            },
+        ]
+
     # Generate synthetic data
     N = 500
     X = np.random.random((N, 2)) * 2 - 1
@@ -221,6 +242,8 @@ def test_e2e(caplog):
     # Build model
 
     mtl_model = EmmentalModel(name="all", tasks=tasks)
+
+    Meta.config["learner_config"]["optimizer_config"]["parameters"] = grouped_parameters
 
     # Create learner
     emmental_learner = EmmentalLearner()

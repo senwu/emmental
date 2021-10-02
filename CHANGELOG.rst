@@ -6,6 +6,8 @@ Added
 
 * `@senwu`_: Support wandb logging.
   (`#99 <https://github.com/senwu/emmental/pull/99>`_)
+* `@senwu`_: Fix log writer cannot dump functions in Meta.config issue.
+  (`#103 <https://github.com/senwu/emmental/pull/103>`_)
 * `@senwu`_: Add `return_loss` argument model predict and forward to support the case
   when no loss calculation can be done or needed.
   (`#105 <https://github.com/senwu/emmental/pull/105>`_)

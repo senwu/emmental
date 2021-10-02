@@ -2,6 +2,7 @@
 
 
 """Emmental utils."""
+import json
 import random
 import string
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -341,3 +342,43 @@ def random_string(length: int = 5) -> str:
     """
     letters = string.ascii_lowercase
     return "".join(random.choice(letters) for i in range(length))
+
+
+def convert_to_serializable_json(obj: Dict[str, Any]) -> Dict[str, Any]:
+    """Covert a dict to a serializable json.
+
+    Args:
+      obj: A dict.
+
+    Returns:
+      Serializable json.
+    """
+    try:
+        json.dumps(obj)
+        return obj
+    except TypeError:
+        # Convert function
+        if hasattr(obj, "__name__"):
+            return f"Function: {obj.__name__}"  # type: ignore
+        # Convert partial function
+        if hasattr(obj, "func"):
+            if hasattr(obj.func, "__name__"):  # type: ignore
+                return f"Function: {obj.func.__name__}"  # type: ignore
+        # Convert dict
+        if isinstance(obj, dict):
+            for key in obj.keys():
+                obj[key] = convert_to_serializable_json(obj[key])
+            return obj
+        # Convert list
+        if isinstance(obj, list):
+            for i in range(len(obj)):
+                obj[i] = convert_to_serializable_json(obj[i])
+            return obj
+        # Convert tuple
+        if isinstance(obj, tuple):
+            return tuple([convert_to_serializable_json(item) for item in obj])
+        # Convert class
+        if hasattr(type(obj), "__name__"):
+            return f"Class: {type(obj).__name__}"  # type: ignore
+
+    return None
