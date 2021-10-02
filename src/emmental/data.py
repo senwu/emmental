@@ -230,7 +230,7 @@ class EmmentalDataLoader(DataLoader):
 
     def __init__(
         self,
-        task_to_label_dict: Dict[str, str],
+        task_to_label_dict: Dict[str, Union[str, None]],
         dataset: EmmentalDataset,
         split: str = "train",
         collate_fn: Callable = emmental_collate_fn,
@@ -238,7 +238,13 @@ class EmmentalDataLoader(DataLoader):
         **kwargs: Any,
     ) -> None:
         """Initialize EmmentalDataLoader."""
-        assert isinstance(dataset, EmmentalDataset)
+        assert isinstance(
+            dataset, EmmentalDataset
+        ), "dataset should inherent from EmmentalDataset."
+        assert isinstance(
+            task_to_label_dict, dict
+        ), "task_to_label_dict should be a dict."
+
         super().__init__(dataset, collate_fn=collate_fn, **kwargs)
 
         self.task_to_label_dict = task_to_label_dict
@@ -247,26 +253,19 @@ class EmmentalDataLoader(DataLoader):
         self.split = split
         self.n_batches = n_batches
 
-        if isinstance(self.task_to_label_dict, dict):
-            if isinstance(dataset[0], dict):
+        for task_name, label_names in task_to_label_dict.items():
+            if label_names is None:
+                continue
+            if not isinstance(label_names, list):
+                label_names = [label_names]  # type: ignore
+            if not isinstance(dataset[0], dict):
+                unrecognized_labels = set(label_names) - set(list(dataset[0][1].keys()))
+            else:
+                unrecognized_labels = set(label_names)
+            if len(unrecognized_labels) > 0:
                 msg = (
-                    f"Dataset {dataset.name} doesn't have Y_dict while "
-                    f"task_to_label_dict has {self.task_to_label_dict}, "
-                    "please check..."
+                    f"Unrecognized Label {unrecognized_labels} of Task "
+                    f"{task_name} in dataset {dataset.name}."
                 )
                 logger.error(msg)
                 raise ValueError(msg)
-            else:
-                for task_name, label_names in task_to_label_dict.items():
-                    if not isinstance(label_names, list):
-                        label_names = [label_names]  # type: ignore
-                    unrecognized_labels = set(label_names) - set(
-                        dataset[0][1].keys()  # type: ignore
-                    )
-                    if len(unrecognized_labels) > 0:
-                        msg = (
-                            f"Unrecognized Label {unrecognized_labels} of Task "
-                            f"{task_name} in dataset {dataset.name}."
-                        )
-                        logger.error(msg)
-                        raise ValueError(msg)
