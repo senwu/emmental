@@ -345,7 +345,7 @@ class EmmentalModel(nn.Module):
           defaults to False.
 
         Returns:
-          The (active) uids, loss, prob, gold, action_output (optional) in the batch of
+          The uids, loss, prob, gold, action_output (optional) in the batch of
           all tasks.
         """
         uid_dict: Dict[str, List[str]] = defaultdict(list)
@@ -367,115 +367,51 @@ class EmmentalModel(nn.Module):
         if Y_dict is not None:
             # Calculate logits and loss for each task
             for task_name, label_name in task_to_label_dict.items():
-                Y = Y_dict[label_name] if label_name is not None else None
-
-                # Select the active samples
-                if Y is not None:
-                    if Meta.config["learner_config"]["ignore_index"] is not None:
-                        if len(Y.size()) == 1:
-                            active = (
-                                Y.detach()
-                                != Meta.config["learner_config"]["ignore_index"]
-                            )
-                        else:
-                            active = torch.any(
-                                Y.detach()
-                                != Meta.config["learner_config"]["ignore_index"],
-                                dim=1,
-                            )
-                    else:
-                        active = torch.BoolTensor([True] * Y.size()[0])  # type: ignore
-                else:
-                    active = None
-
-                # Only calculate the loss when active example exists
-                if active is None or active.any():
-                    if active is not None:
-                        uid_dict[task_name] = [
-                            *itertools.compress(uids, active.numpy())
-                        ]
-                    else:
-                        uid_dict[task_name] = uids
-                    if (
-                        return_loss
-                        and task_name in self.loss_funcs
-                        and self.loss_funcs[task_name] is not None
-                    ):
-                        loss_dict[task_name] = self.loss_funcs[task_name](
-                            output_dict,
-                            move_to_device(
-                                Y_dict[label_name],
-                                Meta.config["model_config"]["device"],
-                            )
-                            if label_name is not None
-                            else None,
-                            move_to_device(
-                                active, Meta.config["model_config"]["device"]
-                            )
-                            if active is not None
-                            else None,
+                uid_dict[task_name] = uids
+                if (
+                    return_loss
+                    and task_name in self.loss_funcs
+                    and self.loss_funcs[task_name] is not None
+                ):
+                    loss_dict[task_name] = self.loss_funcs[task_name](
+                        output_dict,
+                        move_to_device(
+                            Y_dict[label_name],
+                            Meta.config["model_config"]["device"],
                         )
+                        if label_name is not None
+                        else None,
+                    )
+                if (
+                    return_probs
+                    and task_name in self.output_funcs
+                    and self.output_funcs[task_name] is not None
+                ):
+                    prob_dict[task_name] = (
+                        self.output_funcs[task_name](output_dict).cpu().detach().numpy()
+                    )
 
-                    if (
-                        return_probs
-                        and task_name in self.output_funcs
-                        and self.output_funcs[task_name] is not None
-                    ):
-                        if active is not None:
-                            prob_dict[task_name] = (
-                                self.output_funcs[task_name](output_dict)[
-                                    move_to_device(
-                                        active, Meta.config["model_config"]["device"]
-                                    )
-                                ]
-                                .cpu()
-                                .detach()
-                                .numpy()
-                            )
-                        else:
-                            prob_dict[task_name] = (
-                                self.output_funcs[task_name](output_dict)
-                                .cpu()
-                                .detach()
-                                .numpy()
-                            )
+                if label_name is not None:
+                    gold_dict[task_name] = Y_dict[label_name].cpu().numpy()
 
-                    if active is not None:
-                        gold_dict[task_name] = Y_dict[label_name][active].cpu().numpy()
-
-                    if (
-                        return_action_outputs
-                        and task_name in self.action_outputs
-                        and self.action_outputs[task_name] is not None
-                    ):
-                        for action_name, output_index in self.action_outputs[task_name]:
-                            if active is not None:
-                                out_dict[task_name][f"{action_name}_{output_index}"] = (
-                                    output_dict[action_name][output_index][
-                                        move_to_device(
-                                            active,
-                                            Meta.config["model_config"]["device"],
-                                        )
-                                    ]
-                                    .cpu()
-                                    .detach()
-                                    .numpy()
-                                )
-                            else:
-                                out_dict[task_name][f"{action_name}_{output_index}"] = (
-                                    output_dict[action_name][output_index]
-                                    .cpu()
-                                    .detach()
-                                    .numpy()
-                                )
-
+                if (
+                    return_action_outputs
+                    and task_name in self.action_outputs
+                    and self.action_outputs[task_name] is not None
+                ):
+                    for action_name, output_index in self.action_outputs[task_name]:
+                        out_dict[task_name][f"{action_name}_{output_index}"] = (
+                            output_dict[action_name][output_index]
+                            .cpu()
+                            .detach()
+                            .numpy()
+                        )
         else:
             # Calculate logits for each task
             for task_name, label_name in task_to_label_dict.items():
                 assert (
                     label_name is None
                 ), f"Task {task_name} has not {label_name} label."
-
                 uid_dict[task_name] = uids
                 if (
                     return_loss
@@ -485,10 +421,6 @@ class EmmentalModel(nn.Module):
                     loss_dict[task_name] = self.loss_funcs[task_name](
                         output_dict,
                         None,
-                        move_to_device(
-                            torch.BoolTensor([True] * len(uids)),
-                            Meta.config["model_config"]["device"],
-                        ),
                     )
 
                 if (

@@ -50,7 +50,6 @@ The default ``.emmental-config.yaml`` configuration file is shown below::
             - valid
         test_split: # the split for testing, accepts str or list of strs
             - test
-        ignore_index: # the ignore index, uses for masking samples
         online_eval: 0 # whether to perform online evaluation
         optimizer_config:
             optimizer: adam # [sgd, adam, adamax, bert_adam]

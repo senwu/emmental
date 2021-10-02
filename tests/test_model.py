@@ -20,10 +20,8 @@ def test_model(caplog):
     Meta.reset()
     init(dirpath)
 
-    def ce_loss(module_name, immediate_output_dict, Y, active):
-        return F.cross_entropy(
-            immediate_output_dict[module_name][0][active], (Y.view(-1))[active]
-        )
+    def ce_loss(module_name, immediate_output_dict, Y):
+        return F.cross_entropy(immediate_output_dict[module_name][0], Y.view(-1))
 
     def output(module_name, immediate_output_dict):
         return F.softmax(immediate_output_dict[module_name][0], dim=1)

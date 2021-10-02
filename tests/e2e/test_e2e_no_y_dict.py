@@ -116,13 +116,11 @@ def test_e2e_no_y_dict(caplog):
     )
 
     # Create task
-    def ce_loss2(task_name, immediate_output_dict, Y, active):
+    def ce_loss2(task_name, immediate_output_dict, Y):
         module_name = f"{task_name}_pred_head"
-        return F.cross_entropy(
-            immediate_output_dict[module_name][0][active], (Y.view(-1))[active]
-        )
+        return F.cross_entropy(immediate_output_dict[module_name][0], Y.view(-1))
 
-    def ce_loss1(task_name, immediate_output_dict, Y, active):
+    def ce_loss1(task_name, immediate_output_dict, Y):
         module_name = f"{task_name}_pred_head"
         return F.cross_entropy(
             immediate_output_dict[module_name][0],
