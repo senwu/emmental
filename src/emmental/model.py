@@ -59,7 +59,7 @@ class EmmentalModel(nn.Module):
         self.action_outputs: Dict[
             str, Optional[List[Union[Tuple[str, str], Tuple[str, int]]]]
         ] = dict()
-        self.module_device: Dict[str, Union[int, str, torch.device]] = {}
+        self.module_device: Dict[str, Union[int, str, torch.device]] = dict()
         self.task_weights: Dict[str, float] = dict()
         self.require_prob_for_evals: Dict[str, bool] = dict()
         self.require_pred_for_evals: Dict[str, bool] = dict()
