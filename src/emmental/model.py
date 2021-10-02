@@ -360,9 +360,7 @@ class EmmentalModel(nn.Module):
             defaultdict(lambda: defaultdict(list)) if return_action_outputs else None
         )
 
-        task_names = list(task_to_label_dict.keys())
-
-        output_dict = self.flow(X_dict, task_names)
+        output_dict = self.flow(X_dict, list(task_to_label_dict.keys()))
 
         if Y_dict is not None:
             # Calculate logits and loss for each task
