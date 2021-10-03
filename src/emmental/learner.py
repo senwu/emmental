@@ -535,22 +535,32 @@ class EmmentalLearner(object):
 
     def _set_learning_counter(self) -> None:
         if Meta.config["learner_config"]["n_steps"]:
-            self.start_epoch = 0
-            self.end_epoch = 1
             if Meta.config["learner_config"]["skip_learned_data"]:
+                self.start_epoch = 0
                 self.start_step = 0
+                self.start_train_epoch = 0
                 self.start_train_step = Meta.config["learner_config"]["steps_learned"]
             else:
+                self.start_epoch = 0
                 self.start_step = Meta.config["learner_config"]["steps_learned"]
+                self.start_train_epoch = 0
                 self.start_train_step = Meta.config["learner_config"]["steps_learned"]
+            self.end_epoch = 1
             self.end_step = Meta.config["learner_config"]["n_steps"]
             self.use_step_base_counter = True
             self.total_steps = Meta.config["learner_config"]["n_steps"]
         else:
-            self.start_epoch = Meta.config["learner_config"]["epochs_learned"]
+            if Meta.config["learner_config"]["skip_learned_data"]:
+                self.start_epoch = 0
+                self.start_step = 0
+                self.start_train_epoch = Meta.config["learner_config"]["epochs_learned"]
+                self.start_train_step = Meta.config["learner_config"]["steps_learned"]
+            else:
+                self.start_epoch = Meta.config["learner_config"]["epochs_learned"]
+                self.start_step = Meta.config["learner_config"]["steps_learned"]
+                self.start_train_epoch = Meta.config["learner_config"]["epochs_learned"]
+                self.start_train_step = Meta.config["learner_config"]["steps_learned"]
             self.end_epoch = Meta.config["learner_config"]["n_epochs"]
-            self.start_step = 0
-            self.start_train_step = 0
             self.end_step = self.n_batches_per_epoch
             self.use_step_base_counter = False
             self.total_steps = (
@@ -693,7 +703,11 @@ class EmmentalLearner(object):
                     )
                     batch = next(batch_iterator)
 
-                if step_num < self.start_train_step:
+                # Check if skip the current batch
+                if epoch_num < self.start_train_epoch or (
+                    epoch_num == self.start_train_epoch
+                    and step_num < self.start_train_step
+                ):
                     continue
 
                 # Covert single batch into a batch list
