@@ -11,6 +11,10 @@ Added
 * `@senwu`_: Add `return_loss` argument model predict and forward to support the case
   when no loss calculation can be done or needed.
   (`#105 <https://github.com/senwu/emmental/pull/105>`_)
+* `@lorr1`_ and `@senwu`_: Add `skip_learned_data` to support skip trained data in
+  learning.
+  (`#101 <https://github.com/senwu/emmental/pull/101>`_,
+  `#108 <https://github.com/senwu/emmental/pull/108>`_)
 
 Fixed
 ^^^^^
@@ -362,3 +366,4 @@ Removed
   For convenience, all username links for contributors can be listed here
 
 .. _@senwu: https://github.com/senwu
+.. _@lorr1: https://github.com/lorr1
