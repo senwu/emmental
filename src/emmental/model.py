@@ -362,90 +362,50 @@ class EmmentalModel(nn.Module):
 
         output_dict = self.flow(X_dict, list(task_to_label_dict.keys()))
 
-        if Y_dict is not None:
-            # Calculate logits and loss for each task
-            for task_name, label_name in task_to_label_dict.items():
-                uid_dict[task_name] = uids
+        # Calculate logits and loss for each task
+        for task_name, label_name in task_to_label_dict.items():
+            assert Y_dict is not None or (
+                Y_dict is None and label_name is None
+            ), f"Task {task_name} has not {label_name} label."
 
-                if (
-                    return_loss
-                    and task_name in self.loss_funcs
-                    and self.loss_funcs[task_name] is not None
-                ):
-                    loss_dict[task_name] = self.loss_funcs[task_name](
-                        output_dict,
-                        move_to_device(
-                            Y_dict[label_name],
-                            Meta.config["model_config"]["device"],
-                        )
-                        if label_name is not None
-                        else None,
+            uid_dict[task_name] = uids
+
+            if (
+                return_loss
+                and task_name in self.loss_funcs
+                and self.loss_funcs[task_name] is not None
+            ):
+                loss_dict[task_name] = self.loss_funcs[task_name](
+                    output_dict,
+                    move_to_device(
+                        Y_dict[label_name],
+                        Meta.config["model_config"]["device"],
                     )
+                    if Y_dict is not None and label_name is not None
+                    else None,
+                )
 
-                if (
-                    return_probs
-                    and task_name in self.output_funcs
-                    and self.output_funcs[task_name] is not None
-                ):
-                    prob_dict[task_name] = (
-                        self.output_funcs[task_name](output_dict).cpu().detach().numpy()
+            if (
+                return_probs
+                and task_name in self.output_funcs
+                and self.output_funcs[task_name] is not None
+            ):
+                prob_dict[task_name] = (
+                    self.output_funcs[task_name](output_dict).cpu().detach().numpy()
+                )
+
+            if Y_dict is not None and label_name is not None:
+                gold_dict[task_name] = Y_dict[label_name].cpu().numpy()
+
+            if (
+                return_action_outputs
+                and task_name in self.action_outputs
+                and self.action_outputs[task_name] is not None
+            ):
+                for action_name, output_index in self.action_outputs[task_name]:
+                    out_dict[task_name][f"{action_name}_{output_index}"] = (
+                        output_dict[action_name][output_index].cpu().detach().numpy()
                     )
-
-                if label_name is not None:
-                    gold_dict[task_name] = Y_dict[label_name].cpu().numpy()
-
-                if (
-                    return_action_outputs
-                    and task_name in self.action_outputs
-                    and self.action_outputs[task_name] is not None
-                ):
-                    for action_name, output_index in self.action_outputs[task_name]:
-                        out_dict[task_name][f"{action_name}_{output_index}"] = (
-                            output_dict[action_name][output_index]
-                            .cpu()
-                            .detach()
-                            .numpy()
-                        )
-        else:
-            # Calculate logits for each task
-            for task_name, label_name in task_to_label_dict.items():
-                assert (
-                    label_name is None
-                ), f"Task {task_name} has not {label_name} label."
-
-                uid_dict[task_name] = uids
-
-                if (
-                    return_loss
-                    and task_name in self.loss_funcs
-                    and self.loss_funcs[task_name] is not None
-                ):
-                    loss_dict[task_name] = self.loss_funcs[task_name](
-                        output_dict,
-                        None,
-                    )
-
-                if (
-                    return_probs
-                    and task_name in self.output_funcs
-                    and self.output_funcs[task_name] is not None
-                ):
-                    prob_dict[task_name] = (
-                        self.output_funcs[task_name](output_dict).cpu().detach().numpy()
-                    )
-
-                if (
-                    return_action_outputs
-                    and task_name in self.action_outputs
-                    and self.action_outputs[task_name] is not None
-                ):
-                    for action_name, output_index in self.action_outputs[task_name]:
-                        out_dict[task_name][f"{action_name}_{output_index}"] = (
-                            output_dict[action_name][output_index]
-                            .cpu()
-                            .detach()
-                            .numpy()
-                        )
 
         if return_action_outputs:
             return uid_dict, loss_dict, prob_dict, gold_dict, out_dict
