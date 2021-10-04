@@ -42,6 +42,7 @@ The learning parameters of the model are described below::
         n_epochs: 1 # total number of learning epochs
         steps_learned: 0 # learning steps learned
         n_steps: # total number of learning steps
+        skip_learned_data: False # skip learned batches if steps_learned or epochs_learned nonzero
         train_split: # the split for training, accepts str or list of strs
             - train
         valid_split: # the split for validation, accepts str or list of strs
