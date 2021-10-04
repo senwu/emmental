@@ -22,11 +22,11 @@ from emmental import (
 logger = logging.getLogger(__name__)
 
 
-def test_e2e_no_y_dict(caplog):
+def test_e2e_skip_trained(caplog):
     """Run an end-to-end test."""
     caplog.set_level(logging.INFO)
 
-    dirpath = "temp_test_e2e_no_y_dict"
+    dirpath = "temp_test_e2e_skip_trained"
     use_exact_log_path = False
     Meta.reset()
     init(dirpath, use_exact_log_path=use_exact_log_path)
@@ -100,7 +100,7 @@ def test_e2e_no_y_dict(caplog):
         module_name = f"{task_name}_pred_head"
         return F.softmax(immediate_output_dict[module_name][0], dim=1)
 
-    task_metrics = {"task1": ["accuracy"], "task2": ["accuracy"]}
+    task_metrics = {"task1": ["accuracy"]}
 
     class IdentityModule(nn.Module):
         def __init__(self):
@@ -140,16 +140,10 @@ def test_e2e_no_y_dict(caplog):
             module_device={"input_module0": -1},
             loss_func=partial(ce_loss, task_name),
             output_func=partial(output, task_name),
-            action_outputs=[
-                (f"{task_name}_pred_head", 0),
-                ("_input_", "data"),
-                (f"{task_name}_pred_head", 0),
-            ]
-            if task_name == "task2"
-            else None,
+            action_outputs=None,
             scorer=Scorer(metrics=task_metrics[task_name]),
-            require_prob_for_eval=True if task_name in ["task2"] else False,
-            require_pred_for_eval=True if task_name in ["task1"] else False,
+            require_prob_for_eval=False,
+            require_pred_for_eval=True,
         )
         for task_name in ["task1"]
     ]
@@ -163,9 +157,9 @@ def test_e2e_no_y_dict(caplog):
     config = {
         "meta_config": {"seed": 0, "verbose": False},
         "learner_config": {
-            "n_steps": 100,
+            "n_steps": 200,
             "epochs_learned": 0,
-            "steps_learned": 90,
+            "steps_learned": 130,
             "skip_learned_data": True,
             "online_eval": True,
             "optimizer_config": {"lr": 0.01, "grad_clip": 100},
@@ -197,7 +191,7 @@ def test_e2e_no_y_dict(caplog):
 
     test_score = mtl_model.score(test_dataloader)
 
-    assert test_score["task1/synthetic/test/loss"] > 0.3
+    assert test_score["task1/synthetic/test/loss"] > 0.1
 
     Meta.reset()
     init(dirpath, use_exact_log_path=use_exact_log_path)
@@ -207,7 +201,7 @@ def test_e2e_no_y_dict(caplog):
         "learner_config": {
             "n_steps": 200,
             "epochs_learned": 0,
-            "steps_learned": 90,
+            "steps_learned": 0,
             "skip_learned_data": False,
             "online_eval": True,
             "optimizer_config": {"lr": 0.01, "grad_clip": 100},
