@@ -1,2 +1,2 @@
 """Emmental version."""
-__version__ = "0.0.9+dev"
+__version__ = "0.0.9"
