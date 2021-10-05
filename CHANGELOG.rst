@@ -1,6 +1,13 @@
 Unreleased_
 -----------
 
+Deprecated
+^^^^^^^^^^
+
+* `@senwu`_: Deprecated argument `active` in learner and loss function api, and
+  deprecated `ignore_index` argument in configuration.
+  (`#107 <https://github.com/senwu/emmental/pull/107>`_)
+
 0.0.9_ - 2021-10-05
 -------------------
 
