@@ -59,7 +59,6 @@ def test_parse_args(caplog):
             "train_split": ["train"],
             "valid_split": ["valid"],
             "test_split": ["test"],
-            "ignore_index": None,
             "online_eval": False,
             "optimizer_config": {
                 "optimizer": "adam",
@@ -246,7 +245,6 @@ def test_checkpoint_metric(caplog):
             "train_split": ["train"],
             "valid_split": ["valid"],
             "test_split": ["test"],
-            "ignore_index": None,
             "online_eval": False,
             "global_evaluation_metric_dict": None,
             "optimizer_config": {

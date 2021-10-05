@@ -18,7 +18,7 @@ class Scorer(object):
       metrics: A list of metric names which provides
         in emmental (e.g., accuracy), defaults to [].
       customize_metric_funcs: a dict of customize metric where key is the metric
-        name and value is the metric function which takes gold, preds, probs, uids as
+        name and value is the metric function which takes golds, preds, probs, uids as
         input, defaults to {}.
     """
 

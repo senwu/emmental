@@ -111,7 +111,7 @@ class EmbeddingModule(nn.Module):
           Word embedding dimension, word to index dict, and embedding vectors.
         """
         emb_dim = 0
-        emb_w2i: Dict[str, int] = {}
+        emb_w2i: Dict[str, int] = dict()
         emb_wv = []
 
         with open(embedding_file, encoding="utf8") as f:

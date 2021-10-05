@@ -130,7 +130,7 @@ class EmmentalDataset(Dataset):
                 raise ValueError(f"Label {name} should be torch.Tensor.")
 
         if self.Y_dict is None:
-            self.Y_dict = {}
+            self.Y_dict = dict()
         self._update_dict(self.Y_dict, Y_dict)
 
     def remove_feature(self, feature_name: str) -> None:
@@ -168,7 +168,7 @@ def emmental_collate_fn(
         # Check if batch is (x_dict, y_dict) pair
         if isinstance(item, dict):
             x_dict = item
-            y_dict: Dict[str, Any] = {}
+            y_dict: Dict[str, Any] = dict()
         else:
             x_dict, y_dict = item
         for field_name, value in x_dict.items():

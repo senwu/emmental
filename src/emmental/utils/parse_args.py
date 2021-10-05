@@ -191,13 +191,6 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     learner_config.add_argument(
-        "--ignore_index",
-        type=nullable_int,
-        default=None,
-        help="The ignore index, uses for masking samples",
-    )
-
-    learner_config.add_argument(
         "--online_eval",
         type=str2bool,
         default=False,
@@ -958,7 +951,6 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
             "train_split": args.train_split,
             "valid_split": args.valid_split,
             "test_split": args.test_split,
-            "ignore_index": args.ignore_index,
             "online_eval": args.online_eval,
             "optimizer_config": {
                 "optimizer": args.optimizer,
