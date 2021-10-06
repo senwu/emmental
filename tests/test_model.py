@@ -190,3 +190,5 @@ def test_model_invalid_task(caplog):
 
     with pytest.raises(ValueError):
         model.add_task(task_name)
+
+    shutil.rmtree(dirpath)
