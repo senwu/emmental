@@ -3,6 +3,7 @@ import logging
 from functools import partial
 
 import numpy as np
+import pytest
 import torch
 
 from emmental.utils.utils import (
@@ -39,6 +40,9 @@ def test_prob_to_pred(caplog):
         is True
     )
 
+    with pytest.raises(ValueError):
+        prob_to_pred(1.23)
+
 
 def test_pred_to_prob(caplog):
     """Unit test of pred_to_prob."""
@@ -73,12 +77,17 @@ def test_array_to_numpy(caplog):
         is True
     )
     assert (
-        np.array_equal(torch.tensor([[1, 2], [3, 4]]), np.array([[1, 2], [3, 4]]))
+        np.array_equal(
+            array_to_numpy(torch.tensor([[1, 2], [3, 4]])), np.array([[1, 2], [3, 4]])
+        )
         is True
     )
     assert np.array_equal(
         array_to_numpy([[1, 2], [3, 4]], flatten=True), np.array([1, 2, 3, 4])
     )
+
+    with pytest.raises(ValueError):
+        array_to_numpy(1.23)
 
 
 def test_merge(caplog):
@@ -109,6 +118,9 @@ def test_str2bool(caplog):
     assert str2bool("n") is False
     assert str2bool("f") is False
     assert str2bool("0") is False
+
+    with pytest.raises(ValueError):
+        str2bool("o")
 
 
 def test_str2dict(caplog):
