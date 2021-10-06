@@ -63,6 +63,10 @@ class EmmentalTask(object):
         self.module_device = {}
         for module_name in module_device.keys():
             if module_name not in self.module_pool:
+                logger.warning(
+                    f"Module {module_name} from module_device doesn't in module_pool, "
+                    "skip..."
+                )
                 continue
             if module_device[module_name] == -1:
                 self.module_device[module_name] = torch.device("cpu")

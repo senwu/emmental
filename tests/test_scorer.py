@@ -2,6 +2,7 @@
 import logging
 
 import numpy as np
+import pytest
 
 from emmental import Scorer
 
@@ -29,3 +30,11 @@ def test_scorer(caplog):
         "f1": 0.7499999999999999,
         "sum": 5,
     }
+
+
+def test_scorer_with_unknown_metric(caplog):
+    """Unit test of scorer with unknown metric."""
+    caplog.set_level(logging.INFO)
+
+    with pytest.raises(ValueError):
+        Scorer(metrics=["acc"])
