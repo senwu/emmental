@@ -250,6 +250,14 @@ def test_roc_auc(caplog):
 
     assert isequal(metric_dict, {"roc_auc": 0.8333333333333334})
 
+    metric_dict = roc_auc_scorer(
+        GOLDS.reshape(GOLDS.shape[0], 1),
+        UNARY_PROBS.reshape(UNARY_PROBS.shape[0], 1),
+        None,
+    )
+
+    assert isequal(metric_dict, {"roc_auc": 0.8333333333333334})
+
     metric_dict = roc_auc_scorer(PROB_GOLDS, UNARY_PROBS, None)
 
     assert isequal(metric_dict, {"roc_auc": 0.8333333333333334})
