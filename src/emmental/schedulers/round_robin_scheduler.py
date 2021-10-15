@@ -88,10 +88,16 @@ class RoundRobinScheduler(Scheduler):
         for data_loader_idx in dataloader_indexer:
             uid_name = uid_names[data_loader_idx]
             try:
-                X_dict, Y_dict = next(data_loaders[data_loader_idx])
+                batch = next(data_loaders[data_loader_idx])
             except StopIteration:
                 data_loaders[data_loader_idx] = iter(dataloaders[data_loader_idx])
-                X_dict, Y_dict = next(data_loaders[data_loader_idx])
+                batch = next(data_loaders[data_loader_idx])
+
+            if not isinstance(batch, dict):
+                X_dict, Y_dict = batch
+            else:
+                X_dict = batch
+                Y_dict = None
 
             yield X_dict[uid_name], X_dict, Y_dict, task_to_label_dicts[
                 data_loader_idx

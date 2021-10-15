@@ -6,11 +6,11 @@ import os
 import yaml
 
 import emmental
-from emmental.logging.log_writer import LogWriter
+from emmental.logging.json_writer import JsonWriter
 from emmental.logging.tensorboard_writer import TensorBoardWriter
 
 
-def test_log_writer(caplog):
+def test_json_writer(caplog):
     """Unit test of log_writer."""
     caplog.set_level(logging.INFO)
 
@@ -28,13 +28,13 @@ def test_log_writer(caplog):
         }
     )
 
-    log_writer = LogWriter()
+    json_writer = JsonWriter()
 
-    log_writer.add_scalar(name="step 1", value=0.1, step=1)
-    log_writer.add_scalar(name="step 2", value=0.2, step=2)
+    json_writer.add_scalar(name="step 1", value=0.1, step=1)
+    json_writer.add_scalar(name="step 2", value=0.2, step=2)
 
     config_filename = "config.yaml"
-    log_writer.write_config(config_filename)
+    json_writer.write_config(config_filename)
 
     # Test config
     with open(os.path.join(emmental.Meta.log_path, config_filename), "r") as f:
@@ -45,7 +45,7 @@ def test_log_writer(caplog):
     assert config["logging_config"]["checkpointing"] is True
 
     log_filename = "log.json"
-    log_writer.write_log(log_filename)
+    json_writer.write_log(log_filename)
 
     # Test log
     with open(os.path.join(emmental.Meta.log_path, log_filename), "r") as f:
@@ -53,7 +53,7 @@ def test_log_writer(caplog):
 
     assert log == {"step 1": [[1, 0.1]], "step 2": [[2, 0.2]]}
 
-    log_writer.close()
+    json_writer.close()
 
 
 def test_tensorboard_writer(caplog):

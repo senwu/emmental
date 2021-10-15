@@ -27,3 +27,5 @@ omit =
     tests/*
     # Omit anything in the contrib directory
     */contrib/*
+    # Omit setup.py
+    setup.py

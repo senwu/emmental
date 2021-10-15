@@ -167,10 +167,9 @@ def test_emmental_dataloader(caplog):
 
     x_batch, y_batch = next(iter(dataloader2))
 
-    # Check if the dataloader with differet batch size is correctly constructed
+    # Check if the dataloader with different batch size is correctly constructed
     assert dataloader2.task_to_label_dict == {"task2": "label2"}
     assert dataloader2.split == "test"
-    assert dataloader2.is_learnable is True
     assert torch.equal(
         x_batch["data1"], torch.Tensor([[1, 0, 0], [1, 2, 0], [1, 2, 3]])
     )
@@ -208,15 +207,24 @@ def test_emmental_dataloader(caplog):
     dataset = EmmentalDataset(X_dict={"data1": x1}, name="new_data")
 
     dataloader3 = EmmentalDataLoader(
-        task_to_label_dict=["task1"], dataset=dataset, split="train", batch_size=2
+        task_to_label_dict={"task1": None}, dataset=dataset, split="train", batch_size=2
     )
 
     x_batch = next(iter(dataloader3))
 
     # Check if the dataloader is correctly constructed
-    assert dataloader3.task_to_label_dict == ["task1"]
+    assert dataloader3.task_to_label_dict == {"task1": None}
     assert dataloader3.split == "train"
-    assert dataloader3.is_learnable is False
     assert torch.equal(x_batch["data1"], torch.Tensor([[1, 0], [1, 2]]))
+
+    # Check there is an error if task_to_label_dict has task to label mapping while
+    # no y_dict in dataset
+    with pytest.raises(ValueError):
+        EmmentalDataLoader(
+            task_to_label_dict={"task1": "label1"},
+            dataset=dataset,
+            split="train",
+            batch_size=2,
+        )
 
     shutil.rmtree(dirpath)

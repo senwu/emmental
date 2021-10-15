@@ -57,6 +57,27 @@ def test_e2e(caplog):
     }
     Meta.update_config(config)
 
+    def grouped_parameters(model):
+        no_decay = ["bias", "LayerNorm.weight"]
+        return [
+            {
+                "params": [
+                    p
+                    for n, p in model.named_parameters()
+                    if not any(nd in n for nd in no_decay)
+                ],
+                "weight_decay": 0.0,
+            },
+            {
+                "params": [
+                    p
+                    for n, p in model.named_parameters()
+                    if any(nd in n for nd in no_decay)
+                ],
+                "weight_decay": 0.0,
+            },
+        ]
+
     # Generate synthetic data
     N = 500
     X = np.random.random((N, 2)) * 2 - 1
@@ -151,19 +172,20 @@ def test_e2e(caplog):
     )
 
     test_dataloader3 = EmmentalDataLoader(
-        task_to_label_dict=["task2"], dataset=test_dataset3, split="test", batch_size=10
+        task_to_label_dict={"task2": None},
+        dataset=test_dataset3,
+        split="test",
+        batch_size=10,
     )
 
     # Create task
-    def ce_loss(task_name, immediate_ouput_dict, Y, active):
+    def ce_loss(task_name, immediate_output_dict, Y):
         module_name = f"{task_name}_pred_head"
-        return F.cross_entropy(
-            immediate_ouput_dict[module_name][0][active], (Y.view(-1))[active]
-        )
+        return F.cross_entropy(immediate_output_dict[module_name][0], Y.view(-1))
 
-    def output(task_name, immediate_ouput_dict):
+    def output(task_name, immediate_output_dict):
         module_name = f"{task_name}_pred_head"
-        return F.softmax(immediate_ouput_dict[module_name][0], dim=1)
+        return F.softmax(immediate_output_dict[module_name][0], dim=1)
 
     task_metrics = {"task1": ["accuracy"], "task2": ["accuracy", "roc_auc"]}
 
@@ -222,6 +244,8 @@ def test_e2e(caplog):
 
     mtl_model = EmmentalModel(name="all", tasks=tasks)
 
+    Meta.config["learner_config"]["optimizer_config"]["parameters"] = grouped_parameters
+
     # Create learner
     emmental_learner = EmmentalLearner()
 
@@ -242,11 +266,12 @@ def test_e2e(caplog):
     assert test2_score["task2/synthetic/test/accuracy"] >= 0.7
     assert test2_score["task2/synthetic/test/roc_auc"] >= 0.7
 
-    test3_score = mtl_model.score(test_dataloader3)
-    assert test3_score == {}
-
     test2_pred = mtl_model.predict(test_dataloader2, return_action_outputs=True)
-    test3_pred = mtl_model.predict(test_dataloader3, return_action_outputs=True)
+    test3_pred = mtl_model.predict(
+        test_dataloader3,
+        return_action_outputs=True,
+        return_loss=False,
+    )
 
     assert test2_pred["uids"] == test3_pred["uids"]
     assert False not in [
