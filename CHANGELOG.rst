@@ -8,6 +8,12 @@ Deprecated
   deprecated `ignore_index` argument in configuration.
   (`#107 <https://github.com/senwu/emmental/pull/107>`_)
 
+Fixed
+^^^^^
+
+* `@senwu`_: Fix the metric cannot calculate issue when scorer is none.
+  (`#112 <https://github.com/senwu/emmental/pull/112>`_)
+
 0.0.9_ - 2021-10-05
 -------------------
 
