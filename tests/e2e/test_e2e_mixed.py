@@ -1,4 +1,4 @@
-"""Emmental e2e with no y dict test."""
+"""Emmental e2e test with mix with y_dict and without y_dict datasets."""
 import logging
 import shutil
 from functools import partial

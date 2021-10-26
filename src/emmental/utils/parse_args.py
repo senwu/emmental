@@ -1,6 +1,3 @@
-# Copyright (c) 2021 Sen Wu. All Rights Reserved.
-
-
 """Emmental parse_args."""
 import argparse
 from argparse import ArgumentParser, Namespace

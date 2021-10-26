@@ -1,6 +1,3 @@
-# Copyright (c) 2021 Sen Wu. All Rights Reserved.
-
-
 """Emmental learner."""
 import collections
 import copy

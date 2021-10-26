@@ -1,8 +1,4 @@
-# Copyright (c) 2021 Sen Wu. All Rights Reserved.
-
-
 """Helper function to set random seed for reproducibility of models."""
-
 import logging
 import random
 from typing import Optional
