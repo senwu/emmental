@@ -115,6 +115,29 @@ def test_e2e_mixed(caplog):
         batch_size=10,
     )
 
+    def ave_scorer(metric_score_dict):
+        logger.info(metric_score_dict)
+        metric_names = [
+            "task1/synthetic/test/loss",
+            "task2/synthetic/test/loss",
+        ]
+
+        total = 0.0
+        cnt = 0
+
+        for metric_name in metric_names:
+            if metric_name not in metric_score_dict:
+                continue
+            else:
+                total += metric_score_dict[metric_name]
+                cnt += 1
+
+        return total / max(cnt, 1)
+
+    Meta.config["learner_config"]["global_evaluation_metric_dict"] = {
+        "model/ave/test/score": ave_scorer
+    }
+
     # Create task
     def ce_loss2(task_name, immediate_output_dict, Y):
         module_name = f"{task_name}_pred_head"
@@ -131,7 +154,7 @@ def test_e2e_mixed(caplog):
         module_name = f"{task_name}_pred_head"
         return F.softmax(immediate_output_dict[module_name][0], dim=1)
 
-    task_metrics = {"task1": ["accuracy"], "task2": ["accuracy"]}
+    task_metrics = {"task2": ["accuracy"]}
 
     class IdentityModule(nn.Module):
         def __init__(self):
@@ -180,7 +203,9 @@ def test_e2e_mixed(caplog):
             ]
             if task_name == "task2"
             else None,
-            scorer=Scorer(metrics=task_metrics[task_name]),
+            scorer=Scorer(metrics=task_metrics[task_name])
+            if task_name in ["task2"]
+            else None,
             require_prob_for_eval=True if task_name in ["task2"] else False,
             require_pred_for_eval=True if task_name in ["task1"] else False,
         )
@@ -204,5 +229,6 @@ def test_e2e_mixed(caplog):
     assert test_score["task1/synthetic/test/loss"] <= 0.1
     assert test_score["task2/synthetic/test/loss"] <= 0.1
     assert test_score["task2/synthetic/test/accuracy"] >= 0.7
+    assert test_score["model/ave/test/score"] <= 0.1
 
     shutil.rmtree(dirpath)
