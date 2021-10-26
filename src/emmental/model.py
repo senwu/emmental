@@ -587,20 +587,10 @@ class EmmentalModel(nn.Module):
         for dataloader in dataloaders:
             return_probs = False
             return_preds = False
-            has_scorer = False
 
             for task_name in dataloader.task_to_label_dict:
                 return_probs = return_probs or self.require_prob_for_evals[task_name]
                 return_preds = return_preds or self.require_pred_for_evals[task_name]
-                if self.scorers[task_name]:
-                    has_scorer = True
-
-            if not has_scorer:
-                logger.warning(
-                    f"Task(s) used in dataloader {dataloader.data_name} do(es)n't "
-                    "have scorer, continue..."
-                )
-                continue
 
             predictions = self.predict(
                 dataloader,
@@ -609,18 +599,6 @@ class EmmentalModel(nn.Module):
                 return_action_outputs=False,
             )
             for task_name in predictions["uids"].keys():
-                metric_score = self.scorers[task_name].score(
-                    predictions["golds"][task_name],
-                    predictions["probs"][task_name] if return_probs else None,
-                    predictions["preds"][task_name] if return_preds else None,
-                    predictions["uids"][task_name],
-                )
-                for metric_name, metric_value in metric_score.items():
-                    identifier = construct_identifier(
-                        task_name, dataloader.data_name, dataloader.split, metric_name
-                    )
-                    metric_score_dict[identifier] = metric_value
-
                 # Store the loss
                 identifier = construct_identifier(
                     task_name, dataloader.data_name, dataloader.split, "loss"
@@ -628,30 +606,40 @@ class EmmentalModel(nn.Module):
                 metric_score_dict[identifier] = np.mean(  # type: ignore
                     predictions["losses"][task_name]
                 )
+                macro_loss_dict[dataloader.split].append(metric_score_dict[identifier])
 
-                if return_average:
-                    # Collect average score
-                    identifier = construct_identifier(
-                        task_name, dataloader.data_name, dataloader.split, "average"
-                    )
-                    metric_score_dict[identifier] = np.mean(  # type: ignore
-                        list(metric_score.values())
-                    )
-
-                    micro_score_dict[dataloader.split].extend(
-                        list(metric_score.values())
-                    )
-                    macro_score_dict[dataloader.split].append(
-                        metric_score_dict[identifier]
+                # Store the task specific metric score
+                if self.scorers[task_name]:
+                    metric_score = self.scorers[task_name].score(
+                        predictions["golds"][task_name],
+                        predictions["probs"][task_name] if return_probs else None,
+                        predictions["preds"][task_name] if return_preds else None,
+                        predictions["uids"][task_name],
                     )
 
-                    # Store the loss
-                    identifier = construct_identifier(
-                        task_name, dataloader.data_name, dataloader.split, "loss"
-                    )
-                    macro_loss_dict[dataloader.split].append(
-                        metric_score_dict[identifier]
-                    )
+                    for metric_name, metric_value in metric_score.items():
+                        identifier = construct_identifier(
+                            task_name,
+                            dataloader.data_name,
+                            dataloader.split,
+                            metric_name,
+                        )
+                        metric_score_dict[identifier] = metric_value
+
+                    if return_average:
+                        # Collect average score
+                        identifier = construct_identifier(
+                            task_name, dataloader.data_name, dataloader.split, "average"
+                        )
+                        metric_score_dict[identifier] = np.mean(  # type: ignore
+                            list(metric_score.values())
+                        )
+                        micro_score_dict[dataloader.split].extend(
+                            list(metric_score.values())
+                        )
+                        macro_score_dict[dataloader.split].append(
+                            metric_score_dict[identifier]
+                        )
 
         if return_average:
             # Collect split-wise micro/macro average score
@@ -668,27 +656,28 @@ class EmmentalModel(nn.Module):
                 metric_score_dict[identifier] = np.mean(  # type: ignore
                     macro_score_dict[split]
                 )
+            for split in macro_loss_dict.keys():
                 identifier = construct_identifier("model", "all", split, "loss")
                 metric_score_dict[identifier] = np.mean(  # type: ignore
                     macro_loss_dict[split]
                 )
 
             # Collect overall micro/macro average score/loss
-            if len(micro_score_dict):
+            if micro_score_dict:
                 identifier = construct_identifier(
                     "model", "all", "all", "micro_average"
                 )
                 metric_score_dict[identifier] = np.mean(  # type: ignore
                     list(itertools.chain.from_iterable(micro_score_dict.values()))
                 )
-            if len(macro_score_dict):
+            if macro_score_dict:
                 identifier = construct_identifier(
                     "model", "all", "all", "macro_average"
                 )
                 metric_score_dict[identifier] = np.mean(  # type: ignore
                     list(itertools.chain.from_iterable(macro_score_dict.values()))
                 )
-            if len(macro_loss_dict):
+            if macro_loss_dict:
                 identifier = construct_identifier("model", "all", "all", "loss")
                 metric_score_dict[identifier] = np.mean(  # type: ignore
                     list(itertools.chain.from_iterable(macro_loss_dict.values()))

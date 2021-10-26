@@ -21,7 +21,7 @@ class EmmentalTask(object):
       task_flow: The task flow among modules to define how the data flows.
       loss_func: The function to calculate the loss.
       output_func: The function to generate the output.
-      scorer: The class of metrics to evaluate the task.
+      scorer: The class of metrics to evaluate the task, defaults to None.
       action_outputs: The action outputs need to output, defaults to None.
       module_device: The dict of module device specification, defaults to None.
       weight: The weight of the task, defaults to 1.0.
@@ -38,7 +38,7 @@ class EmmentalTask(object):
         ],
         loss_func: Callable,
         output_func: Callable,
-        scorer: Scorer,
+        scorer: Scorer = None,
         action_outputs: Optional[List[Union[Tuple[str, str], Tuple[str, int]]]] = None,
         module_device: Dict[str, Union[int, str, torch.device]] = dict(),
         weight: Union[float, int] = 1.0,
