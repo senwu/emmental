@@ -38,3 +38,36 @@ def test_scorer_with_unknown_metric(caplog):
 
     with pytest.raises(ValueError):
         Scorer(metrics=["acc"])
+
+
+def test_scorer_with_no_gold(caplog):
+    """Unit test of scorer with no gold metric."""
+    caplog.set_level(logging.INFO)
+
+    preds = np.array([1, 1, 1, 1, 1, 0])
+
+    scorer = Scorer(metrics=["accuracy"])
+
+    score = scorer.score([], None, preds)
+
+    score["accuracy"] == float("nan")
+
+
+def test_scorer_with_value_error(caplog):
+    """Unit test of scorer with no gold metric."""
+    caplog.set_level(logging.INFO)
+
+    scorer = Scorer(metrics=["accuracy"])
+
+    with pytest.raises(AttributeError):
+        scorer.score("a", [1, 2, 3], [1, 2, 3])
+
+    scorer = Scorer(metrics=["pearson_correlation"])
+
+    with pytest.raises(TypeError):
+        scorer.score([1, 2, 3], "a", [1, 2, 3])
+
+    scorer = Scorer(metrics=["matthews_correlation"])
+
+    with pytest.raises(ValueError):
+        scorer.score([1, 2, 3], [1, 2, 3], "a")
