@@ -137,9 +137,7 @@ class Checkpointer(object):
 
         # Save optimizer state
         optimizer_path = f"{self.checkpoint_path}/checkpoint_{iteration}.optimizer.pth"
-        optimizer_dict = {
-            "optimizer": optimizer.state_dict(),
-        }
+        optimizer_dict = {"optimizer": optimizer.state_dict()}
         torch.save(optimizer_dict, optimizer_path)
 
         # Save lr_scheduler state
@@ -165,10 +163,7 @@ class Checkpointer(object):
                     f"{self.checkpoint_path}/best_model_"
                     f"{metric.replace('/', '_')}.model.pth"
                 )
-                copyfile(
-                    model_path,
-                    best_metric_model_path,
-                )
+                copyfile(model_path, best_metric_model_path)
                 logger.info(
                     f"Save best model of metric {metric} to {best_metric_model_path}"
                 )

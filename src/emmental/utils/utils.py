@@ -157,12 +157,27 @@ def move_to_device(
     else:
         return obj
 
-def merge_objects(obj_1: Any, obj_2: Any):
+
+def merge_objects(obj_1: Any, obj_2: Any) -> Any:
+    """Merge two objects of the same type.
+
+    Given two objects of the same type and structure, merges the second object
+    into the first object.
+
+    Args:
+      obj_1: first object.
+      obj_2: seecond object to be merged into the first object.
+
+    Returns:
+      an object reflecting the merged output of the two inputs.
+    """
     if isinstance(obj_1, torch.Tensor):
         return torch.cat([obj_1, obj_2])
     elif isinstance(obj_1, dict):
-        if not obj_1: return obj_2
-        elif not obj_2: return obj_1
+        if not obj_1:
+            return obj_2
+        elif not obj_2:
+            return obj_1
         else:
             for key, value in obj_1.items():
                 if isinstance(value, torch.Tensor):
@@ -183,6 +198,7 @@ def merge_objects(obj_1: Any, obj_2: Any):
         return (idx_1, idx_2)
     else:
         return obj_1
+
 
 def array_to_numpy(
     array: Union[ndarray, List[Any], Tensor], flatten: bool = False

@@ -76,18 +76,15 @@ def test_e2e_no_y_dict(caplog):
     )
 
     train_dataset = EmmentalDataset(
-        name="synthetic",
-        X_dict={"data": X_train, "label1": Y_train},
+        name="synthetic", X_dict={"data": X_train, "label1": Y_train}
     )
 
     dev_dataset = EmmentalDataset(
-        name="synthetic",
-        X_dict={"data": X_dev, "label1": Y_dev},
+        name="synthetic", X_dict={"data": X_dev, "label1": Y_dev}
     )
 
     test_dataset = EmmentalDataset(
-        name="synthetic",
-        X_dict={"data": X_test, "label1": Y_test},
+        name="synthetic", X_dict={"data": X_test, "label1": Y_test}
     )
 
     task_name = "task1"
@@ -147,11 +144,7 @@ def test_e2e_no_y_dict(caplog):
                 "module": "input_module0",
                 "inputs": [("_input_", "data")],
             },
-            {
-                "name": "input1",
-                "module": "input_module1",
-                "inputs": [("input", "out")],
-            },
+            {"name": "input1", "module": "input_module1", "inputs": [("input", "out")]},
             {
                 "name": f"{task_name}_pred_head",
                 "module": f"{task_name}_pred_head",
@@ -173,10 +166,7 @@ def test_e2e_no_y_dict(caplog):
     emmental_learner = EmmentalLearner()
 
     # Learning
-    emmental_learner.learn(
-        mtl_model,
-        [train_dataloader, dev_dataloader],
-    )
+    emmental_learner.learn(mtl_model, [train_dataloader, dev_dataloader])
 
     test_score = mtl_model.score(test_dataloader)
 
