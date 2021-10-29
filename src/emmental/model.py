@@ -379,8 +379,7 @@ class EmmentalModel(nn.Module):
                 loss_dict[task_name] = self.loss_funcs[task_name](
                     output_dict,
                     move_to_device(
-                        Y_dict[label_name],
-                        Meta.config["model_config"]["device"],
+                        Y_dict[label_name], Meta.config["model_config"]["device"]
                     )
                     if Y_dict is not None and label_name is not None
                     else None,
@@ -549,11 +548,7 @@ class EmmentalModel(nn.Module):
                 if not isinstance(loss_dict[task_name], list):
                     loss_dict[task_name] /= len(uid_dict[task_name])
 
-        res = {
-            "uids": uid_dict,
-            "golds": gold_dict,
-            "losses": loss_dict,
-        }
+        res = {"uids": uid_dict, "golds": gold_dict, "losses": loss_dict}
 
         if return_probs:
             for task_name in prob_dict.keys():
@@ -642,10 +637,7 @@ class EmmentalModel(nn.Module):
                     if return_average:
                         # Collect average score
                         identifier = construct_identifier(
-                            task_name,
-                            dataloader.data_name,
-                            dataloader.split,
-                            "average",
+                            task_name, dataloader.data_name, dataloader.split, "average"
                         )
                         metric_score_dict[identifier] = np.mean(  # type: ignore
                             list(metric_score.values())
@@ -750,11 +742,7 @@ class EmmentalModel(nn.Module):
         if Meta.config["meta_config"]["verbose"] and verbose:
             logger.info(f"[{self.name}] Model saved in {model_path}")
 
-    def load(
-        self,
-        model_path: str,
-        verbose: bool = True,
-    ) -> None:
+    def load(self, model_path: str, verbose: bool = True) -> None:
         """Load model state_dict from file and reinitialize the model weights.
 
         Args:

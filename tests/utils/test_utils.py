@@ -97,8 +97,7 @@ def test_array_to_numpy(caplog):
     )
     assert (
         np.array_equal(
-            array_to_numpy(torch.tensor([[1, 2], [3, 4]])),
-            np.array([[1, 2], [3, 4]]),
+            array_to_numpy(torch.tensor([[1, 2], [3, 4]])), np.array([[1, 2], [3, 4]])
         )
         is True
     )

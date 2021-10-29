@@ -42,11 +42,7 @@ def test_emmental_task(caplog):
                 "module": "input_module0",
                 "inputs": [("_input_", "data")],
             },
-            {
-                "name": "input2",
-                "module": "input_module1",
-                "inputs": [("input1", 0)],
-            },
+            {"name": "input2", "module": "input_module1", "inputs": [("input1", 0)]},
             {
                 "name": f"{task_name}_pred_head",
                 "module": f"{task_name}_pred_head",

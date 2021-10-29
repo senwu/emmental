@@ -219,9 +219,7 @@ def array_to_numpy(
 
 
 def merge(
-    x: Dict[str, Any],
-    y: Dict[str, Any],
-    specical_keys: Union[str, List[str]] = None,
+    x: Dict[str, Any], y: Dict[str, Any], specical_keys: Union[str, List[str]] = None
 ) -> Dict[str, Any]:
     """Merge two nested dictionaries. Overwrite values in x with values in y.
 
@@ -344,10 +342,7 @@ def nullable_string(v: str) -> Optional[str]:
 
 
 def construct_identifier(
-    task_name: str,
-    data_name: str,
-    split_name: str,
-    metric_name: Optional[str] = None,
+    task_name: str, data_name: str, split_name: str, metric_name: Optional[str] = None
 ) -> str:
     """Construct identifier.
 

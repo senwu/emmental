@@ -51,21 +51,15 @@ def test_e2e_skip_trained_step(caplog):
     )
 
     train_dataset = EmmentalDataset(
-        name="synthetic",
-        X_dict={"data": X_train},
-        Y_dict={"label1": Y_train},
+        name="synthetic", X_dict={"data": X_train}, Y_dict={"label1": Y_train}
     )
 
     dev_dataset = EmmentalDataset(
-        name="synthetic",
-        X_dict={"data": X_dev},
-        Y_dict={"label1": Y_dev},
+        name="synthetic", X_dict={"data": X_dev}, Y_dict={"label1": Y_dev}
     )
 
     test_dataset = EmmentalDataset(
-        name="synthetic",
-        X_dict={"data": X_test},
-        Y_dict={"label1": Y_test},
+        name="synthetic", X_dict={"data": X_test}, Y_dict={"label1": Y_test}
     )
 
     task_to_label_dict = {"task1": "label1"}
@@ -182,10 +176,7 @@ def test_e2e_skip_trained_step(caplog):
     Meta.update_config(config)
 
     # Learning
-    emmental_learner.learn(
-        model,
-        [train_dataloader, dev_dataloader],
-    )
+    emmental_learner.learn(model, [train_dataloader, dev_dataloader])
 
     test_score = model.score(test_dataloader)
 
@@ -236,10 +227,7 @@ def test_e2e_skip_trained_step(caplog):
         model.load(Meta.config["model_config"]["model_path"])
 
     # Learning
-    emmental_learner.learn(
-        model,
-        [train_dataloader, dev_dataloader],
-    )
+    emmental_learner.learn(model, [train_dataloader, dev_dataloader])
 
     test_score = model.score(test_dataloader)
 
@@ -277,21 +265,15 @@ def test_e2e_skip_trained_epoch(caplog):
     )
 
     train_dataset = EmmentalDataset(
-        name="synthetic",
-        X_dict={"data": X_train},
-        Y_dict={"label1": Y_train},
+        name="synthetic", X_dict={"data": X_train}, Y_dict={"label1": Y_train}
     )
 
     dev_dataset = EmmentalDataset(
-        name="synthetic",
-        X_dict={"data": X_dev},
-        Y_dict={"label1": Y_dev},
+        name="synthetic", X_dict={"data": X_dev}, Y_dict={"label1": Y_dev}
     )
 
     test_dataset = EmmentalDataset(
-        name="synthetic",
-        X_dict={"data": X_test},
-        Y_dict={"label1": Y_test},
+        name="synthetic", X_dict={"data": X_test}, Y_dict={"label1": Y_test}
     )
 
     task_to_label_dict = {"task1": "label1"}
@@ -412,10 +394,7 @@ def test_e2e_skip_trained_epoch(caplog):
     Meta.update_config(config)
 
     # Learning
-    emmental_learner.learn(
-        model,
-        [train_dataloader, dev_dataloader],
-    )
+    emmental_learner.learn(model, [train_dataloader, dev_dataloader])
 
     test_score = model.score(test_dataloader)
 
@@ -470,10 +449,7 @@ def test_e2e_skip_trained_epoch(caplog):
         model.load(Meta.config["model_config"]["model_path"])
 
     # Learning
-    emmental_learner.learn(
-        model,
-        [train_dataloader, dev_dataloader],
-    )
+    emmental_learner.learn(model, [train_dataloader, dev_dataloader])
 
     test_score = model.score(test_dataloader)
 

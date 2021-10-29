@@ -23,9 +23,7 @@ def ce_loss(
       Loss.
     """
     return F.cross_entropy(
-        intermediate_output_dict[module_name][0],
-        Y.view(-1) - 1,
-        weight,
+        intermediate_output_dict[module_name][0], Y.view(-1) - 1, weight
     )
 
 

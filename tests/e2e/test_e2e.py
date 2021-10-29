@@ -268,9 +268,7 @@ def test_e2e(caplog):
 
     test2_pred = mtl_model.predict(test_dataloader2, return_action_outputs=True)
     test3_pred = mtl_model.predict(
-        test_dataloader3,
-        return_action_outputs=True,
-        return_loss=False,
+        test_dataloader3, return_action_outputs=True, return_loss=False
     )
 
     assert test2_pred["uids"] == test3_pred["uids"]
