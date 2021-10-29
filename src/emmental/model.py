@@ -324,7 +324,7 @@ class EmmentalModel(nn.Module):
             Dict[str, Tensor],
             Dict[str, Union[ndarray, List[ndarray]]],
             Dict[str, Union[ndarray, List[ndarray]]],
-            Dict[str, Dict[str, Union[ndarray, List]]],
+            Dict[str, Dict[str, Union[ndarray, List, Dict]]],
         ],
         Tuple[
             Dict[str, List[str]],
