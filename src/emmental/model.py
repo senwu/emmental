@@ -452,15 +452,9 @@ class EmmentalModel(nn.Module):
         pred_dict: Dict[str, Union[ndarray, List[ndarray]]] = (
             defaultdict(list) if return_preds else None
         )
-<<<<<<< HEAD
-        out_dict: Dict[str, Dict[str, Union[dict, List[Union[ndarray, int, float, dict]]]]] = (
-            defaultdict(lambda: defaultdict(list)) if return_action_outputs else None
-        ) # HOW DO WE INFER Type
-=======
         out_dict: Dict[
             str, Dict[str, Union[dict, List[Union[ndarray, int, float, dict]]]]
         ] = (defaultdict(lambda: defaultdict(list)) if return_action_outputs else None)
->>>>>>> origin/flexibile-action-outputs
         loss_dict: Dict[str, Union[ndarray, float]] = (
             defaultdict(list) if return_loss else None  # type: ignore
         )
