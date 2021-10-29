@@ -20,9 +20,9 @@ from emmental.task import EmmentalTask
 from emmental.utils.utils import (
     array_to_numpy,
     construct_identifier,
+    merge_objects,
     move_to_device,
     prob_to_pred,
-    merge_objects,
 )
 
 if importlib.util.find_spec("ipywidgets") is not None:
@@ -95,9 +95,7 @@ class EmmentalModel(nn.Module):
             if device != torch.device("cpu"):
                 if torch.cuda.is_available():
                     if Meta.config["meta_config"]["verbose"]:
-                        logger.info(
-                            f"Moving {module_name} module to GPU ({device})."
-                        )
+                        logger.info(f"Moving {module_name} module to GPU ({device}).")
                     self.module_pool[module_name].to(device)
                 else:
                     if Meta.config["meta_config"]["verbose"]:
@@ -129,9 +127,7 @@ class EmmentalModel(nn.Module):
         # TODO support multiple device with DistributedDataParallel
         for key in self.module_pool.keys():
             # Ensure there is some gradient parameter for DDP
-            if not any(
-                p.requires_grad for p in self.module_pool[key].parameters()
-            ):
+            if not any(p.requires_grad for p in self.module_pool[key].parameters()):
                 continue
             self.module_pool[
                 key
@@ -142,9 +138,7 @@ class EmmentalModel(nn.Module):
                 find_unused_parameters=True,
             )
 
-    def add_tasks(
-        self, tasks: Union[EmmentalTask, List[EmmentalTask]]
-    ) -> None:
+    def add_tasks(self, tasks: Union[EmmentalTask, List[EmmentalTask]]) -> None:
         """Build the MTL network using all tasks.
 
         Args:
@@ -240,9 +234,7 @@ class EmmentalModel(nn.Module):
         """
         if task_name not in self.task_flows:
             if Meta.config["meta_config"]["verbose"]:
-                logger.info(
-                    f"Task ({task_name}) not in the current model, skip..."
-                )
+                logger.info(f"Task ({task_name}) not in the current model, skip...")
             return
 
         # Remove task by task_name
@@ -265,9 +257,7 @@ class EmmentalModel(nn.Module):
         cls_name = type(self).__name__
         return f"{cls_name}(name={self.name})"
 
-    def flow(
-        self, X_dict: Dict[str, Any], task_names: List[str]
-    ) -> Dict[str, Any]:
+    def flow(self, X_dict: Dict[str, Any], task_names: List[str]) -> Dict[str, Any]:
         """Forward based on input and task flow.
 
         Note:
@@ -301,27 +291,19 @@ class EmmentalModel(nn.Module):
                             input = move_to_device(
                                 [
                                     output_dict[action_name][output_index]
-                                    for action_name, output_index in action[
-                                        "inputs"
-                                    ]
+                                    for action_name, output_index in action["inputs"]
                                 ],
                                 action_module_device,
                             )
                         except Exception:
                             raise ValueError(f"Unrecognized action {action}.")
-                        output = self.module_pool[action["module"]].forward(
-                            *input
-                        )
+                        output = self.module_pool[action["module"]].forward(*input)
                     else:
                         # TODO: Handle multiple device with not inputs case
-                        output = self.module_pool[action["module"]].forward(
-                            output_dict
-                        )
+                        output = self.module_pool[action["module"]].forward(output_dict)
                     if isinstance(output, tuple):
                         output = list(output)
-                    if not isinstance(output, list) and not isinstance(
-                        output, dict
-                    ):
+                    if not isinstance(output, list) and not isinstance(output, dict):
                         output = [output]
                     output_dict[action["name"]] = output
 
@@ -368,9 +350,7 @@ class EmmentalModel(nn.Module):
           all tasks.
         """
         uid_dict: Dict[str, List[str]] = defaultdict(list)
-        loss_dict: Dict[str, Tensor] = (
-            defaultdict(Tensor) if return_loss else None
-        )
+        loss_dict: Dict[str, Tensor] = defaultdict(Tensor) if return_loss else None
         gold_dict: Dict[str, Union[ndarray, List[ndarray]]] = (
             defaultdict(list) if Y_dict is not None else None
         )
@@ -378,9 +358,7 @@ class EmmentalModel(nn.Module):
             defaultdict(list) if return_probs else None
         )
         out_dict: Dict[str, Dict[str, Union[ndarray, List, Dict]]] = (
-            defaultdict(lambda: defaultdict(list))
-            if return_action_outputs
-            else None
+            defaultdict(lambda: defaultdict(list)) if return_action_outputs else None
         )
 
         output_dict = self.flow(X_dict, list(task_to_label_dict.keys()))
@@ -414,10 +392,7 @@ class EmmentalModel(nn.Module):
                 and self.output_funcs[task_name] is not None
             ):
                 prob_dict[task_name] = (
-                    self.output_funcs[task_name](output_dict)
-                    .cpu()
-                    .detach()
-                    .numpy()
+                    self.output_funcs[task_name](output_dict).cpu().detach().numpy()
                 )
 
             if Y_dict is not None and label_name is not None:
@@ -428,9 +403,7 @@ class EmmentalModel(nn.Module):
                 and task_name in self.action_outputs
                 and self.action_outputs[task_name] is not None
             ):
-                for action_name, output_index in self.action_outputs[
-                    task_name
-                ]:
+                for action_name, output_index in self.action_outputs[task_name]:
                     action_output = output_dict[action_name][output_index]
                     if isinstance(action_output, dict):
                         action_output = move_to_device(action_output, -1)
@@ -439,9 +412,7 @@ class EmmentalModel(nn.Module):
                     else:
                         action_output = action_output.cpu().detach().numpy()
 
-                    out_dict[task_name][
-                        f"{action_name}_{output_index}"
-                    ] = action_output
+                    out_dict[task_name][f"{action_name}_{output_index}"] = action_output
 
         if return_action_outputs:
             return uid_dict, loss_dict, prob_dict, gold_dict, out_dict
@@ -484,11 +455,7 @@ class EmmentalModel(nn.Module):
         )
         out_dict: Dict[
             str, Dict[str, Union[dict, List[Union[ndarray, int, float, dict]]]]
-        ] = (
-            defaultdict(lambda: defaultdict(list))
-            if return_action_outputs
-            else None
-        )
+        ] = (defaultdict(lambda: defaultdict(list)) if return_action_outputs else None)
         loss_dict: Dict[str, Union[ndarray, float]] = (
             defaultdict(list) if return_loss else None  # type: ignore
         )
@@ -546,9 +513,9 @@ class EmmentalModel(nn.Module):
                         if len(loss_bdict[task_name].size()) == 0:
                             if loss_dict[task_name] == []:
                                 loss_dict[task_name] = 0
-                            loss_dict[task_name] += loss_bdict[
-                                task_name
-                            ].item() * len(uid_bdict[task_name])
+                            loss_dict[task_name] += loss_bdict[task_name].item() * len(
+                                uid_bdict[task_name]
+                            )
                         else:
                             loss_dict[task_name].extend(  # type: ignore
                                 loss_bdict[task_name].cpu().numpy()
@@ -567,13 +534,11 @@ class EmmentalModel(nn.Module):
                     for task_name in out_bdict.keys():
                         for action_name in out_bdict[task_name].keys():
                             if not out_dict[task_name][action_name]:
-                                out_dict[task_name][action_name] = out_bdict[
-                                    task_name
-                                ][action_name]
-                            else:
-                                out_dict[task_name][
+                                out_dict[task_name][action_name] = out_bdict[task_name][
                                     action_name
-                                ] = merge_objects(
+                                ]
+                            else:
+                                out_dict[task_name][action_name] = merge_objects(
                                     out_dict[task_name][action_name],
                                     out_bdict[task_name][action_name],
                                 )
@@ -637,12 +602,8 @@ class EmmentalModel(nn.Module):
             return_preds = False
 
             for task_name in dataloader.task_to_label_dict:
-                return_probs = (
-                    return_probs or self.require_prob_for_evals[task_name]
-                )
-                return_preds = (
-                    return_preds or self.require_pred_for_evals[task_name]
-                )
+                return_probs = return_probs or self.require_prob_for_evals[task_name]
+                return_preds = return_preds or self.require_pred_for_evals[task_name]
 
             predictions = self.predict(
                 dataloader,
@@ -658,20 +619,14 @@ class EmmentalModel(nn.Module):
                 metric_score_dict[identifier] = np.mean(  # type: ignore
                     predictions["losses"][task_name]
                 )
-                macro_loss_dict[dataloader.split].append(
-                    metric_score_dict[identifier]
-                )
+                macro_loss_dict[dataloader.split].append(metric_score_dict[identifier])
 
                 # Store the task specific metric score
                 if self.scorers[task_name]:
                     metric_score = self.scorers[task_name].score(
                         predictions["golds"][task_name],
-                        predictions["probs"][task_name]
-                        if return_probs
-                        else None,
-                        predictions["preds"][task_name]
-                        if return_preds
-                        else None,
+                        predictions["probs"][task_name] if return_probs else None,
+                        predictions["preds"][task_name] if return_preds else None,
                         predictions["uids"][task_name],
                     )
 
@@ -718,9 +673,7 @@ class EmmentalModel(nn.Module):
                     macro_score_dict[split]
                 )
             for split in macro_loss_dict.keys():
-                identifier = construct_identifier(
-                    "model", "all", split, "loss"
-                )
+                identifier = construct_identifier("model", "all", split, "loss")
                 metric_score_dict[identifier] = np.mean(  # type: ignore
                     macro_loss_dict[split]
                 )
@@ -731,31 +684,19 @@ class EmmentalModel(nn.Module):
                     "model", "all", "all", "micro_average"
                 )
                 metric_score_dict[identifier] = np.mean(  # type: ignore
-                    list(
-                        itertools.chain.from_iterable(
-                            micro_score_dict.values()
-                        )
-                    )
+                    list(itertools.chain.from_iterable(micro_score_dict.values()))
                 )
             if macro_score_dict:
                 identifier = construct_identifier(
                     "model", "all", "all", "macro_average"
                 )
                 metric_score_dict[identifier] = np.mean(  # type: ignore
-                    list(
-                        itertools.chain.from_iterable(
-                            macro_score_dict.values()
-                        )
-                    )
+                    list(itertools.chain.from_iterable(macro_score_dict.values()))
                 )
             if macro_loss_dict:
-                identifier = construct_identifier(
-                    "model", "all", "all", "loss"
-                )
+                identifier = construct_identifier("model", "all", "all", "loss")
                 metric_score_dict[identifier] = np.mean(  # type: ignore
-                    list(
-                        itertools.chain.from_iterable(macro_loss_dict.values())
-                    )
+                    list(itertools.chain.from_iterable(macro_loss_dict.values()))
                 )
 
         # TODO: have a better to handle global evaluation metric
@@ -824,13 +765,9 @@ class EmmentalModel(nn.Module):
             logger.error("Loading failed... Model does not exist.")
 
         try:
-            checkpoint = torch.load(
-                model_path, map_location=torch.device("cpu")
-            )
+            checkpoint = torch.load(model_path, map_location=torch.device("cpu"))
         except BaseException:
-            logger.error(
-                f"Loading failed... Cannot load model from {model_path}"
-            )
+            logger.error(f"Loading failed... Cannot load model from {model_path}")
             raise
 
         self.load_state_dict(checkpoint["model"]["module_pool"])
@@ -866,8 +803,6 @@ class EmmentalModel(nn.Module):
                         module_state_dict
                     )
                 else:
-                    self.module_pool[module_name].load_state_dict(
-                        module_state_dict
-                    )
+                    self.module_pool[module_name].load_state_dict(module_state_dict)
             else:
                 logger.info(f"Missing {module_name} in module_pool, skip it..")
