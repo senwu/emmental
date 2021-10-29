@@ -159,7 +159,7 @@ def move_to_device(
 
 
 def merge_objects(obj_1: Any, obj_2: Any) -> Any:
-    """Merges two objects of the same type.
+    """Merge two objects of the same type.
 
     Given two objects of the same type and structure, merges the second object
     into the first object.
