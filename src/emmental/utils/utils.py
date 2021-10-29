@@ -165,13 +165,22 @@ def merge_objects(obj_1: Any, obj_2: Any):
         elif not obj_2: return obj_1
         else:
             for key, value in obj_1.items():
-                obj_1[key] = merge_objects(value, obj_2[key])
+                if isinstance(value, torch.Tensor):
+                    obj_1[key] = torch.cat([value, obj_2[key]])
+                elif isinstance(value, np.ndarray):
+                    obj_1[key] = np.concatenate((value, obj_2[key]))
+                elif isinstance(value, list):
+                    obj_1[key].extend(obj_2[key])
             return obj_1
-    elif isinstance(obj_1, list):
-        obj_1.extend(obj_2)
-        return obj_1
     elif isinstance(obj_1, np.ndarray):
-        return np.append((obj_1, obj_2))
+        return np.concatenate((obj_1, obj_2))
+    elif isinstance(obj_1, list):
+        return obj_1.extend(obj_2)
+    elif isinstance(obj_1, tuple):
+        idx_1, idx_2 = None, None
+        idx_1 = merge_objects(obj_1[0], obj_2[0])
+        idx_2 = merge_objects(obj_1[1], obj_2[1])
+        return (idx_1, idx_2)
     else:
         return obj_1
 

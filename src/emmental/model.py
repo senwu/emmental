@@ -408,7 +408,7 @@ class EmmentalModel(nn.Module):
                     if isinstance(action_output, dict):
                         action_output = move_to_device(action_output, -1)
                         for key, value in action_output.items():
-                            action_output[key] = [value.detach().numpy()]
+                            action_output[key] = value.detach().numpy()
                     else:
                         action_output = action_output.cpu().detach().numpy()
 
@@ -457,7 +457,7 @@ class EmmentalModel(nn.Module):
         )
         out_dict: Dict[str, Dict[str, Union[dict, List[Union[ndarray, int, float, dict]]]]] = (
             defaultdict(lambda: defaultdict(list)) if return_action_outputs else None
-        )
+        ) # HOW DO WE INFER Type
         loss_dict: Dict[str, Union[ndarray, float]] = (
             defaultdict(list) if return_loss else None  # type: ignore
         )
@@ -535,7 +535,7 @@ class EmmentalModel(nn.Module):
                 if return_action_outputs and out_bdict:
                     for task_name in out_bdict.keys():
                         for action_name in out_bdict[task_name].keys():
-                            if not out_dict[task_name][action_name]:
+                            if out_dict[task_name][action_name] == []:
                                 out_dict[task_name][action_name] = out_bdict[task_name][action_name]
                             else:
                                 out_dict[task_name][action_name] = merge_objects(
