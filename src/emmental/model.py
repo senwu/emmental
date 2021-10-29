@@ -452,9 +452,9 @@ class EmmentalModel(nn.Module):
         pred_dict: Dict[str, Union[ndarray, List[ndarray]]] = (
             defaultdict(list) if return_preds else None
         )
-        out_dict: Dict[
-            str, Dict[str, Union[dict, List[Union[ndarray, int, float, dict]]]]
-        ] = (defaultdict(lambda: defaultdict(list)) if return_action_outputs else None)
+        out_dict: Dict[str, Dict[str, List[Union[ndarray, int, float, dict]]]] = (
+            defaultdict(lambda: defaultdict(list)) if return_action_outputs else None
+        )
         loss_dict: Dict[str, Union[ndarray, float]] = (
             defaultdict(list) if return_loss else None  # type: ignore
         )
