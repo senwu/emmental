@@ -157,12 +157,15 @@ def move_to_device(
     else:
         return obj
 
+
 def merge_objects(obj_1: Any, obj_2: Any):
     if isinstance(obj_1, torch.Tensor):
         return torch.cat([obj_1, obj_2])
     elif isinstance(obj_1, dict):
-        if not obj_1: return obj_2
-        elif not obj_2: return obj_1
+        if not obj_1:
+            return obj_2
+        elif not obj_2:
+            return obj_1
         else:
             for key, value in obj_1.items():
                 obj_1[key] = merge_objects(value, obj_2[key])
@@ -174,6 +177,7 @@ def merge_objects(obj_1: Any, obj_2: Any):
         return np.append((obj_1, obj_2))
     else:
         return obj_1
+
 
 def array_to_numpy(
     array: Union[ndarray, List[Any], Tensor], flatten: bool = False
@@ -203,7 +207,9 @@ def array_to_numpy(
 
 
 def merge(
-    x: Dict[str, Any], y: Dict[str, Any], specical_keys: Union[str, List[str]] = None
+    x: Dict[str, Any],
+    y: Dict[str, Any],
+    specical_keys: Union[str, List[str]] = None,
 ) -> Dict[str, Any]:
     """Merge two nested dictionaries. Overwrite values in x with values in y.
 
@@ -326,7 +332,10 @@ def nullable_string(v: str) -> Optional[str]:
 
 
 def construct_identifier(
-    task_name: str, data_name: str, split_name: str, metric_name: Optional[str] = None
+    task_name: str,
+    data_name: str,
+    split_name: str,
+    metric_name: Optional[str] = None,
 ) -> str:
     """Construct identifier.
 
