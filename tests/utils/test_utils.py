@@ -77,10 +77,12 @@ def test_merge_objects(caplog):
         merge_objects(torch.Tensor([1, 2]), torch.Tensor([2, 3])),
         torch.Tensor([1, 2, 2, 3]),
     )
-    assert merge_objects(np.array([1, 2]), np.array([2, 3])) == np.array([1, 2, 2, 3])
-    assert merge_objects({"a": torch.Tensor([1, 2])}, {"a": torch.Tensor([2, 3])}) == {
-        "a": torch.Tensor([1, 2, 2, 3])
-    }
+
+    assert np.array_equal(
+        merge_objects(np.array([1, 2]), np.array([2, 3])), np.array([1, 2, 2, 3])
+    )
+
+    assert merge_objects({"a": [1, 2]}, {"a": [2, 3]}) == {"a": [1, 2, 2, 3]}
 
     assert merge_objects({"a": [1, 2]}, {}) == {"a": [1, 2]}
     assert merge_objects({}, {"a": [1, 2]}) == {"a": [1, 2]}

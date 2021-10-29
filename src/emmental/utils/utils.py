@@ -190,7 +190,8 @@ def merge_objects(obj_1: Any, obj_2: Any) -> Any:
     elif isinstance(obj_1, np.ndarray):
         return np.concatenate((obj_1, obj_2))
     elif isinstance(obj_1, list):
-        return obj_1.extend(obj_2)
+        obj_1.extend(obj_2)
+        return obj_1
     elif isinstance(obj_1, tuple):
         idx_1, idx_2 = None, None
         idx_1 = merge_objects(obj_1[0], obj_2[0])

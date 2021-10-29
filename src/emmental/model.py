@@ -533,7 +533,9 @@ class EmmentalModel(nn.Module):
                     for task_name in out_bdict.keys():
                         for action_name in out_bdict[task_name].keys():
                             if out_dict[task_name][action_name] == []:
-                                out_dict[task_name][action_name] = out_bdict[task_name][action_name]
+                                out_dict[task_name][action_name] = out_bdict[task_name][
+                                    action_name
+                                ]
                             else:
                                 out_dict[task_name][action_name] = merge_objects(
                                     out_dict[task_name][action_name],
