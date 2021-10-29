@@ -22,6 +22,7 @@ from emmental.utils.utils import (
     construct_identifier,
     move_to_device,
     prob_to_pred,
+    merge_objects,
 )
 
 if importlib.util.find_spec("ipywidgets") is not None:
@@ -356,7 +357,7 @@ class EmmentalModel(nn.Module):
         prob_dict: Dict[str, Union[ndarray, List[ndarray]]] = (
             defaultdict(list) if return_probs else None
         )
-        out_dict: Dict[str, Dict[str, Union[ndarray, List]]] = (
+        out_dict: Dict[str, Dict[str, Union[ndarray, List, Dict]]] = (
             defaultdict(lambda: defaultdict(list)) if return_action_outputs else None
         )
 
@@ -403,8 +404,16 @@ class EmmentalModel(nn.Module):
                 and self.action_outputs[task_name] is not None
             ):
                 for action_name, output_index in self.action_outputs[task_name]:
+                    action_output = output_dict[action_name][output_index]
+                    if isinstance(action_output, dict):
+                        action_output = move_to_device(action_output, -1)
+                        for key, value in action_output.items():
+                            action_output[key] = [value.detach().numpy()]
+                    else:
+                        action_output = action_output.cpu().detach().numpy()
+
                     out_dict[task_name][f"{action_name}_{output_index}"] = (
-                        output_dict[action_name][output_index].cpu().detach().numpy()
+                        action_output
                     )
 
         if return_action_outputs:
@@ -446,7 +455,7 @@ class EmmentalModel(nn.Module):
         pred_dict: Dict[str, Union[ndarray, List[ndarray]]] = (
             defaultdict(list) if return_preds else None
         )
-        out_dict: Dict[str, Dict[str, List[Union[ndarray, int, float]]]] = (
+        out_dict: Dict[str, Dict[str, Union[dict, List[Union[ndarray, int, float, dict]]]]] = (
             defaultdict(lambda: defaultdict(list)) if return_action_outputs else None
         )
         loss_dict: Dict[str, Union[ndarray, float]] = (
@@ -526,9 +535,14 @@ class EmmentalModel(nn.Module):
                 if return_action_outputs and out_bdict:
                     for task_name in out_bdict.keys():
                         for action_name in out_bdict[task_name].keys():
-                            out_dict[task_name][action_name].extend(
-                                out_bdict[task_name][action_name]
-                            )
+                            if not out_dict[task_name][action_name]:
+                                out_dict[task_name][action_name] = out_bdict[task_name][action_name]
+                            else:
+                                out_dict[task_name][action_name] = merge_objects(
+                                        out_dict[task_name][action_name], 
+                                        out_bdict[task_name][action_name]
+                                )
+                            
 
         # Calculate average loss
         if return_loss:
