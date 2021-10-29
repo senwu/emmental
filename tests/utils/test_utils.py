@@ -70,6 +70,7 @@ def test_move_to_device(caplog):
 
 
 def test_merge_objects(caplog):
+    """Unit test of merge_objects."""
     caplog.set_level(logging.INFO)
 
     assert torch.equal(
