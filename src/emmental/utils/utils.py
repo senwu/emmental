@@ -159,6 +159,18 @@ def move_to_device(
 
 
 def merge_objects(obj_1: Any, obj_2: Any) -> Any:
+    """Merges two objects of the same type
+
+    Given two objects of the same type and structure, merges the second object
+    into the first object.
+
+    Args:
+      obj_1: first object
+      obj_2: seecond object to be merged into the first object
+
+    Returns:
+      an object reflecting the merged output of the two inputs
+    """
     if isinstance(obj_1, torch.Tensor):
         return torch.cat([obj_1, obj_2])
     elif isinstance(obj_1, dict):
