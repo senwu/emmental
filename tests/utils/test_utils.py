@@ -11,6 +11,7 @@ from emmental.utils.utils import (
     construct_identifier,
     convert_to_serializable_json,
     merge,
+    merge_objects,
     move_to_device,
     nullable_float,
     nullable_int,
@@ -68,6 +69,24 @@ def test_move_to_device(caplog):
     assert move_to_device((torch.tensor([1, 2]), torch.tensor([3, 4])), -1)
 
 
+def test_merge_objects(caplog):
+    caplog.set_level(logging.INFO)
+
+    assert torch.equal(
+        merge_objects(torch.Tensor([1, 2]), torch.Tensor([2, 3])),
+        torch.Tensor([1, 2, 2, 3]),
+    )
+    assert merge_objects(np.array([1, 2]), np.array([2, 3])) == np.array([1, 2, 2, 3])
+    assert merge_objects({"a": torch.Tensor([1, 2])}, {"a": torch.Tensor([2, 3])}) == {
+        "a": torch.Tensor([1, 2, 2, 3])
+    }
+
+    assert merge_objects({"a": [1, 2]}, {}) == {"a": [1, 2]}
+    assert merge_objects({}, {"a": [1, 2]}) == {"a": [1, 2]}
+
+    assert merge_objects([1, 2, 3], [2, 3, 4]) == [1, 2, 3, 2, 3, 4]
+
+
 def test_array_to_numpy(caplog):
     """Unit test of array_to_numpy."""
     caplog.set_level(logging.INFO)
@@ -78,7 +97,8 @@ def test_array_to_numpy(caplog):
     )
     assert (
         np.array_equal(
-            array_to_numpy(torch.tensor([[1, 2], [3, 4]])), np.array([[1, 2], [3, 4]])
+            array_to_numpy(torch.tensor([[1, 2], [3, 4]])),
+            np.array([[1, 2], [3, 4]]),
         )
         is True
     )
