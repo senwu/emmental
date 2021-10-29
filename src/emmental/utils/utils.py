@@ -158,7 +158,7 @@ def move_to_device(
         return obj
 
 
-def merge_objects(obj_1: Any, obj_2: Any):
+def merge_objects(obj_1: Any, obj_2: Any) -> Any:
     if isinstance(obj_1, torch.Tensor):
         return torch.cat([obj_1, obj_2])
     elif isinstance(obj_1, dict):
