@@ -404,12 +404,12 @@ class EmmentalModel(nn.Module):
             ):
                 for action_name, output_index in self.action_outputs[task_name]:
                     action_output = output_dict[action_name][output_index]
+                    action_output = move_to_device(action_output, -1)
                     if isinstance(action_output, dict):
-                        action_output = move_to_device(action_output, -1)
                         for key, value in action_output.items():
                             action_output[key] = value.detach().numpy()
                     else:
-                        action_output = action_output.cpu().detach().numpy()
+                        action_output = action_output.detach().numpy()
 
                     out_dict[task_name][f"{action_name}_{output_index}"] = action_output
 
