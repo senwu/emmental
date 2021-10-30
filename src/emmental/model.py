@@ -324,7 +324,7 @@ class EmmentalModel(nn.Module):
             Dict[str, Tensor],
             Dict[str, Union[ndarray, List[ndarray]]],
             Dict[str, Union[ndarray, List[ndarray]]],
-            Dict[str, Dict[str, Union[ndarray, List, Dict]]],
+            Dict[str, Dict[str, Union[ndarray, List, int, float, Dict]]],
         ],
         Tuple[
             Dict[str, List[str]],
@@ -357,7 +357,7 @@ class EmmentalModel(nn.Module):
         prob_dict: Dict[str, Union[ndarray, List[ndarray]]] = (
             defaultdict(list) if return_probs else None
         )
-        out_dict: Dict[str, Dict[str, Union[ndarray, List, Dict]]] = (
+        out_dict: Dict[str, Dict[str, Union[ndarray, List, int, float, Dict]]] = (
             defaultdict(lambda: defaultdict(list)) if return_action_outputs else None
         )
 
@@ -453,7 +453,7 @@ class EmmentalModel(nn.Module):
             defaultdict(list) if return_preds else None
         )
         out_dict: Dict[str, Dict[str, Union[ndarray, int, float, Dict]]] = (
-            defaultdict(lambda: defaultdict(list)) if return_action_outputs else None
+            defaultdict(lambda: defaultdict(dict)) if return_action_outputs else None
         )
         loss_dict: Dict[str, Union[ndarray, float]] = (
             defaultdict(list) if return_loss else None  # type: ignore
