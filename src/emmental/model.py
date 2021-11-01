@@ -404,7 +404,9 @@ class EmmentalModel(nn.Module):
             ):
                 for action_name, output_index in self.action_outputs[task_name]:
                     action_output = output_dict[action_name][output_index]
-                    action_output = move_to_device(action_output, -1)
+                    action_output = move_to_device(
+                        action_output, -1, detach=True, convert_to_numpy=True
+                    )
                     out_dict[task_name][f"{action_name}_{output_index}"] = action_output
 
         if return_action_outputs:

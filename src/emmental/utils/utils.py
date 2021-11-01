@@ -157,11 +157,16 @@ def move_to_device(
             obj = obj.numpy()
         return obj
     elif isinstance(obj, dict):
-        return {key: move_to_device(value, device) for key, value in obj.items()}
+        return {
+            key: move_to_device(value, device, detach, convert_to_numpy)
+            for key, value in obj.items()
+        }
     elif isinstance(obj, list):
-        return [move_to_device(item, device) for item in obj]
+        return [move_to_device(item, device, detach, convert_to_numpy) for item in obj]
     elif isinstance(obj, tuple):
-        return tuple([move_to_device(item, device) for item in obj])
+        return tuple(
+            [move_to_device(item, device, detach, convert_to_numpy) for item in obj]
+        )
     else:
         return obj
 

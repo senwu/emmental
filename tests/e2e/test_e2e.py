@@ -259,7 +259,6 @@ def test_e2e(caplog):
             self.linear = nn.Linear(8, 2)
 
         def forward(self, input):
-            print(input)
             return self.linear(input["image_pil"])
 
     tasks = [
