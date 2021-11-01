@@ -122,7 +122,10 @@ def pred_to_prob(preds: ndarray, n_classes: int) -> ndarray:
 
 
 def move_to_device(
-    obj: Any, device: Optional[Union[int, str, torch.device]] = -1
+    obj: Any,
+    device: Optional[Union[int, str, torch.device]] = -1,
+    detach: bool = False,
+    convert_to_numpy: bool = False,
 ) -> Any:
     """Move object to specified device.
 
@@ -147,7 +150,12 @@ def move_to_device(
         device = torch.device("cpu")
 
     if isinstance(obj, torch.Tensor):
-        return obj.to(device)
+        obj.to(device)
+        if detach:
+            obj = obj.detach()
+        if convert_to_numpy:
+            obj = obj.numpy()
+        return obj
     elif isinstance(obj, dict):
         return {key: move_to_device(value, device) for key, value in obj.items()}
     elif isinstance(obj, list):
