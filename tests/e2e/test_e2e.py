@@ -407,8 +407,7 @@ def test_e2e(caplog):
         )
         for idx in range(len(test2_pred["outputs"]["task2"]["_input__data"]))
     ]
-
-    assert len(test4_pred["outputs"]["task3"]["input1_t3_out"]["image_pil"]) == 10
+    assert test4_pred["outputs"]["task3"]["input1_t3_out"]["image_pil"].shape == (10, 8)
     assert isinstance(
         test4_pred["outputs"]["task3"]["input1_t3_out"]["image_pil"], np.ndarray
     )

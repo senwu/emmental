@@ -81,6 +81,10 @@ def test_merge_objects(caplog):
         merge_objects(torch.Tensor(), torch.Tensor([2, 3])),
         torch.Tensor([2, 3]),
     )
+    assert torch.equal(
+        merge_objects(torch.Tensor([2, 3]), torch.Tensor()),
+        torch.Tensor([2, 3]),
+    )
     assert merge_objects(
         torch.zeros((128, 256)), torch.zeros((64, 256))
     ).shape == torch.Size([192, 256])
@@ -91,6 +95,18 @@ def test_merge_objects(caplog):
     assert np.array_equal(
         merge_objects(np.array([]), np.array([2, 3])), np.array([2, 3])
     )
+    assert np.array_equal(
+        merge_objects(np.zeros((2, 3)), np.array([])), np.zeros((2, 3))
+    )
+
+    assert 1 == merge_objects(1, 2)
+
+    try:
+        merge_objects([], torch.Tensor(1))
+        assert False
+    except (TypeError):
+        assert True
+
     assert merge_objects({"a": [1, 2]}, {"a": [2, 3]}) == {"a": [1, 2, 2, 3]}
     assert merge_objects({"a": [1, 2]}, {}) == {"a": [1, 2]}
     assert merge_objects({}, {"a": [1, 2]}) == {"a": [1, 2]}

@@ -122,7 +122,7 @@ def pred_to_prob(preds: ndarray, n_classes: int) -> ndarray:
 
 
 def move_to_device(
-    obj: Any,
+    obj: Union[Tensor, ndarray, dict, list, tuple],
     device: Optional[Union[int, str, torch.device]] = -1,
     detach: bool = False,
     convert_to_numpy: bool = False,

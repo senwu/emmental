@@ -531,7 +531,7 @@ class EmmentalModel(nn.Module):
                             if out_dict[task_name][action_name] == []:
                                 out_dict[task_name][action_name] = (
                                     out_bdict[task_name][action_name]
-                                    if (out_dict[task_name][action_name] == [])
+                                    if out_dict[task_name][action_name] == []
                                     else merge_objects(
                                         out_dict[task_name][action_name],
                                         out_bdict[task_name][action_name],
