@@ -528,15 +528,14 @@ class EmmentalModel(nn.Module):
                 if return_action_outputs and out_bdict:
                     for task_name in out_bdict.keys():
                         for action_name in out_bdict[task_name].keys():
-                            if out_dict[task_name][action_name] == []:
-                                out_dict[task_name][action_name] = (
-                                    out_bdict[task_name][action_name]
-                                    if out_dict[task_name][action_name] == []
-                                    else merge_objects(
-                                        out_dict[task_name][action_name],
-                                        out_bdict[task_name][action_name],
-                                    )
+                            out_dict[task_name][action_name] = (
+                                out_bdict[task_name][action_name]
+                                if out_dict[task_name][action_name] == []
+                                else merge_objects(
+                                    out_dict[task_name][action_name],
+                                    out_bdict[task_name][action_name],
                                 )
+                            )
 
         # Calculate average loss
         if return_loss:
