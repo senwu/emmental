@@ -20,6 +20,7 @@ from emmental.task import EmmentalTask
 from emmental.utils.utils import (
     array_to_numpy,
     construct_identifier,
+    merge_objects,
     move_to_device,
     prob_to_pred,
 )
@@ -323,7 +324,7 @@ class EmmentalModel(nn.Module):
             Dict[str, Tensor],
             Dict[str, Union[ndarray, List[ndarray]]],
             Dict[str, Union[ndarray, List[ndarray]]],
-            Dict[str, Dict[str, Union[ndarray, List]]],
+            Dict[str, Dict[str, Union[ndarray, List, int, float, Dict]]],
         ],
         Tuple[
             Dict[str, List[str]],
@@ -356,7 +357,7 @@ class EmmentalModel(nn.Module):
         prob_dict: Dict[str, Union[ndarray, List[ndarray]]] = (
             defaultdict(list) if return_probs else None
         )
-        out_dict: Dict[str, Dict[str, Union[ndarray, List]]] = (
+        out_dict: Dict[str, Dict[str, Union[ndarray, List, int, float, Dict]]] = (
             defaultdict(lambda: defaultdict(list)) if return_action_outputs else None
         )
 
@@ -378,8 +379,7 @@ class EmmentalModel(nn.Module):
                 loss_dict[task_name] = self.loss_funcs[task_name](
                     output_dict,
                     move_to_device(
-                        Y_dict[label_name],
-                        Meta.config["model_config"]["device"],
+                        Y_dict[label_name], Meta.config["model_config"]["device"]
                     )
                     if Y_dict is not None and label_name is not None
                     else None,
@@ -403,9 +403,11 @@ class EmmentalModel(nn.Module):
                 and self.action_outputs[task_name] is not None
             ):
                 for action_name, output_index in self.action_outputs[task_name]:
-                    out_dict[task_name][f"{action_name}_{output_index}"] = (
-                        output_dict[action_name][output_index].cpu().detach().numpy()
+                    action_output = output_dict[action_name][output_index]
+                    action_output = move_to_device(
+                        action_output, -1, detach=True, convert_to_numpy=True
                     )
+                    out_dict[task_name][f"{action_name}_{output_index}"] = action_output
 
         if return_action_outputs:
             return uid_dict, loss_dict, prob_dict, gold_dict, out_dict
@@ -446,7 +448,7 @@ class EmmentalModel(nn.Module):
         pred_dict: Dict[str, Union[ndarray, List[ndarray]]] = (
             defaultdict(list) if return_preds else None
         )
-        out_dict: Dict[str, Dict[str, List[Union[ndarray, int, float]]]] = (
+        out_dict: Dict[str, Dict[str, Union[ndarray, List, int, float, Dict]]] = (
             defaultdict(lambda: defaultdict(list)) if return_action_outputs else None
         )
         loss_dict: Dict[str, Union[ndarray, float]] = (
@@ -526,8 +528,13 @@ class EmmentalModel(nn.Module):
                 if return_action_outputs and out_bdict:
                     for task_name in out_bdict.keys():
                         for action_name in out_bdict[task_name].keys():
-                            out_dict[task_name][action_name].extend(
+                            out_dict[task_name][action_name] = (
                                 out_bdict[task_name][action_name]
+                                if out_dict[task_name][action_name] == []
+                                else merge_objects(
+                                    out_dict[task_name][action_name],
+                                    out_bdict[task_name][action_name],
+                                )
                             )
 
         # Calculate average loss
@@ -536,11 +543,7 @@ class EmmentalModel(nn.Module):
                 if not isinstance(loss_dict[task_name], list):
                     loss_dict[task_name] /= len(uid_dict[task_name])
 
-        res = {
-            "uids": uid_dict,
-            "golds": gold_dict,
-            "losses": loss_dict,
-        }
+        res = {"uids": uid_dict, "golds": gold_dict, "losses": loss_dict}
 
         if return_probs:
             for task_name in prob_dict.keys():
@@ -734,11 +737,7 @@ class EmmentalModel(nn.Module):
         if Meta.config["meta_config"]["verbose"] and verbose:
             logger.info(f"[{self.name}] Model saved in {model_path}")
 
-    def load(
-        self,
-        model_path: str,
-        verbose: bool = True,
-    ) -> None:
+    def load(self, model_path: str, verbose: bool = True) -> None:
         """Load model state_dict from file and reinitialize the model weights.
 
         Args:

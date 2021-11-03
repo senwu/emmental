@@ -251,10 +251,7 @@ class Meta(object):
             Meta.config["logging_config"]["evaluation_freq"] = new_evaluation_freq
 
         if (
-            Meta.config["logging_config"]["counter_unit"]
-            in [
-                "epoch",
-            ]
+            Meta.config["logging_config"]["counter_unit"] in ["epoch"]
             and isinstance(Meta.config["logging_config"]["evaluation_freq"], int)
             and Meta.config["logging_config"]["writer_config"]["write_loss_per_step"]
         ):

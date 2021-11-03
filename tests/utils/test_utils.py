@@ -11,6 +11,7 @@ from emmental.utils.utils import (
     construct_identifier,
     convert_to_serializable_json,
     merge,
+    merge_objects,
     move_to_device,
     nullable_float,
     nullable_int,
@@ -66,6 +67,76 @@ def test_move_to_device(caplog):
     assert move_to_device({1: torch.tensor([1, 2]), 2: torch.tensor([3, 4])}, -1)
     assert move_to_device([torch.tensor([1, 2]), torch.tensor([3, 4])], -1)
     assert move_to_device((torch.tensor([1, 2]), torch.tensor([3, 4])), -1)
+
+
+def test_merge_objects(caplog):
+    """Unit test of merge_objects."""
+    caplog.set_level(logging.INFO)
+
+    assert torch.equal(
+        merge_objects(torch.Tensor([1, 2]), torch.Tensor([2, 3])),
+        torch.Tensor([[1, 2], [2, 3]]),
+    )
+    assert torch.equal(
+        merge_objects(torch.Tensor(), torch.Tensor([2, 3])),
+        torch.Tensor([2, 3]),
+    )
+    assert torch.equal(
+        merge_objects(torch.Tensor([2, 3]), torch.Tensor()),
+        torch.Tensor([2, 3]),
+    )
+    assert merge_objects(
+        torch.zeros((128, 256)), torch.zeros((64, 256))
+    ).shape == torch.Size([192, 256])
+
+    assert np.array_equal(
+        merge_objects(np.array([1, 2]), np.array([2, 3])), np.array([[1, 2], [2, 3]])
+    )
+    assert np.array_equal(
+        merge_objects(np.array([]), np.array([2, 3])), np.array([2, 3])
+    )
+    assert np.array_equal(
+        merge_objects(np.zeros((2, 3)), np.array([])), np.zeros((2, 3))
+    )
+
+    assert 1 == merge_objects(1, 2)
+
+    try:
+        merge_objects([], torch.Tensor(1))
+        assert False
+    except (TypeError):
+        assert True
+
+    assert merge_objects({"a": [1, 2]}, {"a": [2, 3]}) == {"a": [1, 2, 2, 3]}
+    assert merge_objects({"a": [1, 2]}, {}) == {"a": [1, 2]}
+    assert merge_objects({}, {"a": [1, 2]}) == {"a": [1, 2]}
+    assert merge_objects(([2, 4], [3, 4]), ([3, 4], [4, 5])) == (
+        [2, 4, 3, 4],
+        [3, 4, 4, 5],
+    )
+    assert (
+        torch.equal(
+            merge_objects(
+                (torch.Tensor([2]), torch.Tensor([2]), [2, 3]),
+                (torch.Tensor([3]), torch.Tensor([2]), [3, 4]),
+            )[0],
+            torch.Tensor([[2], [3]]),
+        )
+        and torch.equal(
+            merge_objects(
+                (torch.Tensor([2]), torch.Tensor([2]), [2, 3]),
+                (torch.Tensor([3]), torch.Tensor([2]), [3, 4]),
+            )[1],
+            torch.Tensor([[2], [2]]),
+        )
+        and merge_objects(
+            (torch.Tensor([2]), torch.Tensor([2]), [2, 3]),
+            (torch.Tensor([3]), torch.Tensor([2]), [3, 4]),
+        )[2]
+        == [2, 3, 3, 4]
+    )
+
+    assert merge_objects([1, 2, 3], [2, 3, 4]) == [1, 2, 3, 2, 3, 4]
 
 
 def test_array_to_numpy(caplog):

@@ -61,33 +61,19 @@ def test_config_check_in_meta(caplog):
     Meta.reset()
     init(dirpath)
 
-    config = {
-        "logging_config": {
-            "evaluation_freq": 5.0,
-        },
-    }
+    config = {"logging_config": {"evaluation_freq": 5.0}}
     Meta.update_config(config)
 
     assert type(Meta.config["logging_config"]["evaluation_freq"]) == int
     assert Meta.config["logging_config"]["evaluation_freq"] == 5
 
-    config = {
-        "logging_config": {
-            "counter_unit": "batch",
-            "evaluation_freq": 2.3,
-        },
-    }
+    config = {"logging_config": {"counter_unit": "batch", "evaluation_freq": 2.3}}
     Meta.update_config(config)
 
     assert type(Meta.config["logging_config"]["evaluation_freq"]) == int
     assert Meta.config["logging_config"]["evaluation_freq"] == 3
 
-    config = {
-        "logging_config": {
-            "counter_unit": "sample",
-            "evaluation_freq": 0.2,
-        },
-    }
+    config = {"logging_config": {"counter_unit": "sample", "evaluation_freq": 0.2}}
     Meta.update_config(config)
 
     assert type(Meta.config["logging_config"]["evaluation_freq"]) == int
@@ -98,7 +84,7 @@ def test_config_check_in_meta(caplog):
             "counter_unit": "epoch",
             "evaluation_freq": 1,
             "writer_config": {"write_loss_per_step": True},
-        },
+        }
     }
     Meta.update_config(config)
 

@@ -122,7 +122,10 @@ def pred_to_prob(preds: ndarray, n_classes: int) -> ndarray:
 
 
 def move_to_device(
-    obj: Any, device: Optional[Union[int, str, torch.device]] = -1
+    obj: Union[Tensor, ndarray, dict, list, tuple],
+    device: Optional[Union[int, str, torch.device]] = -1,
+    detach: bool = False,
+    convert_to_numpy: bool = False,
 ) -> Any:
     """Move object to specified device.
 
@@ -147,15 +150,96 @@ def move_to_device(
         device = torch.device("cpu")
 
     if isinstance(obj, torch.Tensor):
-        return obj.to(device)
+        obj.to(device)
+        if detach:
+            obj = obj.detach()
+        if convert_to_numpy:
+            obj = obj.numpy()
+        return obj
     elif isinstance(obj, dict):
-        return {key: move_to_device(value, device) for key, value in obj.items()}
+        return {
+            key: move_to_device(value, device, detach, convert_to_numpy)
+            for key, value in obj.items()
+        }
     elif isinstance(obj, list):
-        return [move_to_device(item, device) for item in obj]
+        return [move_to_device(item, device, detach, convert_to_numpy) for item in obj]
     elif isinstance(obj, tuple):
-        return tuple([move_to_device(item, device) for item in obj])
+        return tuple(
+            [move_to_device(item, device, detach, convert_to_numpy) for item in obj]
+        )
     else:
         return obj
+
+
+def merge_objects(obj_1: Any, obj_2: Any) -> Any:
+    """Merge two objects of the same type.
+
+    Given two objects of the same type and structure, merges the second object
+    into the first object. If either of the objects is empty, the non-empty
+    object is returned. Supported types include torch tensors, numpy arrays
+    lists, dicts and tuples. For tensors and arrays, objects are merged
+    along the 1st dimension:
+
+        obj_1: torch.Tensor([1,2]), obj_2: torch.Tensor([2,3])
+        merged object: torch.Tensor([[1,2],[2,3]])
+
+    Args:
+      obj_1: first object.
+      obj_2: second object to be merged into the first object.
+
+    Returns:
+      an object reflecting the merged output of the two inputs.
+    """
+    if type(obj_1) != type(obj_2):
+        raise TypeError(
+            f"Cannot merge object of type {type(obj_1)} "
+            f"with object of type {type(obj_2)}."
+        )
+    if isinstance(obj_1, torch.Tensor):
+        # empty edge case
+        if not obj_1.size()[0]:
+            return obj_2
+        elif not obj_2.size()[0]:
+            return obj_1
+
+        # unsqueeze of object is 1D and not empty
+        if len(obj_1.shape) == 1:
+            obj_1 = obj_1.unsqueeze(0)
+        if len(obj_2.shape) == 1:
+            obj_2 = obj_2.unsqueeze(0)
+        return torch.cat([obj_1, obj_2])
+    elif isinstance(obj_1, np.ndarray):
+        # empty edge case
+        if not obj_1.size:
+            return obj_2
+        elif not obj_2.size:
+            return obj_1
+
+        # expand if array has 1 dimension
+        if len(obj_1.shape) == 1:
+            obj_1 = np.expand_dims(obj_1, axis=0)
+        if len(obj_2.shape) == 1:
+            obj_2 = np.expand_dims(obj_2, axis=0)
+        return np.concatenate((obj_1, obj_2))
+    elif isinstance(obj_1, list):
+        obj_1.extend(obj_2)
+        return obj_1
+    elif isinstance(obj_1, dict):
+        if not obj_1:
+            return obj_2
+        elif not obj_2:
+            return obj_1
+
+        for key, value in obj_1.items():
+            obj_1[key] = merge_objects(value, obj_2[key])
+        return obj_1
+    elif isinstance(obj_1, tuple):
+        merged_tuple_vals = []
+        for idx in range(len(obj_1)):
+            merged_tuple_vals.append(merge_objects(obj_1[idx], obj_2[idx]))
+        return tuple(merged_tuple_vals)
+    else:
+        return obj_1
 
 
 def array_to_numpy(

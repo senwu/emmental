@@ -117,10 +117,7 @@ def test_e2e_mixed(caplog):
 
     def ave_scorer(metric_score_dict):
         logger.info(metric_score_dict)
-        metric_names = [
-            "task1/synthetic/test/loss",
-            "task2/synthetic/test/loss",
-        ]
+        metric_names = ["task1/synthetic/test/loss", "task2/synthetic/test/loss"]
 
         total = 0.0
         cnt = 0
@@ -219,10 +216,7 @@ def test_e2e_mixed(caplog):
     emmental_learner = EmmentalLearner()
 
     # Learning
-    emmental_learner.learn(
-        mtl_model,
-        [train_dataloader, dev_dataloader],
-    )
+    emmental_learner.learn(mtl_model, [train_dataloader, dev_dataloader])
 
     test_score = mtl_model.score(test_dataloader)
 

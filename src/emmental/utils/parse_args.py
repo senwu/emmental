@@ -819,10 +819,7 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     logging_config.add_argument(
-        "--wandb_run_name",
-        type=nullable_string,
-        default=None,
-        help="Wandb run name",
+        "--wandb_run_name", type=nullable_string, default=None, help="Wandb run name"
     )
 
     logging_config.add_argument(

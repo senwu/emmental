@@ -102,6 +102,11 @@ def test_e2e(caplog):
         torch.tensor(Y2[int(0.8 * N) : int(0.9 * N)]),
         torch.tensor(Y2[int(0.9 * N) :]),
     )
+    Y3_train, Y3_dev, Y3_test = (
+        torch.tensor(Y2[: int(0.8 * N)]),
+        torch.tensor(Y2[int(0.8 * N) : int(0.9 * N)]),
+        torch.tensor(Y2[int(0.9 * N) :]),
+    )
 
     train_dataset1 = EmmentalDataset(
         name="synthetic", X_dict={"data": X_train}, Y_dict={"label1": Y1_train}
@@ -109,6 +114,9 @@ def test_e2e(caplog):
 
     train_dataset2 = EmmentalDataset(
         name="synthetic", X_dict={"data": X_train}, Y_dict={"label2": Y2_train}
+    )
+    train_dataset3 = EmmentalDataset(
+        name="synthetic", X_dict={"data": X_train}, Y_dict={"label3": Y3_train}
     )
 
     dev_dataset1 = EmmentalDataset(
@@ -118,6 +126,9 @@ def test_e2e(caplog):
     dev_dataset2 = EmmentalDataset(
         name="synthetic", X_dict={"data": X_dev}, Y_dict={"label2": Y2_dev}
     )
+    dev_dataset3 = EmmentalDataset(
+        name="synthetic", X_dict={"data": X_dev}, Y_dict={"label3": Y3_dev}
+    )
 
     test_dataset1 = EmmentalDataset(
         name="synthetic", X_dict={"data": X_test}, Y_dict={"label1": Y1_test}
@@ -125,6 +136,9 @@ def test_e2e(caplog):
 
     test_dataset2 = EmmentalDataset(
         name="synthetic", X_dict={"data": X_test}, Y_dict={"label2": Y2_test}
+    )
+    test_dataset4 = EmmentalDataset(
+        name="synthetic", X_dict={"data": X_test}, Y_dict={"label3": Y3_test}
     )
 
     test_dataset3 = EmmentalDataset(name="synthetic", X_dict={"data": X_test})
@@ -177,6 +191,26 @@ def test_e2e(caplog):
         split="test",
         batch_size=10,
     )
+    task_to_label_dict = {"task3": "label3"}
+
+    train_dataloader3 = EmmentalDataLoader(
+        task_to_label_dict=task_to_label_dict,
+        dataset=train_dataset3,
+        split="train",
+        batch_size=10,
+    )
+    dev_dataloader3 = EmmentalDataLoader(
+        task_to_label_dict=task_to_label_dict,
+        dataset=dev_dataset3,
+        split="valid",
+        batch_size=10,
+    )
+    test_dataloader4 = EmmentalDataLoader(
+        task_to_label_dict=task_to_label_dict,
+        dataset=test_dataset4,
+        split="test",
+        batch_size=10,
+    )
 
     # Create task
     def ce_loss(task_name, immediate_output_dict, Y):
@@ -187,7 +221,11 @@ def test_e2e(caplog):
         module_name = f"{task_name}_pred_head"
         return F.softmax(immediate_output_dict[module_name][0], dim=1)
 
-    task_metrics = {"task1": ["accuracy"], "task2": ["accuracy", "roc_auc"]}
+    task_metrics = {
+        "task1": ["accuracy"],
+        "task2": ["accuracy", "roc_auc"],
+        "task3": ["accuracy"],
+    }
 
     class IdentityModule(nn.Module):
         def __init__(self):
@@ -196,6 +234,32 @@ def test_e2e(caplog):
 
         def forward(self, input):
             return {"out": input}
+
+    class IdentityDictModule(nn.Module):
+        def __init__(self):
+            """Initialize IdentityModule."""
+            super().__init__()
+
+        def forward(self, input):
+            return {"out": {"image_pil": input}}
+
+    class LinearLayerDictModule(nn.Module):
+        def __init__(self):
+            """Initialize IdentityModule."""
+            super().__init__()
+            self.linear = nn.Linear(2, 8)
+
+        def forward(self, input):
+            return {"out": {"image_pil": self.linear(input["image_pil"])}}
+
+    class PredictHeadDictModule(nn.Module):
+        def __init__(self):
+            """Initialize IdentityModule."""
+            super().__init__()
+            self.linear = nn.Linear(8, 2)
+
+        def forward(self, input):
+            return self.linear(input["image_pil"])
 
     tasks = [
         EmmentalTask(
@@ -240,6 +304,45 @@ def test_e2e(caplog):
         )
         for task_name in ["task1", "task2"]
     ]
+    tasks.append(
+        EmmentalTask(
+            name="task3",
+            module_pool=nn.ModuleDict(
+                {
+                    "task3_input_module": IdentityDictModule(),
+                    "task3_input_module1": LinearLayerDictModule(),
+                    "task3_pred_head": PredictHeadDictModule(),
+                }
+            ),
+            task_flow=[
+                {
+                    "name": "input_t3",
+                    "module": "task3_input_module",
+                    "inputs": [("_input_", "data")],
+                },
+                {
+                    "name": "input1_t3",
+                    "module": "task3_input_module1",
+                    "inputs": [("input_t3", "out")],
+                },
+                {
+                    "name": "task3_pred_head",
+                    "module": "task3_pred_head",
+                    "inputs": [("input1_t3", "out")],
+                },
+            ],
+            module_device={"task3_input_module": -1},
+            loss_func=partial(ce_loss, "task3"),
+            output_func=partial(output, "task3"),
+            action_outputs=[
+                ("task3_pred_head", 0),
+                ("_input_", "data"),
+                ("input1_t3", "out"),
+            ],
+            scorer=Scorer(metrics=task_metrics["task3"]),
+            require_prob_for_eval=True,
+        )
+    )
     # Build model
 
     mtl_model = EmmentalModel(name="all", tasks=tasks)
@@ -252,7 +355,14 @@ def test_e2e(caplog):
     # Learning
     emmental_learner.learn(
         mtl_model,
-        [train_dataloader1, train_dataloader2, dev_dataloader1, dev_dataloader2],
+        [
+            train_dataloader1,
+            train_dataloader2,
+            train_dataloader3,
+            dev_dataloader1,
+            dev_dataloader2,
+            dev_dataloader3,
+        ],
     )
 
     test1_score = mtl_model.score(test_dataloader1)
@@ -268,9 +378,10 @@ def test_e2e(caplog):
 
     test2_pred = mtl_model.predict(test_dataloader2, return_action_outputs=True)
     test3_pred = mtl_model.predict(
-        test_dataloader3,
-        return_action_outputs=True,
-        return_loss=False,
+        test_dataloader3, return_action_outputs=True, return_loss=False
+    )
+    test4_pred = mtl_model.predict(
+        test_dataloader4, return_action_outputs=True, return_loss=False
     )
 
     assert test2_pred["uids"] == test3_pred["uids"]
@@ -296,6 +407,10 @@ def test_e2e(caplog):
         )
         for idx in range(len(test2_pred["outputs"]["task2"]["_input__data"]))
     ]
+    assert test4_pred["outputs"]["task3"]["input1_t3_out"]["image_pil"].shape == (10, 8)
+    assert isinstance(
+        test4_pred["outputs"]["task3"]["input1_t3_out"]["image_pil"], np.ndarray
+    )
 
     test4_pred = mtl_model.predict(test_dataloader2, return_action_outputs=False)
     assert "outputs" not in test4_pred
