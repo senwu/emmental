@@ -14,6 +14,7 @@ from emmental import (
     EmmentalLearner,
     EmmentalModel,
     EmmentalTask,
+    EmmentalTaskFlowAction as Act,
     Meta,
     Scorer,
     init,
@@ -119,21 +120,13 @@ def test_e2e_skip_trained_step(caplog):
                 }
             ),
             task_flow=[
-                {
-                    "name": "input",
-                    "module": "input_module0",
-                    "inputs": [("_input_", "data")],
-                },
-                {
-                    "name": "input1",
-                    "module": "input_module1",
-                    "inputs": [("input", "out")],
-                },
-                {
-                    "name": f"{task_name}_pred_head",
-                    "module": f"{task_name}_pred_head",
-                    "inputs": [("input1", 0)],
-                },
+                Act(name="input", module="input_module0", inputs=[("_input_", "data")]),
+                Act(name="input1", module="input_module1", inputs=[("input", "out")]),
+                Act(
+                    name=f"{task_name}_pred_head",
+                    module=f"{task_name}_pred_head",
+                    inputs=[("input1", 0)],
+                ),
             ],
             module_device={"input_module0": -1},
             loss_func=partial(ce_loss, task_name),
@@ -345,21 +338,13 @@ def test_e2e_skip_trained_epoch(caplog):
                 }
             ),
             task_flow=[
-                {
-                    "name": "input",
-                    "module": "input_module0",
-                    "inputs": [("_input_", "data")],
-                },
-                {
-                    "name": "input1",
-                    "module": "input_module1",
-                    "inputs": [("input", "out")],
-                },
-                {
-                    "name": f"{task_name}_pred_head",
-                    "module": f"{task_name}_pred_head",
-                    "inputs": [("input1", 0)],
-                },
+                Act(name="input", module="input_module0", inputs=[("_input_", "data")]),
+                Act(name="input1", module="input_module1", inputs=[("input", "out")]),
+                Act(
+                    name=f"{task_name}_pred_head",
+                    module=f"{task_name}_pred_head",
+                    inputs=[("input1", 0)],
+                ),
             ],
             module_device={"input_module0": -1},
             loss_func=partial(ce_loss, task_name),

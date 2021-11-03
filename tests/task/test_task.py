@@ -7,7 +7,7 @@ from torch import nn
 from torch.nn import functional as F
 
 import emmental
-from emmental import EmmentalTask, Scorer
+from emmental import EmmentalTask, EmmentalTaskFlowAction as Action, Scorer
 from emmental.modules.identity_module import IdentityModule
 
 
@@ -37,21 +37,9 @@ def test_emmental_task(caplog):
             }
         ),
         task_flow=[
-            {
-                "name": "input1",
-                "module": "input_module0",
-                "inputs": [("_input_", "data")],
-            },
-            {
-                "name": "input2",
-                "module": "input_module1",
-                "inputs": [("input1", 0)],
-            },
-            {
-                "name": f"{task_name}_pred_head",
-                "module": f"{task_name}_pred_head",
-                "inputs": [("input2", 0)],
-            },
+            Action("input1", "input_module0", [("_input_", "data")]),
+            Action("input2", "input_module1", [("input1", 0)]),
+            Action(f"{task_name}_pred_head", f"{task_name}_pred_head", [("input2", 0)]),
         ],
         module_device={"input_module0": -1, "input_module1": 0, "input_module": -1},
         loss_func=partial(ce_loss, f"{task_name}_pred_head"),

@@ -184,7 +184,7 @@ def test_convert_to_serializable_json(caplog):
     """Unite test of convert_to_serializable_json."""
     caplog.set_level(logging.INFO)
 
-    class abc:
+    class ABC:
         a = 1
 
     def cde(a, b):
@@ -193,13 +193,13 @@ def test_convert_to_serializable_json(caplog):
     config = {
         1: 1,
         2: 2,
-        3: {4: cde, 5: [abc(), {1: 1, 2: partial(cde, 1)}]},
-        6: (abc(), 1),
+        3: {4: cde, 5: [ABC(), {1: 1, 2: partial(cde, 1)}]},
+        6: (ABC(), 1),
     }
 
     assert convert_to_serializable_json(config) == {
         1: 1,
         2: 2,
-        3: {4: "Function: cde", 5: ["Class: abc", {1: 1, 2: "Function: cde"}]},
-        6: ("Class: abc", 1),
+        3: {4: "Function: cde", 5: ["Class: ABC", {1: 1, 2: "Function: cde"}]},
+        6: ("Class: ABC", 1),
     }

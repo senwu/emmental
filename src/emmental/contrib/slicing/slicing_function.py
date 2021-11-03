@@ -13,7 +13,7 @@ from emmental.data import EmmentalDataset
 logger = logging.getLogger(__name__)
 
 
-class slicing_function:
+class SlicingFunction:
     """Slicing function decorator.
 
     When wrapped with this decorator, slicing functions only need to return an
