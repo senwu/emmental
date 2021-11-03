@@ -279,32 +279,34 @@ class EmmentalModel(nn.Module):
         # Call forward for each task
         for task_name in task_names:
             for action in self.task_flows[task_name]:
-                if action["name"] not in output_dict:
-                    if action["inputs"]:
+                if action.name not in output_dict:
+                    if action.inputs:
                         try:
                             action_module_device = (
-                                self.module_device[action["module"]]
-                                if action["module"] in self.module_device
+                                self.module_device[action.module]
+                                if action.module in self.module_device
                                 else default_device
                             )
                             input = move_to_device(
                                 [
-                                    output_dict[action_name][output_index]
-                                    for action_name, output_index in action["inputs"]
+                                    output_dict[_input[0]][_input[1]]
+                                    if isinstance(_input, tuple)
+                                    else output_dict[_input]
+                                    for _input in action.inputs
                                 ],
                                 action_module_device,
                             )
                         except Exception:
                             raise ValueError(f"Unrecognized action {action}.")
-                        output = self.module_pool[action["module"]].forward(*input)
+                        output = self.module_pool[action.module].forward(*input)
                     else:
                         # TODO: Handle multiple device with not inputs case
-                        output = self.module_pool[action["module"]].forward(output_dict)
+                        output = self.module_pool[action.module].forward(output_dict)
                     if isinstance(output, tuple):
                         output = list(output)
                     if not isinstance(output, list) and not isinstance(output, dict):
                         output = [output]
-                    output_dict[action["name"]] = output
+                    output_dict[action.name] = output
 
         return output_dict
 

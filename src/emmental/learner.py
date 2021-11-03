@@ -717,22 +717,21 @@ class EmmentalLearner(object):
                 total_step_num = epoch_num * self.n_batches_per_epoch + step_num
                 batch_size = 0
 
-                for uids, X_dict, Y_dict, task_to_label_dict, data_name, split in batch:
-                    batch_size += len(uids)
-
+                for _batch in batch:
+                    batch_size += len(_batch.uids)
                     # Perform forward pass and calcualte the loss and count
                     uid_dict, loss_dict, prob_dict, gold_dict = model(
-                        uids,
-                        X_dict,
-                        Y_dict,
-                        task_to_label_dict,
+                        _batch.uids,
+                        _batch.X_dict,
+                        _batch.Y_dict,
+                        _batch.task_to_label_dict,
                         return_probs=Meta.config["learner_config"]["online_eval"],
                         return_action_outputs=False,
                     )
 
                     # Update running loss and count
                     for task_name in uid_dict.keys():
-                        identifier = f"{task_name}/{data_name}/{split}"
+                        identifier = f"{task_name}/{_batch.data_name}/{_batch.split}"
                         self.running_uids[identifier].extend(uid_dict[task_name])
                         self.running_losses[identifier] += (
                             loss_dict[task_name].item() * len(uid_dict[task_name])

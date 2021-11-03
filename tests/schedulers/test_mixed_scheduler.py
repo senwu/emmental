@@ -41,29 +41,29 @@ def test_mixed_scheduler(caplog):
 
     assert scheduler.get_num_batches(dataloaders) == 2
 
-    batch_task_names_1 = [
-        batch_data[0][-2] for batch_data in scheduler.get_batches(dataloaders)
+    batch_data_names_1 = [
+        batch[0].data_name for batch in scheduler.get_batches(dataloaders)
     ]
-    batch_task_names_2 = [
-        batch_data[1][-2] for batch_data in scheduler.get_batches(dataloaders)
+    batch_data_names_2 = [
+        batch[1].data_name for batch in scheduler.get_batches(dataloaders)
     ]
 
-    assert batch_task_names_1 == [task1, task1]
-    assert batch_task_names_2 == [task2, task2]
+    assert batch_data_names_1 == [task1, task1]
+    assert batch_data_names_2 == [task2, task2]
 
     scheduler = MixedScheduler(fillup=True)
 
     assert scheduler.get_num_batches(dataloaders) == 3
 
-    batch_task_names_1 = [
-        batch_data[0][-2] for batch_data in scheduler.get_batches(dataloaders)
+    batch_data_names_1 = [
+        batch[0].data_name for batch in scheduler.get_batches(dataloaders)
     ]
-    batch_task_names_2 = [
-        batch_data[1][-2] for batch_data in scheduler.get_batches(dataloaders)
+    batch_data_names_2 = [
+        batch[1].data_name for batch in scheduler.get_batches(dataloaders)
     ]
 
-    assert batch_task_names_1 == [task1, task1, task1]
-    assert batch_task_names_2 == [task2, task2, task2]
+    assert batch_data_names_1 == [task1, task1, task1]
+    assert batch_data_names_2 == [task2, task2, task2]
 
 
 def test_mixed_scheduler_no_y_dict(caplog):
@@ -93,12 +93,8 @@ def test_mixed_scheduler_no_y_dict(caplog):
 
     assert scheduler.get_num_batches(dataloaders) == 2
 
-    batch_task_names_1 = [
-        batch_data[0][2] for batch_data in scheduler.get_batches(dataloaders)
-    ]
-    batch_task_names_2 = [
-        batch_data[1][2] for batch_data in scheduler.get_batches(dataloaders)
-    ]
+    batch_y_dict_1 = [batch[0].Y_dict for batch in scheduler.get_batches(dataloaders)]
+    batch_y_dict_2 = [batch[1].Y_dict for batch in scheduler.get_batches(dataloaders)]
 
-    assert batch_task_names_1 == [None] * 2
-    assert batch_task_names_2 == [None] * 2
+    assert batch_y_dict_1 == [None] * 2
+    assert batch_y_dict_2 == [None] * 2

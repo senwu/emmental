@@ -41,21 +41,17 @@ def test_sequential_scheduler(caplog):
 
     assert scheduler.get_num_batches(dataloaders) == 5
 
-    batch_task_names = [
-        batch_data[-2] for batch_data in scheduler.get_batches(dataloaders)
-    ]
+    batch_data_names = [batch.data_name for batch in scheduler.get_batches(dataloaders)]
 
-    assert batch_task_names == [task1, task1, task2, task2, task2]
+    assert batch_data_names == [task1, task1, task2, task2, task2]
 
     scheduler = SequentialScheduler(fillup=True)
 
     assert scheduler.get_num_batches(dataloaders) == 6
 
-    batch_task_names = [
-        batch_data[-2] for batch_data in scheduler.get_batches(dataloaders)
-    ]
+    batch_data_names = [batch.data_name for batch in scheduler.get_batches(dataloaders)]
 
-    assert batch_task_names == [task1, task1, task1, task2, task2, task2]
+    assert batch_data_names == [task1, task1, task1, task2, task2, task2]
 
 
 def test_sequential_scheduler_no_y_dict(caplog):
@@ -88,8 +84,6 @@ def test_sequential_scheduler_no_y_dict(caplog):
 
     assert scheduler.get_num_batches(dataloaders) == 7
 
-    batch_task_names = [
-        batch_data[2] for batch_data in scheduler.get_batches(dataloaders)
-    ]
+    batch_y_dicts = [batch.Y_dict for batch in scheduler.get_batches(dataloaders)]
 
-    assert batch_task_names == [None] * 7
+    assert batch_y_dicts == [None] * 7

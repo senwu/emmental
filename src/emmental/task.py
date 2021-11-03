@@ -1,6 +1,6 @@
 """Emmental task."""
 import logging
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import torch
 from torch import nn
@@ -10,6 +10,39 @@ from emmental.meta import Meta
 from emmental.scorer import Scorer
 
 logger = logging.getLogger(__name__)
+
+
+class EmmentalTaskFlowAction:
+    """An action to execute in a EmmentalTask task_flow.
+
+    Args:
+      name: The name of the action.
+      module_name: The module_name of the action.
+      inputs: The inputs of the action. The inputs can be several format:
+        1) X: takes all action X's output as input for this action.
+        2) X, Y (int): takes action X's Yth output as input for this action.
+        3) X, Y (str): takes action X's output Y as input for this action.
+        4) None: takes all task_flow's output as input for this action.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        module: str,
+        inputs: Optional[Sequence[Union[str, Tuple[str, str], Tuple[str, int]]]] = None,
+    ) -> None:
+        """Initialize Action."""
+        self.name = name
+        self.module = module
+        self.inputs = inputs
+
+    def __repr__(self) -> str:
+        """Represent the action as a string."""
+        return (
+            f"Action(name={self.name}, "
+            f"module={self.module}, "
+            f"inputs={self.inputs})"
+        )
 
 
 class EmmentalTask(object):
@@ -33,9 +66,7 @@ class EmmentalTask(object):
         self,
         name: str,
         module_pool: ModuleDict,
-        task_flow: List[
-            Dict[str, Union[str, List[Tuple[str, str]], List[Tuple[str, int]]]]
-        ],
+        task_flow: Sequence[EmmentalTaskFlowAction],
         loss_func: Callable,
         output_func: Callable,
         scorer: Scorer = None,
