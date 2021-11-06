@@ -131,7 +131,7 @@ def test_e2e_no_y_dict(caplog):
             super().__init__()
 
         def forward(self, input):
-            return {"out": input}
+            return {"out": input["_input_"]["data"]}
 
     task = EmmentalTask(
         name=task_name,
@@ -143,7 +143,7 @@ def test_e2e_no_y_dict(caplog):
             }
         ),
         task_flow=[
-            Act(name="input", module="input_module0", inputs=[("_input_", "data")]),
+            Act(name="input", module="input_module0", inputs=None),
             Act(name="input1", module="input_module1", inputs=[("input", "out")]),
             Act(
                 name=f"{task_name}_pred_head",
@@ -171,8 +171,9 @@ def test_e2e_no_y_dict(caplog):
         [train_dataloader, dev_dataloader],
     )
 
-    test_score = mtl_model.score(test_dataloader)
+    test_score = mtl_model.score(test_dataloader, return_average=False)
 
     assert test_score["task1/synthetic/test/loss"] <= 0.1
-
+    logger.info(test_score)
+    assert "model/all/all/loss" not in test_score
     shutil.rmtree(dirpath)

@@ -224,4 +224,7 @@ def test_e2e_mixed(caplog):
     assert test_score["task2/synthetic/test/accuracy"] >= 0.7
     assert test_score["model/ave/test/score"] <= 0.1
 
+    test_score = mtl_model.score(test_dataloader, return_average=False)
+    assert "model/all/all/micro_average" not in test_score
+
     shutil.rmtree(dirpath)
