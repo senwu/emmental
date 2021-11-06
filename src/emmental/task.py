@@ -1,6 +1,6 @@
 """Emmental task."""
 import logging
-from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Callable, Dict, Optional, Sequence, Tuple, Union
 
 import torch
 from torch import nn
@@ -10,6 +10,10 @@ from emmental.meta import Meta
 from emmental.scorer import Scorer
 
 logger = logging.getLogger(__name__)
+
+ActionIndex = Union[str, Tuple[str, str], Tuple[str, int]]
+ActionInputs = Union[str, Sequence[ActionIndex]]
+ActionOutputs = Union[str, Sequence[ActionIndex]]
 
 
 class EmmentalTaskFlowAction:
@@ -29,12 +33,12 @@ class EmmentalTaskFlowAction:
         self,
         name: str,
         module: str,
-        inputs: Optional[Sequence[Union[str, Tuple[str, str], Tuple[str, int]]]] = None,
+        inputs: Optional[ActionInputs] = None,
     ) -> None:
         """Initialize Action."""
         self.name = name
         self.module = module
-        self.inputs = inputs
+        self.inputs = inputs if isinstance(inputs, list) else [inputs]
 
     def __repr__(self) -> str:
         """Represent the action as a string."""
@@ -70,7 +74,7 @@ class EmmentalTask(object):
         loss_func: Callable,
         output_func: Callable,
         scorer: Scorer = None,
-        action_outputs: Optional[List[Union[Tuple[str, str], Tuple[str, int]]]] = None,
+        action_outputs: Optional[ActionOutputs] = None,
         module_device: Dict[str, Union[int, str, torch.device]] = dict(),
         weight: Union[float, int] = 1.0,
         require_prob_for_eval: bool = True,
@@ -87,7 +91,7 @@ class EmmentalTask(object):
         self.action_outputs = (
             action_outputs
             if action_outputs is None or isinstance(action_outputs, list)
-            else [action_outputs]  # type: ignore
+            else [action_outputs]
         )
         if action_outputs is not None:
             self.action_outputs = list(set(action_outputs))

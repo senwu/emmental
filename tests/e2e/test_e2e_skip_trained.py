@@ -93,11 +93,11 @@ def test_e2e_skip_trained_step(caplog):
     # Create task
     def ce_loss(task_name, immediate_output_dict, Y):
         module_name = f"{task_name}_pred_head"
-        return F.cross_entropy(immediate_output_dict[module_name][0], Y.view(-1))
+        return F.cross_entropy(immediate_output_dict[module_name], Y)
 
     def output(task_name, immediate_output_dict):
         module_name = f"{task_name}_pred_head"
-        return F.softmax(immediate_output_dict[module_name][0], dim=1)
+        return F.softmax(immediate_output_dict[module_name], dim=1)
 
     task_metrics = {"task1": ["accuracy"]}
 
@@ -311,11 +311,11 @@ def test_e2e_skip_trained_epoch(caplog):
     # Create task
     def ce_loss(task_name, immediate_output_dict, Y):
         module_name = f"{task_name}_pred_head"
-        return F.cross_entropy(immediate_output_dict[module_name][0], Y.view(-1))
+        return F.cross_entropy(immediate_output_dict[module_name], Y)
 
     def output(task_name, immediate_output_dict):
         module_name = f"{task_name}_pred_head"
-        return F.softmax(immediate_output_dict[module_name][0], dim=1)
+        return F.softmax(immediate_output_dict[module_name], dim=1)
 
     task_metrics = {"task1": ["accuracy"]}
 

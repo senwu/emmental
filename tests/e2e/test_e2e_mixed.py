@@ -142,18 +142,18 @@ def test_e2e_mixed(caplog):
     # Create task
     def ce_loss2(task_name, immediate_output_dict, Y):
         module_name = f"{task_name}_pred_head"
-        return F.cross_entropy(immediate_output_dict[module_name][0], Y.view(-1))
+        return F.cross_entropy(immediate_output_dict[module_name], Y)
 
     def ce_loss1(task_name, immediate_output_dict, Y):
         module_name = f"{task_name}_pred_head"
         return F.cross_entropy(
-            immediate_output_dict[module_name][0],
-            immediate_output_dict["_input_"]["label1"].view(-1),
+            immediate_output_dict[module_name],
+            immediate_output_dict["_input_"]["label1"],
         )
 
     def output(task_name, immediate_output_dict):
         module_name = f"{task_name}_pred_head"
-        return F.softmax(immediate_output_dict[module_name][0], dim=1)
+        return F.softmax(immediate_output_dict[module_name], dim=1)
 
     task_metrics = {"task2": ["accuracy"]}
 
@@ -181,7 +181,7 @@ def test_e2e_mixed(caplog):
                 Act(
                     name=f"{task_name}_pred_head",
                     module=f"{task_name}_pred_head",
-                    inputs=[("input1", 0)],
+                    inputs="input1",
                 ),
             ],
             module_device={"input_module0": -1},
