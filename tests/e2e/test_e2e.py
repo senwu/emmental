@@ -196,7 +196,7 @@ def test_e2e(caplog):
             super().__init__()
 
         def forward(self, input):
-            return {"out": input}
+            return input, input
 
     tasks = [
         EmmentalTask(
@@ -210,11 +210,11 @@ def test_e2e(caplog):
             ),
             task_flow=[
                 Act(name="input", module="input_module0", inputs=[("_input_", "data")]),
-                Act(name="input1", module="input_module1", inputs=[("input", "out")]),
+                Act(name="input1", module="input_module1", inputs=[("input", 0)]),
                 Act(
                     name=f"{task_name}_pred_head",
                     module=f"{task_name}_pred_head",
-                    inputs=["input1"],
+                    inputs="input1",
                 ),
             ],
             module_device={"input_module0": -1},
