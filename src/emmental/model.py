@@ -263,8 +263,8 @@ class EmmentalModel(nn.Module):
         # Handle any output_dict and index is str
         if isinstance(index, str):
             return output_dict[index]
-        # Handle output_dict is a list or dict, and index is (X, Y)
-        if isinstance(output_dict[index[0]], list) or isinstance(
+        # Handle output_dict is a list, tuple or dict, and index is (X, Y)
+        if isinstance(output_dict[index[0]], (list, tuple)) or isinstance(
             output_dict[index[0]], dict
         ):
             return output_dict[index[0]][index[1]]
@@ -318,9 +318,6 @@ class EmmentalModel(nn.Module):
                     else:
                         # TODO: Handle multiple device with not inputs case
                         output = self.module_pool[action.module].forward(output_dict)
-                    # Convert output tuple to list
-                    if isinstance(output, tuple):
-                        output = list(output)
                     output_dict[action.name] = output
 
         return output_dict
