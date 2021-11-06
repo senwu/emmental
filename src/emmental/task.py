@@ -38,7 +38,7 @@ class EmmentalTaskFlowAction:
         """Initialize Action."""
         self.name = name
         self.module = module
-        self.inputs = inputs if isinstance(inputs, list) else [inputs]
+        self.inputs = inputs if inputs is None or isinstance(inputs, list) else [inputs]
 
     def __repr__(self) -> str:
         """Represent the action as a string."""

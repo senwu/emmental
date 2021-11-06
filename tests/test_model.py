@@ -104,6 +104,13 @@ def test_model(caplog):
 
     model.load(f"{dirpath}/saved_model.pth")
 
+    # Save to a non-exit folder
+    model.save(f"{dirpath}/new_create/saved_model.pth")
+
+    # Save from a non-exit folder
+    with pytest.raises(FileNotFoundError):
+        model.load(f"{dirpath}/new_create_/saved_model.pth")
+
     # Test add_tasks
     model = EmmentalModel(name="test")
 
@@ -120,7 +127,12 @@ def test_model_invalid_task(caplog):
     dirpath = "temp_test_model_with_invalid_task"
 
     Meta.reset()
-    init(dirpath)
+    init(
+        dirpath,
+        config={
+            "meta_config": {"verbose": 0},
+        },
+    )
 
     task_name = "task1"
 
@@ -185,9 +197,19 @@ def test_model_invalid_task(caplog):
     model = EmmentalModel(name="test")
     model.add_task(task)
 
+    model.remove_task(task_name)
+    assert model.task_names == set([])
+
+    model.remove_task("task_2")
+    assert model.task_names == set([])
+
+    model.add_task(task)
+
+    # Duplicate task
     with pytest.raises(ValueError):
         model.add_task(task1)
 
+    # Invalid task
     with pytest.raises(ValueError):
         model.add_task(task_name)
 

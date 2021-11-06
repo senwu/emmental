@@ -627,7 +627,10 @@ class EmmentalModel(nn.Module):
                 metric_score_dict[identifier] = np.mean(  # type: ignore
                     predictions["losses"][task_name]
                 )
-                macro_loss_dict[dataloader.split].append(metric_score_dict[identifier])
+                if return_average:
+                    macro_loss_dict[dataloader.split].append(
+                        metric_score_dict[identifier]
+                    )
 
                 # Store the task specific metric score
                 if self.scorers[task_name]:
