@@ -16,7 +16,7 @@ from torch.nn import ModuleDict
 from emmental.data import EmmentalDataLoader
 from emmental.meta import Meta
 from emmental.scorer import Scorer
-from emmental.task import EmmentalTask
+from emmental.task import ActionIndex, EmmentalTask
 from emmental.utils.utils import (
     array_to_numpy,
     construct_identifier,
@@ -256,6 +256,24 @@ class EmmentalModel(nn.Module):
         cls_name = type(self).__name__
         return f"{cls_name}(name={self.name})"
 
+    def _get_data_from_output_dict(
+        self, output_dict: Dict[str, Any], index: ActionIndex
+    ) -> Any:
+        """Get output_dict output based on output_idx."""
+        # Handle any output_dict and index is str
+        if isinstance(index, str):
+            return output_dict[index]
+        # Handle output_dict is a list or dict, and index is (X, Y)
+        if isinstance(output_dict[index[0]], list) or isinstance(
+            output_dict[index[0]], dict
+        ):
+            return output_dict[index[0]][index[1]]
+        # Handle output_dict is neither a list or dict, and index is (X, Y)
+        else:
+            return [output_dict[index[0]]][int(index[1])]
+
+        raise ValueError(f"Cannot parse action index {index}.")
+
     def flow(self, X_dict: Dict[str, Any], task_names: List[str]) -> Dict[str, Any]:
         """Forward based on input and task flow.
 
@@ -289,9 +307,7 @@ class EmmentalModel(nn.Module):
                             )
                             input = move_to_device(
                                 [
-                                    output_dict[_input[0]][_input[1]]
-                                    if isinstance(_input, tuple)
-                                    else output_dict[_input]
+                                    self._get_data_from_output_dict(output_dict, _input)
                                     for _input in action.inputs
                                 ],
                                 action_module_device,
@@ -302,10 +318,9 @@ class EmmentalModel(nn.Module):
                     else:
                         # TODO: Handle multiple device with not inputs case
                         output = self.module_pool[action.module].forward(output_dict)
+                    # Convert output tuple to list
                     if isinstance(output, tuple):
                         output = list(output)
-                    if not isinstance(output, list) and not isinstance(output, dict):
-                        output = [output]
                     output_dict[action.name] = output
 
         return output_dict
@@ -404,9 +419,16 @@ class EmmentalModel(nn.Module):
                 and task_name in self.action_outputs
                 and self.action_outputs[task_name] is not None
             ):
-                for action_name, output_index in self.action_outputs[task_name]:
-                    out_dict[task_name][f"{action_name}_{output_index}"] = (
-                        output_dict[action_name][output_index].cpu().detach().numpy()
+                for _output in self.action_outputs[task_name]:
+                    out_dict[task_name][
+                        _output
+                        if isinstance(_output, str)
+                        else f"{_output[0]}_{_output[1]}"
+                    ] = (
+                        self._get_data_from_output_dict(output_dict, _output)
+                        .cpu()
+                        .detach()
+                        .numpy()
                     )
 
         if return_action_outputs:

@@ -117,13 +117,13 @@ def test_e2e_no_y_dict(caplog):
     def ce_loss(task_name, immediate_output_dict, Y):
         module_name = f"{task_name}_pred_head"
         return F.cross_entropy(
-            immediate_output_dict[module_name][0],
-            immediate_output_dict["_input_"]["label1"].view(-1),
+            immediate_output_dict[module_name],
+            immediate_output_dict["_input_"]["label1"],
         )
 
     def output(task_name, immediate_output_dict):
         module_name = f"{task_name}_pred_head"
-        return F.softmax(immediate_output_dict[module_name][0], dim=1)
+        return F.softmax(immediate_output_dict[module_name], dim=1)
 
     class IdentityModule(nn.Module):
         def __init__(self):
