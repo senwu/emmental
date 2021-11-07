@@ -261,7 +261,7 @@ class EmmentalModel(nn.Module):
     ) -> Any:
         """Get output_dict output based on output_idx."""
         # Handle any output_dict and index is str
-        if isinstance(index, str):
+        if isinstance(index, (str, int)):
             if index in output_dict:
                 return output_dict[index]
             else:
