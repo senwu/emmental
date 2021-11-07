@@ -262,14 +262,28 @@ class EmmentalModel(nn.Module):
         """Get output_dict output based on output_idx."""
         # Handle any output_dict and index is str
         if isinstance(index, str):
-            return output_dict[index]
+            if index in output_dict:
+                return output_dict[index]
+            else:
+                raise ValueError(f"Action {index}'s output is not in the output_dict.")
         # Handle output_dict is a list, tuple or dict, and index is (X, Y)
-        if isinstance(output_dict[index[0]], (list, tuple)) or isinstance(
-            output_dict[index[0]], dict
-        ):
-            return output_dict[index[0]][index[1]]
+        elif isinstance(output_dict[index[0]], (list, tuple)):
+            if isinstance(index[1], int):
+                return output_dict[index[0]][index[1]]
+            else:
+                raise ValueError(
+                    f"Action {index[0]} output has {type(output_dict[index[0]])} type, "
+                    f"while index has {type(index[1])} not int."
+                )
+        elif isinstance(output_dict[index[0]], dict):
+            if index[1] in output_dict[index[0]]:
+                return output_dict[index[0]][index[1]]
+            else:
+                raise ValueError(
+                    f"Action {index[0]}'s output doesn't have attribute {index[1]}."
+                )
         # Handle output_dict is neither a list or dict, and index is (X, Y)
-        else:
+        elif int(index[1]) == 0:
             return [output_dict[index[0]]][int(index[1])]
 
         raise ValueError(f"Cannot parse action index {index}.")
