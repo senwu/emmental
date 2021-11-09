@@ -21,7 +21,7 @@ class EmmentalTaskFlowAction:
 
     Args:
       name: The name of the action.
-      module_name: The module_name of the action.
+      module_name: The module_name of the module.
       inputs: The inputs of the action. The inputs can be several format:
         1) X: takes all action X's output as input for this action.
         2) X, Y (int): takes action X's Yth output as input for this action.
