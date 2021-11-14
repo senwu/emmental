@@ -19,14 +19,29 @@ ActionOutputs = Union[str, Sequence[ActionIndex]]
 class EmmentalTaskFlowAction:
     """An action to execute in a EmmentalTask task_flow.
 
+    EmmentalTaskFlowAction is the object that populate the task_flow sequence.
+    It has three attributes: name, module_name and inputs where name is the name of the
+    action, module_name is the module name used in this action and inputs is the inputs
+    to the action. By introducing a class for specifying actions in the task_flow,
+    we standardize its definition. Moreover, EmmentalTaskFlowAction enables more user
+    flexibility in specifying a task flow as we can now support a wider-range of
+    formats for the input attribute of a task_flow as follow:
+
+    1. It now supports str as inputs (e.g., inputs="input1") which means take the
+    input1's output as input for current action.
+    2. It also supports a list as inputs which can be constructed by three different
+    formats:
+        a) x (x is str) where takes whole output of x's output as input: this enables
+        users to pass all outputs from one module to another without having to manually
+        specify every input to the module
+        b) (x, y) (y is int) where takes x's y-th output as input
+        c) (x, y) (y is str) where takes x's output str as input
+    3. It also support None as inputs which will take all modules' output as input.
+
     Args:
       name: The name of the action.
       module_name: The module_name of the module.
-      inputs: The inputs of the action. The inputs can be several format:
-        1) X: takes all action X's output as input for this action.
-        2) X, Y (int): takes action X's Yth output as input for this action.
-        3) X, Y (str): takes action X's output Y as input for this action.
-        4) None: takes all task_flow's output as input for this action.
+      inputs: The inputs of the action. Details can be found above.
     """
 
     def __init__(
