@@ -259,8 +259,11 @@ class EmmentalModel(nn.Module):
     def _get_data_from_output_dict(
         self, output_dict: Dict[str, Any], index: ActionIndex
     ) -> Any:
-        """Get output_dict output based on output_idx."""
-        # Handle any output_dict and index is str
+        """Get output_dict output based on output_idx.
+
+        For the valid index, please check the definition of EmmentalTaskFlowAction.
+        """
+        # Handle any output_dict and index is str or int
         if isinstance(index, (str, int)):
             if index in output_dict:
                 return output_dict[index]
@@ -284,7 +287,7 @@ class EmmentalModel(nn.Module):
                 )
         # Handle output_dict is neither a list or dict, and index is (X, Y)
         elif int(index[1]) == 0:
-            return [output_dict[index[0]]][int(index[1])]
+            return output_dict[index[0]]
 
         raise ValueError(f"Cannot parse action index {index}.")
 
