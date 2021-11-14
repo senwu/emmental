@@ -29,14 +29,20 @@ class EmmentalTaskFlowAction:
 
     1. It now supports str as inputs (e.g., inputs="input1") which means take the
     input1's output as input for current action.
-    2. It also supports a list as inputs which can be constructed by three different
+
+    2. It also support None as inputs which will take all modules' output as input.
+
+    3. It also supports a list as inputs which can be constructed by three different
     formats:
-        a) x (x is str) where takes whole output of x's output as input: this enables
-        users to pass all outputs from one module to another without having to manually
-        specify every input to the module
-        b) (x, y) (y is int) where takes x's y-th output as input
-        c) (x, y) (y is str) where takes x's output str as input
-    3. It also support None as inputs which will take all modules' output as input.
+
+
+    a). x (x is str) where takes whole output of x's output as input: this enables
+    users to pass all outputs from one module to another without having to manually
+    specify every input to the module.
+
+    b). (x, y) (y is int) where takes x's y-th output as input.
+
+    c). (x, y) (y is str) where takes x's output str as input.
 
     Args:
       name: The name of the action.
