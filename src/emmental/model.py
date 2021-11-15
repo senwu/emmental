@@ -263,13 +263,13 @@ class EmmentalModel(nn.Module):
 
         For the valid index, please check the definition of EmmentalTaskFlowAction.
         """
-        # Handle any output_dict and index is str or int
+        # Handle any output_dict's item and index is str or int
         if isinstance(index, (str, int)):
             if index in output_dict:
                 return output_dict[index]
             else:
                 raise ValueError(f"Action {index}'s output is not in the output_dict.")
-        # Handle output_dict is a list, tuple or dict, and index is (X, Y)
+        # Handle output_dict's item is a list, tuple or dict, and index is (X, Y)
         elif isinstance(output_dict[index[0]], (list, tuple)):
             if isinstance(index[1], int):
                 return output_dict[index[0]][index[1]]
@@ -285,7 +285,7 @@ class EmmentalModel(nn.Module):
                 raise ValueError(
                     f"Action {index[0]}'s output doesn't have attribute {index[1]}."
                 )
-        # Handle output_dict is neither a list or dict, and index is (X, Y)
+        # Handle output_dict's item is neither a list or dict, and index is (X, Y)
         elif int(index[1]) == 0:
             return output_dict[index[0]]
 
