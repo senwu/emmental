@@ -261,7 +261,7 @@ class EmmentalModel(nn.Module):
     ) -> Any:
         """Get output_dict output based on output_idx.
 
-        For the valid index, please check the definition of EmmentalTaskFlowAction.
+        For the valid index, please check the definition of Action.
         """
         # Handle any output_dict's item and index is str or int
         if isinstance(index, (str, int)):

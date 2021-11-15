@@ -16,16 +16,16 @@ ActionInputs = Union[str, Sequence[ActionIndex]]
 ActionOutputs = Union[str, Sequence[ActionIndex]]
 
 
-class EmmentalTaskFlowAction:
+class Action:
     """An action to execute in a EmmentalTask task_flow.
 
-    EmmentalTaskFlowAction is the object that populate the task_flow sequence.
+    Action is the object that populate the task_flow sequence.
     It has three attributes: name, module_name and inputs where name is the name of the
     action, module_name is the module name used in this action and inputs is the inputs
     to the action. By introducing a class for specifying actions in the task_flow,
-    we standardize its definition. Moreover, EmmentalTaskFlowAction enables more user
-    flexibility in specifying a task flow as we can now support a wider-range of
-    formats for the input attribute of a task_flow as follow:
+    we standardize its definition. Moreover, Action enables more user flexibility in
+    specifying a task flow as we can now support a wider-range of formats for the input
+    attribute of a task_flow as follow:
 
     1. It now supports str as inputs (e.g., inputs="input1") which means take the
     input1's output as input for current action.
@@ -91,7 +91,7 @@ class EmmentalTask(object):
         self,
         name: str,
         module_pool: ModuleDict,
-        task_flow: Sequence[EmmentalTaskFlowAction],
+        task_flow: Sequence[Action],
         loss_func: Callable,
         output_func: Callable,
         scorer: Scorer = None,

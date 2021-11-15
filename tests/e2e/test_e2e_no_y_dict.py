@@ -9,12 +9,12 @@ from torch import nn
 from torch.nn import functional as F
 
 from emmental import (
+    Action,
     EmmentalDataLoader,
     EmmentalDataset,
     EmmentalLearner,
     EmmentalModel,
     EmmentalTask,
-    EmmentalTaskFlowAction as Act,
     Meta,
     init,
 )
@@ -143,9 +143,9 @@ def test_e2e_no_y_dict(caplog):
             }
         ),
         task_flow=[
-            Act(name="input", module="input_module0", inputs=None),
-            Act(name="input1", module="input_module1", inputs=[("input", "out")]),
-            Act(
+            Action(name="input", module="input_module0", inputs=None),
+            Action(name="input1", module="input_module1", inputs=[("input", "out")]),
+            Action(
                 name=f"{task_name}_pred_head",
                 module=f"{task_name}_pred_head",
                 inputs=[("input1", 0)],

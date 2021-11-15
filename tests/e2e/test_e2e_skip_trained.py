@@ -9,12 +9,12 @@ from torch import nn
 from torch.nn import functional as F
 
 from emmental import (
+    Action,
     EmmentalDataLoader,
     EmmentalDataset,
     EmmentalLearner,
     EmmentalModel,
     EmmentalTask,
-    EmmentalTaskFlowAction as Act,
     Meta,
     Scorer,
     init,
@@ -120,9 +120,13 @@ def test_e2e_skip_trained_step(caplog):
                 }
             ),
             task_flow=[
-                Act(name="input", module="input_module0", inputs=[("_input_", "data")]),
-                Act(name="input1", module="input_module1", inputs=[("input", "out")]),
-                Act(
+                Action(
+                    name="input", module="input_module0", inputs=[("_input_", "data")]
+                ),
+                Action(
+                    name="input1", module="input_module1", inputs=[("input", "out")]
+                ),
+                Action(
                     name=f"{task_name}_pred_head",
                     module=f"{task_name}_pred_head",
                     inputs=[("input1", 0)],
@@ -338,9 +342,13 @@ def test_e2e_skip_trained_epoch(caplog):
                 }
             ),
             task_flow=[
-                Act(name="input", module="input_module0", inputs=[("_input_", "data")]),
-                Act(name="input1", module="input_module1", inputs=[("input", "out")]),
-                Act(
+                Action(
+                    name="input", module="input_module0", inputs=[("_input_", "data")]
+                ),
+                Action(
+                    name="input1", module="input_module1", inputs=[("input", "out")]
+                ),
+                Action(
                     name=f"{task_name}_pred_head",
                     module=f"{task_name}_pred_head",
                     inputs=[("input1", 0)],

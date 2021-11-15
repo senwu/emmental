@@ -7,7 +7,7 @@ from torch import nn
 from torch.nn import functional as F
 
 import emmental
-from emmental import EmmentalTask, EmmentalTaskFlowAction as Action, Scorer
+from emmental import Action, EmmentalTask, Scorer
 from emmental.modules.identity_module import IdentityModule
 
 

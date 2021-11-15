@@ -10,7 +10,7 @@ from emmental.contrib.slicing.modules import utils
 from emmental.contrib.slicing.modules.slice_attention_module import SliceAttentionModule
 from emmental.meta import Meta
 from emmental.scorer import Scorer
-from emmental.task import EmmentalTask, EmmentalTaskFlowAction as Action
+from emmental.task import Action, EmmentalTask
 from emmental.utils.utils import move_to_device
 
 logger = logging.getLogger(__name__)
