@@ -15,6 +15,7 @@ __all__ = [
     "EmmentalLearner",
     "EmmentalModel",
     "EmmentalTask",
+    "EmmentalTaskFlowAction",
     "Meta",
     "Scorer",
     "init",

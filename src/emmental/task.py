@@ -35,7 +35,6 @@ class Action:
     3. It also supports a list as inputs which can be constructed by three different
     formats:
 
-
     a). x (x is str) where takes whole output of x's output as input: this enables
     users to pass all outputs from one module to another without having to manually
     specify every input to the module.
