@@ -14,6 +14,71 @@ Fixed
 * `@senwu`_: Fix the metric cannot calculate issue when scorer is none.
   (`#112 <https://github.com/senwu/emmental/pull/112>`_)
 
+Added
+^^^^^
+
+* `@senwu`_: Introduce two new classes: `Action` and `Batch` to make the APIs more
+  modularized and make Emmental more extendable and easy to use for downstream tasks.
+  (`#116 <https://github.com/senwu/emmental/pull/116>`_)
+
+.. note::
+
+    1. We introduce two new classes: `Action` and `Batch` to make the APIs more
+    modularized.
+
+    - `Action` are objects that populate the `task_flow` sequence. It has three
+      attributes: name, module and inputs where name is the name of the action, module
+      is the module name of the action and inputs is the inputs to the action. By
+      introducing a class for specifying actions in the `task_flow`, we standardize its
+      definition. Moreover,  `Action` enables more user flexibility in specifying a
+      task flow as we can now support a wider-range of formats for the input attribute
+      of a `task_flow` as discussed in (2).
+
+    - `Batch` is the object that is returned from the Emmental `Scheduler`. Each
+      `Batch` object has 6 attributes: uids (uids of the samples), X_dict (input
+      features of the samples), Y_dict (output of the samples), task_to_label_dict
+      (the task to label mapping), data_name (name of the dataset that samples come
+      from), and split (the split information). By defining the `Batch` class, we unify
+      and standardize the training scheduler interface by ensuring a consistent output
+      format for all schedulers.
+
+    2. We make the `task_flow` more flexible by supporting more formats for specifying
+    inputs to each module.
+
+    - It now supports str as inputs (e.g., inputs="input1") which means take the
+      `input1`'s output as input for current action.
+
+    - It also supports a list as inputs which can be constructed by three
+      different formats:
+
+      - x (x is str) where takes whole output of x's output as input: this enables
+        users to pass all outputs from one module to another without having to
+        manually specify every input to the module.
+
+      - (x, y) (y is int) where takes x's y-th output as input.
+
+      - (x, y) (y is str) where takes x's output str as input.
+
+    Few emmental.Action examples:
+
+    .. code:: python
+
+      from emmental.Action as Act
+      Act(name="input", module="input_module0", inputs=[("_input_", "data")])
+      Act(name="input", module="input_module0", inputs=[("_input_", 0)])
+      Act(name="input", module="input_module0", inputs=["_input_"])
+      Act(name="input", module="input_module0", inputs="_input_")
+      Act(name="input", module="input_module0", inputs=[("_input_", "data"), ("_input_", 1), "_input_"])
+      Act(name="input", module="input_module0", inputs=None)
+
+    This design also can be applied to action_outputs, here are few example:
+
+    .. code:: python
+
+      action_outputs=[(f"{task_name}_pred_head", 0), ("_input_", "data"), f"{task_name}_pred_head"]
+      action_outputs="_input_"
+
+
 0.0.9_ - 2021-10-05
 -------------------
 
