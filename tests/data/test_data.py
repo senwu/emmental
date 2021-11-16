@@ -1,13 +1,14 @@
 """Emmental dataset and dataloader unit tests."""
 import logging
 import shutil
+from functools import partial
 
 import pytest
 import torch
 
 import emmental
 from emmental import Meta
-from emmental.data import EmmentalDataLoader, EmmentalDataset
+from emmental.data import EmmentalDataLoader, EmmentalDataset, emmental_collate_fn
 
 
 def test_emmental_dataset(caplog):
@@ -163,6 +164,7 @@ def test_emmental_dataloader(caplog):
         dataset=dataset,
         split="test",
         batch_size=3,
+        collate_fn=partial(emmental_collate_fn, min_data_len=0, max_data_len=0),
     )
 
     x_batch, y_batch = next(iter(dataloader2))
