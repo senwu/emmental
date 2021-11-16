@@ -145,6 +145,7 @@ def test_emmental_dataloader(caplog):
         dataset=dataset,
         split="train",
         batch_size=2,
+        num_workers=2,
     )
 
     x_batch, y_batch = next(iter(dataloader1))
