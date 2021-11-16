@@ -13,6 +13,10 @@ Fixed
 
 * `@senwu`_: Fix the metric cannot calculate issue when scorer is none.
   (`#112 <https://github.com/senwu/emmental/pull/112>`_)
+* `@senwu`_: Fix Meta.config is None issue in collate_fn with num_workers > 1 when
+  using python 3.8+ on mac.
+  (`#117 <https://github.com/senwu/emmental/pull/117>`_)
+
 
 Added
 ^^^^^
