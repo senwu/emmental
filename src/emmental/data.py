@@ -2,6 +2,7 @@
 import copy
 import logging
 from collections import defaultdict
+from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from torch import Tensor
@@ -56,13 +57,6 @@ class EmmentalDataset(Dataset):
                 logger.info(
                     f"Auto generate uids for dataset {self.name} under {self.uid}."
                 )
-
-        # if self.Y_dict is not None:
-        #     for name, label in self.Y_dict.items():
-        #         if not isinstance(label, Tensor):
-        #             raise ValueError(
-        #                 f"Label {name} should be torch.Tensor, not {type(label)}."
-        #             )
 
     def __getitem__(
         self, index: int
@@ -151,12 +145,16 @@ class EmmentalDataset(Dataset):
 
 
 def emmental_collate_fn(
-    batch: Union[List[Tuple[Dict[str, Any], Dict[str, Tensor]]], List[Dict[str, Any]]]
+    batch: Union[List[Tuple[Dict[str, Any], Dict[str, Tensor]]], List[Dict[str, Any]]],
+    min_data_len: int = 0,
+    max_data_len: int = 0,
 ) -> Union[Tuple[Dict[str, Any], Dict[str, Tensor]], Dict[str, Any]]:
     """Collate function.
 
     Args:
       batch: The batch to collate.
+      min_data_len: The minimal data sequence length, defaults to 0.
+      max_data_len: The maximal data sequence length (0 means no limit), defaults to 0.
 
     Returns:
       The collated batch.
@@ -190,8 +188,8 @@ def emmental_collate_fn(
         if isinstance(values[0], Tensor):
             item_tensor, item_mask_tensor = list_to_tensor(
                 values,
-                min_len=Meta.config["data_config"]["min_data_len"],
-                max_len=Meta.config["data_config"]["max_data_len"],
+                min_len=min_data_len,
+                max_len=max_data_len,
             )
             X_batch[field_name] = item_tensor
             if item_mask_tensor is not None:
@@ -200,8 +198,8 @@ def emmental_collate_fn(
     for label_name, values in Y_batch.items():
         Y_batch[label_name] = list_to_tensor(
             values,
-            min_len=Meta.config["data_config"]["min_data_len"],
-            max_len=Meta.config["data_config"]["max_data_len"],
+            min_len=min_data_len,
+            max_len=max_data_len,
         )[0]
 
     if len(Y_batch) != 0:
@@ -233,7 +231,7 @@ class EmmentalDataLoader(DataLoader):
         task_to_label_dict: Dict[str, str],
         dataset: EmmentalDataset,
         split: str = "train",
-        collate_fn: Callable = emmental_collate_fn,
+        collate_fn: Optional[Callable] = None,
         n_batches: Optional[int] = None,
         **kwargs: Any,
     ) -> None:
@@ -244,6 +242,13 @@ class EmmentalDataLoader(DataLoader):
         assert isinstance(
             task_to_label_dict, dict
         ), "task_to_label_dict should be a dict."
+
+        if collate_fn is None:
+            collate_fn = partial(
+                emmental_collate_fn,
+                min_data_len=Meta.config["data_config"]["min_data_len"],
+                max_data_len=Meta.config["data_config"]["max_data_len"],
+            )
 
         super().__init__(dataset, collate_fn=collate_fn, **kwargs)
 
