@@ -39,6 +39,7 @@ def test_e2e(caplog):
             "online_eval": True,
             "optimizer_config": {"lr": 0.01, "grad_clip": 100},
         },
+        "data_config": {"max_data_len": 10},
         "logging_config": {
             "counter_unit": "epoch",
             "evaluation_freq": 0.2,
@@ -137,18 +138,21 @@ def test_e2e(caplog):
         dataset=train_dataset1,
         split="train",
         batch_size=10,
+        num_workers=2,
     )
     dev_dataloader1 = EmmentalDataLoader(
         task_to_label_dict=task_to_label_dict,
         dataset=dev_dataset1,
         split="valid",
         batch_size=10,
+        num_workers=2,
     )
     test_dataloader1 = EmmentalDataLoader(
         task_to_label_dict=task_to_label_dict,
         dataset=test_dataset1,
         split="test",
         batch_size=10,
+        num_workers=2,
     )
 
     task_to_label_dict = {"task2": "label2"}
