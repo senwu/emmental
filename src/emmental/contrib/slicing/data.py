@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from emmental.contrib.slicing.slicing_function import slicing_function
+from emmental.contrib.slicing.slicing_function import SlicingFunction
 from emmental.data import EmmentalDataLoader
 from emmental.task import EmmentalTask
 
@@ -90,7 +90,7 @@ def add_slice_labels(
     return slice_distribution
 
 
-@slicing_function()
+@SlicingFunction()
 def base_slice(example: Any) -> bool:
     """Slicing function which always to return True.
 

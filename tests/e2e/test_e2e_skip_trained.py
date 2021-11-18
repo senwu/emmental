@@ -9,6 +9,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from emmental import (
+    Action,
     EmmentalDataLoader,
     EmmentalDataset,
     EmmentalLearner,
@@ -92,11 +93,11 @@ def test_e2e_skip_trained_step(caplog):
     # Create task
     def ce_loss(task_name, immediate_output_dict, Y):
         module_name = f"{task_name}_pred_head"
-        return F.cross_entropy(immediate_output_dict[module_name][0], Y.view(-1))
+        return F.cross_entropy(immediate_output_dict[module_name], Y)
 
     def output(task_name, immediate_output_dict):
         module_name = f"{task_name}_pred_head"
-        return F.softmax(immediate_output_dict[module_name][0], dim=1)
+        return F.softmax(immediate_output_dict[module_name], dim=1)
 
     task_metrics = {"task1": ["accuracy"]}
 
@@ -119,21 +120,17 @@ def test_e2e_skip_trained_step(caplog):
                 }
             ),
             task_flow=[
-                {
-                    "name": "input",
-                    "module": "input_module0",
-                    "inputs": [("_input_", "data")],
-                },
-                {
-                    "name": "input1",
-                    "module": "input_module1",
-                    "inputs": [("input", "out")],
-                },
-                {
-                    "name": f"{task_name}_pred_head",
-                    "module": f"{task_name}_pred_head",
-                    "inputs": [("input1", 0)],
-                },
+                Action(
+                    name="input", module="input_module0", inputs=[("_input_", "data")]
+                ),
+                Action(
+                    name="input1", module="input_module1", inputs=[("input", "out")]
+                ),
+                Action(
+                    name=f"{task_name}_pred_head",
+                    module=f"{task_name}_pred_head",
+                    inputs=[("input1", 0)],
+                ),
             ],
             module_device={"input_module0": -1},
             loss_func=partial(ce_loss, task_name),
@@ -318,11 +315,11 @@ def test_e2e_skip_trained_epoch(caplog):
     # Create task
     def ce_loss(task_name, immediate_output_dict, Y):
         module_name = f"{task_name}_pred_head"
-        return F.cross_entropy(immediate_output_dict[module_name][0], Y.view(-1))
+        return F.cross_entropy(immediate_output_dict[module_name], Y)
 
     def output(task_name, immediate_output_dict):
         module_name = f"{task_name}_pred_head"
-        return F.softmax(immediate_output_dict[module_name][0], dim=1)
+        return F.softmax(immediate_output_dict[module_name], dim=1)
 
     task_metrics = {"task1": ["accuracy"]}
 
@@ -345,21 +342,17 @@ def test_e2e_skip_trained_epoch(caplog):
                 }
             ),
             task_flow=[
-                {
-                    "name": "input",
-                    "module": "input_module0",
-                    "inputs": [("_input_", "data")],
-                },
-                {
-                    "name": "input1",
-                    "module": "input_module1",
-                    "inputs": [("input", "out")],
-                },
-                {
-                    "name": f"{task_name}_pred_head",
-                    "module": f"{task_name}_pred_head",
-                    "inputs": [("input1", 0)],
-                },
+                Action(
+                    name="input", module="input_module0", inputs=[("_input_", "data")]
+                ),
+                Action(
+                    name="input1", module="input_module1", inputs=[("input", "out")]
+                ),
+                Action(
+                    name=f"{task_name}_pred_head",
+                    module=f"{task_name}_pred_head",
+                    inputs=[("input1", 0)],
+                ),
             ],
             module_device={"input_module0": -1},
             loss_func=partial(ce_loss, task_name),

@@ -9,6 +9,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from emmental import (
+    Action,
     EmmentalDataLoader,
     EmmentalDataset,
     EmmentalLearner,
@@ -38,6 +39,7 @@ def test_e2e(caplog):
             "online_eval": True,
             "optimizer_config": {"lr": 0.01, "grad_clip": 100},
         },
+        "data_config": {"max_data_len": 10},
         "logging_config": {
             "counter_unit": "epoch",
             "evaluation_freq": 0.2,
@@ -136,18 +138,21 @@ def test_e2e(caplog):
         dataset=train_dataset1,
         split="train",
         batch_size=10,
+        num_workers=2,
     )
     dev_dataloader1 = EmmentalDataLoader(
         task_to_label_dict=task_to_label_dict,
         dataset=dev_dataset1,
         split="valid",
         batch_size=10,
+        num_workers=2,
     )
     test_dataloader1 = EmmentalDataLoader(
         task_to_label_dict=task_to_label_dict,
         dataset=test_dataset1,
         split="test",
         batch_size=10,
+        num_workers=2,
     )
 
     task_to_label_dict = {"task2": "label2"}
@@ -181,11 +186,11 @@ def test_e2e(caplog):
     # Create task
     def ce_loss(task_name, immediate_output_dict, Y):
         module_name = f"{task_name}_pred_head"
-        return F.cross_entropy(immediate_output_dict[module_name][0], Y.view(-1))
+        return F.cross_entropy(immediate_output_dict[module_name], Y)
 
     def output(task_name, immediate_output_dict):
         module_name = f"{task_name}_pred_head"
-        return F.softmax(immediate_output_dict[module_name][0], dim=1)
+        return F.softmax(immediate_output_dict[module_name], dim=1)
 
     task_metrics = {"task1": ["accuracy"], "task2": ["accuracy", "roc_auc"]}
 
@@ -195,7 +200,7 @@ def test_e2e(caplog):
             super().__init__()
 
         def forward(self, input):
-            return {"out": input}
+            return input, input
 
     tasks = [
         EmmentalTask(
@@ -208,21 +213,15 @@ def test_e2e(caplog):
                 }
             ),
             task_flow=[
-                {
-                    "name": "input",
-                    "module": "input_module0",
-                    "inputs": [("_input_", "data")],
-                },
-                {
-                    "name": "input1",
-                    "module": "input_module1",
-                    "inputs": [("input", "out")],
-                },
-                {
-                    "name": f"{task_name}_pred_head",
-                    "module": f"{task_name}_pred_head",
-                    "inputs": [("input1", 0)],
-                },
+                Action(
+                    name="input", module="input_module0", inputs=[("_input_", "data")]
+                ),
+                Action(name="input1", module="input_module1", inputs=[("input", 0)]),
+                Action(
+                    name=f"{task_name}_pred_head",
+                    module=f"{task_name}_pred_head",
+                    inputs="input1",
+                ),
             ],
             module_device={"input_module0": -1},
             loss_func=partial(ce_loss, task_name),
@@ -231,6 +230,7 @@ def test_e2e(caplog):
                 (f"{task_name}_pred_head", 0),
                 ("_input_", "data"),
                 (f"{task_name}_pred_head", 0),
+                f"{task_name}_pred_head",
             ]
             if task_name == "task2"
             else None,
@@ -296,6 +296,9 @@ def test_e2e(caplog):
         )
         for idx in range(len(test2_pred["outputs"]["task2"]["_input__data"]))
     ]
+
+    assert len(test3_pred["outputs"]["task2"]["task2_pred_head"]) == 50
+    assert len(test2_pred["outputs"]["task2"]["task2_pred_head"]) == 50
 
     test4_pred = mtl_model.predict(test_dataloader2, return_action_outputs=False)
     assert "outputs" not in test4_pred

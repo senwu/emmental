@@ -3,9 +3,12 @@
 #   - W503: line break before binary operator
 #   - E741: do not use variables named 'l', 'O', or 'I'
 #   - E203: whitespace before ':'
+#   - N803: argument name should be lowercase
+#   - N806: variable in function should be lowercase
+#   - N812: lowercase imported as non-lowercase
 [flake8]
 count = True
 max-line-length = 88
 statistics = True
-ignore = E731,W503,E741,E203
+ignore = E731,W503,E741,E203,N803,N806,N812
 exclude = setup.py, docs/conf.py

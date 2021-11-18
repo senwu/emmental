@@ -1,6 +1,3 @@
-# Copyright (c) 2021 Sen Wu. All Rights Reserved.
-
-
 """Emmental learner."""
 import collections
 import copy
@@ -492,41 +489,44 @@ class EmmentalLearner(object):
             for identifier in self.running_uids.keys():
                 task_name, data_name, split = identifier.split("/")
 
-                metric_score = model.scorers[task_name].score(
-                    self.running_golds[identifier],
-                    self.running_probs[identifier],
-                    prob_to_pred(self.running_probs[identifier]),
-                    self.running_uids[identifier],
-                )
-                for metric_name, metric_value in metric_score.items():
-                    metric_dict[f"{identifier}/{metric_name}"] = metric_value
+                if (
+                    model.scorers[task_name]
+                    and self.running_golds[identifier]
+                    and self.running_probs[identifier]
+                ):
+                    metric_score = model.scorers[task_name].score(
+                        self.running_golds[identifier],
+                        self.running_probs[identifier],
+                        prob_to_pred(self.running_probs[identifier]),
+                        self.running_uids[identifier],
+                    )
+                    for metric_name, metric_value in metric_score.items():
+                        metric_dict[f"{identifier}/{metric_name}"] = metric_value
 
-                # Collect average score
-                identifier = construct_identifier(
-                    task_name, data_name, split, "average"
-                )
+                    # Collect average score
+                    identifier = construct_identifier(
+                        task_name, data_name, split, "average"
+                    )
+                    metric_dict[identifier] = np.mean(list(metric_score.values()))
+                    micro_score_dict[split].extend(
+                        list(metric_score.values())  # type: ignore
+                    )
+                    macro_score_dict[split].append(metric_dict[identifier])
 
-                metric_dict[identifier] = np.mean(list(metric_score.values()))
-
-                micro_score_dict[split].extend(
-                    list(metric_score.values())  # type: ignore
-                )
-                macro_score_dict[split].append(metric_dict[identifier])
-
-            # Collect split-wise micro/macro average score
-            for split in micro_score_dict.keys():
-                identifier = construct_identifier(
-                    "model", "all", split, "micro_average"
-                )
-                metric_dict[identifier] = np.mean(
-                    micro_score_dict[split]  # type: ignore
-                )
-                identifier = construct_identifier(
-                    "model", "all", split, "macro_average"
-                )
-                metric_dict[identifier] = np.mean(
-                    macro_score_dict[split]  # type: ignore
-                )
+                # Collect split-wise micro/macro average score
+                for split in micro_score_dict.keys():
+                    identifier = construct_identifier(
+                        "model", "all", split, "micro_average"
+                    )
+                    metric_dict[identifier] = np.mean(
+                        micro_score_dict[split]  # type: ignore
+                    )
+                    identifier = construct_identifier(
+                        "model", "all", split, "macro_average"
+                    )
+                    metric_dict[identifier] = np.mean(
+                        macro_score_dict[split]  # type: ignore
+                    )
 
         # Log the learning rate
         metric_dict["model/all/train/lr"] = self.optimizer.param_groups[0]["lr"]
@@ -717,29 +717,32 @@ class EmmentalLearner(object):
                 total_step_num = epoch_num * self.n_batches_per_epoch + step_num
                 batch_size = 0
 
-                for uids, X_dict, Y_dict, task_to_label_dict, data_name, split in batch:
-                    batch_size += len(uids)
-
+                for _batch in batch:
+                    batch_size += len(_batch.uids)
                     # Perform forward pass and calcualte the loss and count
                     uid_dict, loss_dict, prob_dict, gold_dict = model(
-                        uids,
-                        X_dict,
-                        Y_dict,
-                        task_to_label_dict,
+                        _batch.uids,
+                        _batch.X_dict,
+                        _batch.Y_dict,
+                        _batch.task_to_label_dict,
                         return_probs=Meta.config["learner_config"]["online_eval"],
                         return_action_outputs=False,
                     )
 
                     # Update running loss and count
                     for task_name in uid_dict.keys():
-                        identifier = f"{task_name}/{data_name}/{split}"
+                        identifier = f"{task_name}/{_batch.data_name}/{_batch.split}"
                         self.running_uids[identifier].extend(uid_dict[task_name])
                         self.running_losses[identifier] += (
                             loss_dict[task_name].item() * len(uid_dict[task_name])
                             if len(loss_dict[task_name].size()) == 0
                             else torch.sum(loss_dict[task_name]).item()
                         ) * model.task_weights[task_name]
-                        if Meta.config["learner_config"]["online_eval"]:
+                        if (
+                            Meta.config["learner_config"]["online_eval"]
+                            and prob_dict
+                            and gold_dict
+                        ):
                             self.running_probs[identifier].extend(prob_dict[task_name])
                             self.running_golds[identifier].extend(gold_dict[task_name])
 

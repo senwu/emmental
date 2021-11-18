@@ -1,6 +1,3 @@
-# Copyright (c) 2021 Sen Wu. All Rights Reserved.
-
-
 """Emmental parsing args unit tests."""
 import logging
 import shutil

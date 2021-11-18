@@ -10,7 +10,7 @@ from emmental.contrib.slicing.modules import utils
 from emmental.contrib.slicing.modules.slice_attention_module import SliceAttentionModule
 from emmental.meta import Meta
 from emmental.scorer import Scorer
-from emmental.task import EmmentalTask
+from emmental.task import Action, EmmentalTask
 from emmental.utils.utils import move_to_device
 
 logger = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ def build_slice_tasks(
     """
     # Collect task predictor module info
     base_task_predictor_action = task.task_flow[-1]
-    base_task_predictor_module = task.module_pool[base_task_predictor_action["module"]]
+    base_task_predictor_module = task.module_pool[base_task_predictor_action.module]
     if isinstance(base_task_predictor_module, nn.DataParallel):
         base_task_predictor_module = base_task_predictor_module.module
 
@@ -63,7 +63,7 @@ def build_slice_tasks(
 
     # Remove the predictor head module and action
     base_task_module_pool = task.module_pool
-    del base_task_module_pool[base_task_predictor_action["module"]]  # type: ignore
+    del base_task_module_pool[base_task_predictor_action.module]  # type: ignore
 
     base_task_task_flow = task.task_flow[:-1]
 
@@ -104,30 +104,30 @@ def build_slice_tasks(
         ind_module_pool[ind_head_dropout_module_name] = ind_head_dropout_module
         ind_module_pool[ind_head_module_name] = ind_head_module
 
-        assert len(base_task_predictor_action["inputs"]) == 1
+        assert len(base_task_predictor_action.inputs) == 1
 
-        ind_head_dropout_module_input_name = base_task_predictor_action["inputs"][0][0]
+        ind_head_dropout_module_input_name = base_task_predictor_action.inputs[0][0]
         ind_head_dropout_module_input_idx = 1 if sep_slice_ind_feature else 0
 
         # Create task_flow
         ind_task_flow = [action for action in base_task_task_flow]
         ind_task_flow.extend(
             [
-                {
-                    "name": ind_head_dropout_module_name,
-                    "module": ind_head_dropout_module_name,
-                    "inputs": [
+                Action(
+                    name=ind_head_dropout_module_name,
+                    module=ind_head_dropout_module_name,
+                    inputs=[
                         (
                             ind_head_dropout_module_input_name,
                             ind_head_dropout_module_input_idx,
                         )
                     ],
-                },
-                {
-                    "name": ind_head_module_name,
-                    "module": ind_head_module_name,
-                    "inputs": [(ind_head_dropout_module_name, 0)],
-                },
+                ),
+                Action(
+                    name=ind_head_module_name,
+                    module=ind_head_module_name,
+                    inputs=[(ind_head_dropout_module_name, 0)],
+                ),
             ]
         )
 
@@ -135,21 +135,21 @@ def build_slice_tasks(
         slice_module_pool[ind_head_module_name] = ind_head_module
         slice_actions.extend(
             [
-                {
-                    "name": ind_head_dropout_module_name,
-                    "module": ind_head_dropout_module_name,
-                    "inputs": [
+                Action(
+                    name=ind_head_dropout_module_name,
+                    module=ind_head_dropout_module_name,
+                    inputs=[
                         (
                             ind_head_dropout_module_input_name,
                             ind_head_dropout_module_input_idx,
                         )
                     ],
-                },
-                {
-                    "name": ind_head_module_name,
-                    "module": ind_head_module_name,
-                    "inputs": [(ind_head_dropout_module_name, 0)],
-                },
+                ),
+                Action(
+                    name=ind_head_module_name,
+                    module=ind_head_module_name,
+                    inputs=[(ind_head_dropout_module_name, 0)],
+                ),
             ]
         )
 
@@ -209,16 +209,16 @@ def build_slice_tasks(
         pred_task_flow = [action for action in base_task_task_flow]
         pred_task_flow.extend(
             [
-                {
-                    "name": pred_transform_module_name,
-                    "module": pred_transform_module_name,
-                    "inputs": base_task_predictor_action["inputs"],
-                },
-                {
-                    "name": pred_head_module_name,
-                    "module": shared_pred_head_module_name,
-                    "inputs": [(pred_transform_module_name, 0)],
-                },
+                Action(
+                    name=pred_transform_module_name,
+                    module=pred_transform_module_name,
+                    inputs=base_task_predictor_action.inputs,
+                ),
+                Action(
+                    name=pred_head_module_name,
+                    module=shared_pred_head_module_name,
+                    inputs=[(pred_transform_module_name, 0)],
+                ),
             ]
         )
 
@@ -226,16 +226,16 @@ def build_slice_tasks(
         slice_module_pool[pred_transform_module_name] = pred_transform_module
         slice_actions.extend(
             [
-                {
-                    "name": pred_transform_module_name,
-                    "module": pred_transform_module_name,
-                    "inputs": base_task_predictor_action["inputs"],
-                },
-                {
-                    "name": pred_head_module_name,
-                    "module": shared_pred_head_module_name,
-                    "inputs": [(pred_transform_module_name, 0)],
-                },
+                Action(
+                    name=pred_transform_module_name,
+                    module=pred_transform_module_name,
+                    inputs=base_task_predictor_action.inputs,
+                ),
+                Action(
+                    name=pred_head_module_name,
+                    module=shared_pred_head_module_name,
+                    inputs=[(pred_transform_module_name, 0)],
+                ),
             ]
         )
 
@@ -286,16 +286,16 @@ def build_slice_tasks(
 
     # Create task_flow
     master_task_flow = slice_actions + [
-        {
-            "name": master_attention_module_name,
-            "module": master_attention_module_name,
-            "inputs": [],  # type: ignore
-        },
-        {
-            "name": master_head_module_name,
-            "module": master_head_module_name,
-            "inputs": [(master_attention_module_name, 0)],
-        },
+        Action(
+            name=master_attention_module_name,
+            module=master_attention_module_name,
+            inputs=[],  # type: ignore
+        ),
+        Action(
+            name=master_head_module_name,
+            module=master_head_module_name,
+            inputs=[(master_attention_module_name, 0)],
+        ),
     ]
 
     tasks.append(

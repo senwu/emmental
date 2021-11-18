@@ -1,12 +1,10 @@
 """Emmental round robin scheduler."""
 import random
-from typing import Dict, Iterator, List, Tuple, Union
-
-from torch import Tensor
+from typing import Iterator, List, Union
 
 from emmental.data import EmmentalDataLoader
 from emmental.model import EmmentalModel
-from emmental.schedulers.scheduler import Scheduler
+from emmental.schedulers.scheduler import Batch, Scheduler
 
 
 class RoundRobinScheduler(Scheduler):
@@ -43,16 +41,7 @@ class RoundRobinScheduler(Scheduler):
 
     def get_batches(
         self, dataloaders: List[EmmentalDataLoader], model: EmmentalModel = None
-    ) -> Iterator[
-        Tuple[
-            List[str],
-            Dict[str, Union[Tensor, List[str]]],
-            Dict[str, Tensor],
-            Dict[str, str],
-            str,
-            str,
-        ]
-    ]:
+    ) -> Iterator[Union[Batch, List[Batch]]]:
         """Generate batch generator from all dataloaders for one epoch.
 
         Args:
@@ -99,6 +88,11 @@ class RoundRobinScheduler(Scheduler):
                 X_dict = batch
                 Y_dict = None
 
-            yield X_dict[uid_name], X_dict, Y_dict, task_to_label_dicts[
-                data_loader_idx
-            ], data_names[data_loader_idx], splits[data_loader_idx]
+            yield Batch(
+                X_dict[uid_name],
+                X_dict,
+                Y_dict,
+                task_to_label_dicts[data_loader_idx],
+                data_names[data_loader_idx],
+                splits[data_loader_idx],
+            )
