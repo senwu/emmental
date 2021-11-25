@@ -1,5 +1,5 @@
-Unreleased_
------------
+0.1.0_ - 2021-11-24
+-------------------
 
 Deprecated
 ^^^^^^^^^^
@@ -441,13 +441,14 @@ Removed
 
 * `@senwu`_: Remove `checkpoint_clear` argument.
 
-.. _Unreleased: https://github.com/senwu/emmental/compare/v0.0.9...master
+.. _Unreleased: https://github.com/senwu/emmental/compare/v0.1.0...master
 .. _0.0.4: https://github.com/senwu/emmental/compare/v0.0.3...v0.0.4
 .. _0.0.5: https://github.com/senwu/emmental/compare/v0.0.4...v0.0.5
 .. _0.0.6: https://github.com/senwu/emmental/compare/v0.0.5...v0.0.6
 .. _0.0.7: https://github.com/senwu/emmental/compare/v0.0.6...v0.0.7
 .. _0.0.8: https://github.com/senwu/emmental/compare/v0.0.7...v0.0.8
 .. _0.0.9: https://github.com/senwu/emmental/compare/v0.0.8...v0.0.9
+.. _0.1.0: https://github.com/senwu/emmental/compare/v0.0.9...v0.1.0
 ..
   For convenience, all username links for contributors can be listed here
 
