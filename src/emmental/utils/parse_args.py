@@ -819,6 +819,13 @@ def parse_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     )
 
     logging_config.add_argument(
+        "--wandb_group_name",
+        type=nullable_string,
+        default=None,
+        help="Wandb group name",
+    )
+
+    logging_config.add_argument(
         "--wandb_run_name",
         type=nullable_string,
         default=None,
@@ -1087,6 +1094,7 @@ def parse_args_to_config(args: Namespace) -> Dict[str, Any]:
                 "writer": args.writer,
                 "write_loss_per_step": args.write_loss_per_step,
                 "wandb_project_name": args.wandb_project_name,
+                "wandb_group_name": args.wandb_group_name,
                 "wandb_run_name": args.wandb_run_name,
                 "wandb_watch_model": args.wandb_watch_model,
                 "wandb_model_watch_freq": args.wandb_model_watch_freq,
