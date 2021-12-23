@@ -2,6 +2,7 @@
 import json
 import random
 import string
+import typing
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -341,6 +342,8 @@ def random_string(length: int = 5) -> str:
     return "".join(random.choice(letters) for i in range(length))
 
 
+# Skip typing due to recursion; the output is correct type but intermediates are not
+@typing.no_type_check
 def convert_to_serializable_json(obj: Dict[str, Any]) -> Dict[str, Any]:
     """Covert a dict to a serializable json.
 
