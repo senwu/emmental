@@ -21,6 +21,7 @@ class WandbWriter(LogWriter):
             project=Meta.config["logging_config"]["writer_config"][
                 "wandb_project_name"
             ],
+            group=Meta.config["logging_config"]["write_config"]["wandb_group_name"],
             name=Meta.config["logging_config"]["writer_config"]["wandb_run_name"],
             config=convert_to_serializable_json(copy.deepcopy(Meta.config)),
         )
