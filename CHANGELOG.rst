@@ -1,6 +1,14 @@
-Unreleased_
------------
+0.1.1_ - 2022-01-11
+-------------------
 
+Fixed
+^^^^^
+
+* `@lorr1`_: Fix multiple wand issues.
+  (`#118 <https://github.com/senwu/emmental/pull/118>`_,
+  `#119 <https://github.com/senwu/emmental/pull/119>`_)
+* `@senwu`_: Fix scikit-learn version.
+  (`#120 <https://github.com/senwu/emmental/pull/120>`_)
 
 0.1.0_ - 2021-11-24
 -------------------
@@ -445,7 +453,7 @@ Removed
 
 * `@senwu`_: Remove `checkpoint_clear` argument.
 
-.. _Unreleased: https://github.com/senwu/emmental/compare/v0.1.0...master
+.. _Unreleased: https://github.com/senwu/emmental/compare/v0.1.1...main
 .. _0.0.4: https://github.com/senwu/emmental/compare/v0.0.3...v0.0.4
 .. _0.0.5: https://github.com/senwu/emmental/compare/v0.0.4...v0.0.5
 .. _0.0.6: https://github.com/senwu/emmental/compare/v0.0.5...v0.0.6
@@ -453,6 +461,7 @@ Removed
 .. _0.0.8: https://github.com/senwu/emmental/compare/v0.0.7...v0.0.8
 .. _0.0.9: https://github.com/senwu/emmental/compare/v0.0.8...v0.0.9
 .. _0.1.0: https://github.com/senwu/emmental/compare/v0.0.9...v0.1.0
+.. _0.1.1: https://github.com/senwu/emmental/compare/v0.1.0...v0.1.1
 ..
   For convenience, all username links for contributors can be listed here
 
