@@ -230,14 +230,10 @@ class Meta(object):
                 Meta.config["logging_config"]["evaluation_freq"]
             )
 
-        if (
-            Meta.config["logging_config"]["counter_unit"]
-            in [
-                "sample",
-                "batch",
-            ]
-            and isinstance(Meta.config["logging_config"]["evaluation_freq"], float)
-        ):
+        if Meta.config["logging_config"]["counter_unit"] in [
+            "sample",
+            "batch",
+        ] and isinstance(Meta.config["logging_config"]["evaluation_freq"], float):
             original_evaluation_freq = Meta.config["logging_config"]["evaluation_freq"]
             new_evaluation_freq = max(
                 1, math.ceil(Meta.config["logging_config"]["evaluation_freq"])

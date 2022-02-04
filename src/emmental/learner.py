@@ -1,7 +1,6 @@
 """Emmental learner."""
 import collections
 import copy
-import importlib
 import logging
 import math
 import time
@@ -16,6 +15,7 @@ from numpy import ndarray
 from torch import optim as optim
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader, DistributedSampler
+from tqdm.auto import tqdm
 
 from emmental.data import EmmentalDataLoader
 from emmental.logging import LoggingManager
@@ -25,11 +25,6 @@ from emmental.optimizers.bert_adam import BertAdam
 from emmental.schedulers import SCHEDULERS
 from emmental.schedulers.scheduler import Scheduler
 from emmental.utils.utils import construct_identifier, prob_to_pred
-
-if importlib.util.find_spec("ipywidgets") is not None:
-    from tqdm.auto import tqdm
-else:
-    from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 

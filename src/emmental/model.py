@@ -1,5 +1,4 @@
 """Emmental model."""
-import importlib
 import itertools
 import logging
 import os
@@ -12,6 +11,7 @@ import torch
 from numpy import ndarray
 from torch import Tensor, nn
 from torch.nn import ModuleDict
+from tqdm.auto import tqdm
 
 from emmental.data import EmmentalDataLoader
 from emmental.meta import Meta
@@ -23,11 +23,6 @@ from emmental.utils.utils import (
     move_to_device,
     prob_to_pred,
 )
-
-if importlib.util.find_spec("ipywidgets") is not None:
-    from tqdm.auto import tqdm
-else:
-    from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +51,7 @@ class EmmentalModel(nn.Module):
         self.loss_funcs: Dict[str, Callable] = dict()
         self.output_funcs: Dict[str, Callable] = dict()
         self.scorers: Dict[str, Scorer] = dict()
+        self.sample_scorers: Dict[str, Scorer] = dict()
         self.action_outputs: Dict[
             str, Optional[List[Union[Tuple[str, str], Tuple[str, int]]]]
         ] = dict()
@@ -183,6 +179,8 @@ class EmmentalModel(nn.Module):
         self.module_device.update(task.module_device)
         # Collect scorer
         self.scorers[task.name] = task.scorer
+        # Collect sample scorer
+        self.sample_scorers[task.name] = task.sample_scorer
         # Collect weight
         self.task_weights[task.name] = task.weight
         # Collect require prob for eval
@@ -215,6 +213,8 @@ class EmmentalModel(nn.Module):
         self.module_device.update(task.module_device)
         # Update scorer
         self.scorers[task.name] = task.scorer
+        # Update sample scorer
+        self.sample_scorers[task.name] = task.sample_scorer
         # Update weight
         self.task_weights[task.name] = task.weight
         # Update require prob for eval
@@ -246,6 +246,7 @@ class EmmentalModel(nn.Module):
         del self.output_funcs[task_name]
         del self.action_outputs[task_name]
         del self.scorers[task_name]
+        del self.sample_scorers[task_name]
         del self.task_weights[task_name]
         del self.require_prob_for_evals[task_name]
         del self.require_pred_for_evals[task_name]
@@ -458,6 +459,7 @@ class EmmentalModel(nn.Module):
         return_probs: bool = True,
         return_preds: bool = False,
         return_action_outputs: bool = False,
+        return_sample_scores: bool = False,
     ) -> Dict[str, Any]:
         """Predict from dataloader.
 
@@ -467,7 +469,8 @@ class EmmentalModel(nn.Module):
           return_probs: Whether return probs or not, defaults to True.
           return_preds: Whether return predictions or not, defaults to False.
           return_action_outputs: Whether return action_outputs or not,
-          defaults to False.
+            defaults to False.
+          return_sample_scores: Whether return sample scores or not, default to False.
 
         Returns:
           The result dict.
@@ -492,6 +495,9 @@ class EmmentalModel(nn.Module):
         )
         gold_dict: Dict[str, List[Union[ndarray, int, float]]] = (
             defaultdict(list) if has_y_dict else None
+        )
+        sample_score_dict: Dict[str, Dict[str, List[Union[ndarray, int, float]]]] = (
+            defaultdict(lambda: defaultdict(list)) if return_sample_scores else None
         )
 
         with torch.no_grad():
@@ -520,7 +526,9 @@ class EmmentalModel(nn.Module):
                         dataloader.task_to_label_dict,
                         return_loss=return_loss,
                         return_action_outputs=return_action_outputs,
-                        return_probs=return_probs or return_preds,
+                        return_probs=return_probs
+                        or return_preds
+                        or return_sample_scores,
                     )
                 else:
                     (
@@ -535,7 +543,9 @@ class EmmentalModel(nn.Module):
                         dataloader.task_to_label_dict,
                         return_loss=return_loss,
                         return_action_outputs=return_action_outputs,
-                        return_probs=return_probs or return_preds,
+                        return_probs=return_probs
+                        or return_preds
+                        or return_sample_scores,
                     )
                     out_bdict = None
                 for task_name in uid_bdict.keys():
@@ -559,8 +569,24 @@ class EmmentalModel(nn.Module):
                         pred_dict[task_name].extend(  # type: ignore
                             prob_to_pred(prob_bdict[task_name])
                         )
-                    if has_y_dict:
+                    if has_y_dict and not return_sample_scores:
                         gold_dict[task_name].extend(gold_bdict[task_name])
+
+                    if return_sample_scores and self.sample_scorers[task_name]:
+                        for metric_name, metric_score in (
+                            self.sample_scorers[task_name]
+                            .score(
+                                gold_bdict[task_name],
+                                prob_bdict[task_name],
+                                prob_to_pred(prob_bdict[task_name]),
+                                uid_bdict[task_name],
+                                return_sample_scores=True,
+                            )
+                            .items()
+                        ):
+                            sample_score_dict[task_name][metric_name].extend(
+                                metric_score  # type: ignore
+                            )
                 if return_action_outputs and out_bdict:
                     for task_name in out_bdict.keys():
                         for action_name in out_bdict[task_name].keys():
@@ -576,9 +602,11 @@ class EmmentalModel(nn.Module):
 
         res = {
             "uids": uid_dict,
-            "golds": gold_dict,
             "losses": loss_dict,
         }
+
+        if not return_sample_scores:
+            res["golds"] = gold_dict
 
         if return_probs:
             for task_name in prob_dict.keys():
@@ -592,6 +620,9 @@ class EmmentalModel(nn.Module):
 
         if return_action_outputs:
             res["outputs"] = out_dict
+
+        if return_sample_scores:
+            res["sample_scores"] = sample_score_dict
 
         return res
 
@@ -625,16 +656,22 @@ class EmmentalModel(nn.Module):
         for dataloader in dataloaders:
             return_probs = False
             return_preds = False
+            return_sample_scores = False
 
             for task_name in dataloader.task_to_label_dict:
                 return_probs = return_probs or self.require_prob_for_evals[task_name]
                 return_preds = return_preds or self.require_pred_for_evals[task_name]
-
+                return_sample_scores = (
+                    return_sample_scores or self.sample_scorers[task_name] is not None
+                )
+                return_probs = return_probs and not return_sample_scores
+                return_preds = return_preds and not return_sample_scores
             predictions = self.predict(
                 dataloader,
                 return_probs=return_probs,
                 return_preds=return_preds,
                 return_action_outputs=False,
+                return_sample_scores=return_sample_scores,
             )
             for task_name in predictions["uids"].keys():
                 # Store the loss
@@ -648,14 +685,18 @@ class EmmentalModel(nn.Module):
                     macro_loss_dict[dataloader.split].append(
                         metric_score_dict[identifier]
                     )
-
                 # Store the task specific metric score
                 if self.scorers[task_name]:
                     metric_score = self.scorers[task_name].score(
-                        predictions["golds"][task_name],
+                        predictions["golds"][task_name]
+                        if not return_sample_scores
+                        else None,
                         predictions["probs"][task_name] if return_probs else None,
                         predictions["preds"][task_name] if return_preds else None,
                         predictions["uids"][task_name],
+                        predictions["sample_scores"][task_name]
+                        if return_sample_scores
+                        else None,
                     )
 
                     for metric_name, metric_value in metric_score.items():

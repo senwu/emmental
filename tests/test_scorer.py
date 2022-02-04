@@ -17,7 +17,7 @@ def test_scorer(caplog):
         [[0.2, 0.8], [0.4, 0.6], [0.1, 0.9], [0.3, 0.7], [0.3, 0.7], [0.8, 0.2]]
     )
 
-    def sum(gold, probs, preds, uids):
+    def sum(gold, probs, preds, uids, sample_scores, return_sample_scores):
         return np.sum(preds)
 
     scorer = Scorer(
