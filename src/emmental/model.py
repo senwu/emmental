@@ -454,7 +454,11 @@ class EmmentalModel(nn.Module):
 
     @torch.no_grad()
     def save_preds_to_numpy(
-        self, dataloader: EmmentalDataLoader, filepath, KEY_DELIMITER, save_bins=False
+        self,
+        dataloader: EmmentalDataLoader,
+        filepath: str,
+        KEY_DELIMITER: str,
+        save_bins: bool = False,
     ) -> Dict[str, Any]:
         """Predict from dataloader and save to numpys in batches.
 
