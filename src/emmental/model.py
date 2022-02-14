@@ -456,7 +456,17 @@ class EmmentalModel(nn.Module):
     def save_preds_to_numpy(
         self, dataloader: EmmentalDataLoader, filepath, KEY_DELIMITER, save_bins=False
     ) -> Dict[str, Any]:
-        """Predict from dataloader and save to numpys in batches."""
+        """Predict from dataloader and save to numpys in batches.
+
+         Args:
+          dataloader: The dataloader to predict.
+          filepath: File path to save the predicted arrays.
+          KEY_DELIMITER: delimiter that separates split, patient ID, and slice number.
+          save_bins: Whether to save the binarized predictions.
+
+        Returns:
+          None.
+        """
         self.eval()
 
         # Check if Y_dict exists
