@@ -539,10 +539,10 @@ class EmmentalModel(nn.Module):
                 pred_bin = []
                 for slice_bin_path in sorted_bin_paths:
                     pred_bin += [np.load(slice_bin_path)]
-                pred_bin = np.stack(pred_bin, 2)
+                pred_bin = np.stack(pred_bin, 2).astype("float16")
                 np.save(
                     os.path.join(filepath, pid + "_binarized.npy"),
-                    pred_bin.astype("float16"),
+                    pred_bin,
                 )
                 for slice_bin_path in sorted_bin_paths:
                     os.remove(slice_bin_path)
@@ -561,8 +561,6 @@ class EmmentalModel(nn.Module):
             np.save(os.path.join(filepath, pid + "_seg.npy"), pred_seg)
             for slice_seg_path in sorted_seg_paths:
                 os.remove(slice_seg_path)
-
-        return
 
     @torch.no_grad()
     def predict(
