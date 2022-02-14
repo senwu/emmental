@@ -536,7 +536,7 @@ class EmmentalModel(nn.Module):
                 pred_bin = []
                 for slice_bin_path in sorted_bin_paths:
                     pred_bin += [np.load(slice_bin_path)]
-                pred_bin = np.stack(pred_bin, 2).astype("float16")
+                pred_bin = np.stack(pred_bin, 2).astype("float16")  # type: ignore
                 np.save(
                     os.path.join(filepath, pid + "_binarized.npy"),
                     pred_bin,
@@ -554,7 +554,7 @@ class EmmentalModel(nn.Module):
             pred_seg = []
             for slice_seg_path in sorted_seg_paths:
                 pred_seg += [np.load(slice_seg_path)]
-            pred_seg = np.stack(pred_seg, 2)
+            pred_seg = np.stack(pred_seg, 2).astype("float16")  # type: ignore
             np.save(os.path.join(filepath, pid + "_seg.npy"), pred_seg)
             for slice_seg_path in sorted_seg_paths:
                 os.remove(slice_seg_path)
