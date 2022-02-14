@@ -459,17 +459,14 @@ class EmmentalModel(nn.Module):
         filepath: str,
         KEY_DELIMITER: str,
         save_bins: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> None:
         """Predict from dataloader and save to numpys in batches.
 
-         Args:
-          dataloader: The dataloader to predict.
-          filepath: File path to save the predicted arrays.
-          KEY_DELIMITER: delimiter that separates split, patient ID, and slice number.
-          save_bins: Whether to save the binarized predictions.
-
-        Returns:
-          None.
+        Args:
+         dataloader: The dataloader to predict.
+         filepath: File path to save the predicted arrays.
+         KEY_DELIMITER: delimiter that separates split, patient ID, and slice number.
+         save_bins: Whether to save the binarized predictions.
         """
         self.eval()
 
