@@ -1,8 +1,8 @@
 """Emmental model."""
+import glob
 import itertools
 import logging
 import os
-import glob
 from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
@@ -24,7 +24,6 @@ from emmental.utils.utils import (
     move_to_device,
     prob_to_pred,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -455,14 +454,9 @@ class EmmentalModel(nn.Module):
 
     @torch.no_grad()
     def save_preds_to_numpy(
-        self,
-        dataloader: EmmentalDataLoader,
-        filepath,
-        KEY_DELIMITER,
-        save_bins = False
+        self, dataloader: EmmentalDataLoader, filepath, KEY_DELIMITER, save_bins=False
     ) -> Dict[str, Any]:
-        """Predict from dataloader and save to numpys in batches.
-        """
+        """Predict from dataloader and save to numpys in batches."""
         self.eval()
 
         # Check if Y_dict exists
@@ -495,52 +489,67 @@ class EmmentalModel(nn.Module):
                     return_action_outputs=False,
                     return_probs=True,
                 )
-                out_bdict = None
-                
+
                 for task_name in uid_bdict.keys():
-                    
+
                     uids = uid_bdict[task_name]
                     probs = array_to_numpy(prob_bdict[task_name])
                     preds = array_to_numpy(prob_to_pred(prob_bdict[task_name]))
-                    
-                    if not os.path.exists(filepath): os.makedirs(filepath)
-                        
-                    for uid, prob, pred in zip(uids,probs,preds):      
-                        
-                        save_path = os.path.join(filepath, uid+'_seg.npy')
-                        np.save(save_path, prob.astype('float32'))
+
+                    if not os.path.exists(filepath):
+                        os.makedirs(filepath)
+
+                    for uid, prob, pred in zip(uids, probs, preds):
+
+                        save_path = os.path.join(filepath, uid + "_seg.npy")
+                        np.save(save_path, prob.astype("float32"))
 
                         if save_bins:
-                            save_path = os.path.join(filepath, uid+'_binarized.npy')
-                            np.save(save_path, pred.astype('float32'))
-                        
-        # Combine slices into volumes        
-        all_binarized_paths = glob.glob(os.path.join(filepath,'*binarized*'))
-        all_seg_paths = glob.glob(os.path.join(filepath,'*seg*'))
+                            save_path = os.path.join(filepath, uid + "_binarized.npy")
+                            np.save(save_path, pred.astype("float32"))
+
+        # Combine slices into volumes
+        all_binarized_paths = glob.glob(os.path.join(filepath, "*binarized*"))
+        all_seg_paths = glob.glob(os.path.join(filepath, "*seg*"))
         all_pids = set([p.split(KEY_DELIMITER)[-2] for p in all_seg_paths])
 
         for pid in all_pids:
             if save_bins:
-                slice_bin_paths = [p for p in all_binarized_paths if p.split(KEY_DELIMITER)[-2]==pid]
-                slice_bin_numbers = [int(p.split('_')[-2]) for p in slice_bin_paths]
-                sorted_bin_paths = [p for _, p in sorted(zip(slice_bin_numbers,slice_bin_paths))]
+                slice_bin_paths = [
+                    p for p in all_binarized_paths if p.split(KEY_DELIMITER)[-2] == pid
+                ]
+                slice_bin_numbers = [int(p.split("_")[-2]) for p in slice_bin_paths]
+                sorted_bin_paths = [
+                    p for _, p in sorted(zip(slice_bin_numbers, slice_bin_paths))
+                ]
                 pred_bin = []
-                for slice_bin_path in sorted_bin_paths: pred_bin += [np.load(slice_bin_path)]
-                pred_bin = np.stack(pred_bin,2)
-                np.save(os.path.join(filepath, pid+'_binarized.npy'), pred_bin.astype('float16'))
-                for slice_bin_path in sorted_bin_paths: os.remove(slice_bin_path)
+                for slice_bin_path in sorted_bin_paths:
+                    pred_bin += [np.load(slice_bin_path)]
+                pred_bin = np.stack(pred_bin, 2)
+                np.save(
+                    os.path.join(filepath, pid + "_binarized.npy"),
+                    pred_bin.astype("float16"),
+                )
+                for slice_bin_path in sorted_bin_paths:
+                    os.remove(slice_bin_path)
 
-            slice_seg_paths = [p for p in all_seg_paths if p.split(KEY_DELIMITER)[-2]==pid]
-            slice_seg_numbers = [int(p.split('_')[-2]) for p in slice_seg_paths]
-            sorted_seg_paths = [p for _, p in sorted(zip(slice_seg_numbers,slice_seg_paths))]
+            slice_seg_paths = [
+                p for p in all_seg_paths if p.split(KEY_DELIMITER)[-2] == pid
+            ]
+            slice_seg_numbers = [int(p.split("_")[-2]) for p in slice_seg_paths]
+            sorted_seg_paths = [
+                p for _, p in sorted(zip(slice_seg_numbers, slice_seg_paths))
+            ]
             pred_seg = []
-            for slice_seg_path in sorted_seg_paths: pred_seg += [np.load(slice_seg_path)]
-            pred_seg = np.stack(pred_seg,2)
-            np.save(os.path.join(filepath, pid+'_seg.npy'), pred_seg)
-            for slice_seg_path in sorted_seg_paths: os.remove(slice_seg_path)
-            
-        return 
-    
+            for slice_seg_path in sorted_seg_paths:
+                pred_seg += [np.load(slice_seg_path)]
+            pred_seg = np.stack(pred_seg, 2)
+            np.save(os.path.join(filepath, pid + "_seg.npy"), pred_seg)
+            for slice_seg_path in sorted_seg_paths:
+                os.remove(slice_seg_path)
+
+        return
+
     @torch.no_grad()
     def predict(
         self,
