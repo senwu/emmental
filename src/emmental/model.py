@@ -7,7 +7,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
-import h5py
+import h5py  # type: ignore
 import numpy as np
 import torch
 from numpy import ndarray
@@ -475,7 +475,7 @@ class EmmentalModel(nn.Module):
         # Check if Y_dict exists
         has_y_dict = False if isinstance(dataloader.dataset[0], dict) else True
         all_sl_uids = []
-        
+
         # Save all slices
         with torch.no_grad():
             for bdict in tqdm(
@@ -513,14 +513,23 @@ class EmmentalModel(nn.Module):
                     if not os.path.exists(filepath):
                         os.makedirs(filepath)
 
-                    with h5py.File(os.path.join(filepath,split+'_images.h5'), mode="a") as h5file:
+                    with h5py.File(
+                        os.path.join(filepath, split + "_images.h5"), mode="a"
+                    ) as h5file:
                         for uid, prob, pred in zip(uids, probs, preds):
-                        
-                            h5file.create_dataset(name=uid+'/Seg', data=prob.astype('float16'), dtype="float16", shape=prob.shape)
+
+                            h5file.create_dataset(
+                                name=uid + "/Seg",
+                                data=prob.astype("float16"),
+                                dtype="float16",
+                                shape=prob.shape,
+                            )
                             all_sl_uids += [uid]
-                            
+
                             if save_bins:
-                                raise ValueError('Saving binary code not updated for h5.')
+                                raise ValueError(
+                                    "Saving binary code not updated for h5."
+                                )
 
         # Combine slices into volumes
         all_pids = set([p.split(KEY_DELIMITER)[-2] for p in all_sl_uids])
@@ -530,21 +539,28 @@ class EmmentalModel(nn.Module):
             slice_seg_paths = [
                 p for p in all_sl_uids if p.split(KEY_DELIMITER)[-2] == pid
             ]
-            slice_seg_numbers = [int(p.split(KEY_DELIMITER)[-1]) for p in slice_seg_paths]
+            slice_seg_numbers = [
+                int(p.split(KEY_DELIMITER)[-1]) for p in slice_seg_paths
+            ]
             sorted_seg_paths = [
                 p for _, p in sorted(zip(slice_seg_numbers, slice_seg_paths))
             ]
             pred_seg = []
-            with h5py.File(os.path.join(filepath,split+'_images.h5'), mode="a") as h5file:
+            with h5py.File(
+                os.path.join(filepath, split + "_images.h5"), mode="a"
+            ) as h5file:
                 for slice_seg_path in sorted_seg_paths:
-                    pred_seg += [h5file[slice_seg_path]['Seg'][:]]
+                    pred_seg += [h5file[slice_seg_path]["Seg"][:]]
                 pred_seg = np.stack(pred_seg, 2).astype("float16")  # type: ignore
-                h5file.create_dataset(name=pid+'/Seg', data=pred_seg, dtype="float16", shape=pred_seg.shape)
+                h5file.create_dataset(
+                    name=pid + "/Seg",
+                    data=pred_seg,
+                    dtype="float16",
+                    shape=pred_seg.shape,  # type: ignore
+                )
                 for slice_seg_path in sorted_seg_paths:
                     del h5file[slice_seg_path]
-                    
-                    
-    
+
     @torch.no_grad()
     def save_preds_to_numpy(
         self,
