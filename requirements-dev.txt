@@ -1,4 +1,4 @@
-black>=21.7b0
+black>=22.1.0
 flake8>=3.9.2
 flake8-docstrings
 mypy
@@ -8,5 +8,4 @@ pre-commit>=2.14.0
 pytest
 sphinx>=3.0.0
 sphinx_rtd_theme
-sphinxcontrib-napoleon
 sphinx_autodoc_typehints

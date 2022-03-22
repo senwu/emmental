@@ -40,7 +40,7 @@ needs_sphinx = "3.0.0"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
-    "sphinxcontrib.napoleon",
+    "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
 ]
 

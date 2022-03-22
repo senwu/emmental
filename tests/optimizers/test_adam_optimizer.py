@@ -28,7 +28,12 @@ def test_adam_optimizer(caplog):
     emmental.Meta.update_config(config)
     emmental_learner._set_optimizer(model)
 
-    assert emmental_learner.optimizer.defaults == {
+    optimizer_config = emmental_learner.optimizer.defaults
+
+    if "maximize" in optimizer_config:
+        del optimizer_config["maximize"]
+
+    assert optimizer_config == {
         "lr": 0.001,
         "betas": (0.9, 0.999),
         "eps": 1e-08,
@@ -54,7 +59,12 @@ def test_adam_optimizer(caplog):
     emmental.Meta.update_config(config)
     emmental_learner._set_optimizer(model)
 
-    assert emmental_learner.optimizer.defaults == {
+    optimizer_config = emmental_learner.optimizer.defaults
+
+    if "maximize" in optimizer_config:
+        del optimizer_config["maximize"]
+
+    assert optimizer_config == {
         "lr": 0.02,
         "betas": (0.9, 0.99),
         "eps": 1e-05,
