@@ -542,6 +542,8 @@ class EmmentalModel(nn.Module):
                 h5file.create_dataset(name=pid+'/Seg', data=pred_seg, dtype="float16", shape=pred_seg.shape)
                 for slice_seg_path in sorted_seg_paths:
                     del h5file[slice_seg_path]
+                    
+                    
     
     @torch.no_grad()
     def save_preds_to_numpy(
