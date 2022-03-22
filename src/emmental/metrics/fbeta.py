@@ -37,8 +37,8 @@ def fbeta_scorer(
     recall = recall_scorer(golds, probs, preds, uids, pos_label)["recall"]
 
     fbeta = (
-        (1 + beta ** 2) * (precision * recall) / ((beta ** 2 * precision) + recall)
-        if (beta ** 2 * precision) + recall > 0
+        (1 + beta**2) * (precision * recall) / ((beta**2 * precision) + recall)
+        if (beta**2 * precision) + recall > 0
         else 0.0
     )
 

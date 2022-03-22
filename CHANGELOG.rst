@@ -1,3 +1,12 @@
+Unreleased_
+-----------
+
+Added
+^^^^^
+
+* `@senwu`_: Support python 3.10 (`#123 <https://github.com/senwu/emmental/pull/123>`_)
+
+
 0.1.1_ - 2022-01-11
 -------------------
 

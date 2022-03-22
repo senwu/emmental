@@ -28,7 +28,12 @@ def test_sgd_optimizer(caplog):
     emmental.Meta.update_config(config)
     emmental_learner._set_optimizer(model)
 
-    assert emmental_learner.optimizer.defaults == {
+    optimizer_config = emmental_learner.optimizer.defaults
+
+    if "maximize" in optimizer_config:
+        del optimizer_config["maximize"]
+
+    assert optimizer_config == {
         "lr": 0.001,
         "momentum": 0,
         "dampening": 0,
@@ -54,7 +59,12 @@ def test_sgd_optimizer(caplog):
     emmental.Meta.update_config(config)
     emmental_learner._set_optimizer(model)
 
-    assert emmental_learner.optimizer.defaults == {
+    optimizer_config = emmental_learner.optimizer.defaults
+
+    if "maximize" in optimizer_config:
+        del optimizer_config["maximize"]
+
+    assert optimizer_config == {
         "lr": 0.02,
         "momentum": 0.1,
         "dampening": 0,
