@@ -7,6 +7,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
+import h5py
 import numpy as np
 import torch
 from numpy import ndarray
@@ -452,6 +453,96 @@ class EmmentalModel(nn.Module):
         else:
             return uid_dict, loss_dict, prob_dict, gold_dict
 
+    @torch.no_grad()
+    def save_preds_to_h5(
+        self,
+        dataloader: EmmentalDataLoader,
+        filepath: str,
+        split: str,
+        KEY_DELIMITER: str,
+        save_bins: bool = False,
+    ) -> None:
+        """Predict from dataloader and save to numpys in batches.
+
+        Args:
+         dataloader: The dataloader to predict.
+         filepath: File path to save the predicted arrays.
+         KEY_DELIMITER: delimiter that separates split, patient ID, and slice number.
+         save_bins: Whether to save the binarized predictions.
+        """
+        self.eval()
+
+        # Check if Y_dict exists
+        has_y_dict = False if isinstance(dataloader.dataset[0], dict) else True
+        all_sl_uids = []
+        
+        # Save all slices
+        with torch.no_grad():
+            for bdict in tqdm(
+                dataloader,
+                total=len(dataloader),
+                desc=f"Evaluating {dataloader.data_name} ({dataloader.split})",
+            ):
+                if has_y_dict:
+                    X_bdict, Y_bdict = bdict
+                else:
+                    X_bdict = bdict
+                    Y_bdict = None
+
+                (
+                    uid_bdict,
+                    loss_bdict,
+                    prob_bdict,
+                    gold_bdict,
+                ) = self.forward(  # type: ignore
+                    X_bdict[dataloader.uid],
+                    X_bdict,
+                    Y_bdict,
+                    dataloader.task_to_label_dict,
+                    return_loss=False,
+                    return_action_outputs=False,
+                    return_probs=True,
+                )
+
+                for task_name in uid_bdict.keys():
+
+                    uids = uid_bdict[task_name]
+                    probs = array_to_numpy(prob_bdict[task_name])
+                    preds = array_to_numpy(prob_to_pred(prob_bdict[task_name]))
+
+                    if not os.path.exists(filepath):
+                        os.makedirs(filepath)
+
+                    with h5py.File(os.path.join(filepath,split+'_images.h5'), mode="a") as h5file:
+                        for uid, prob, pred in zip(uids, probs, preds):
+                        
+                            h5file.create_dataset(name=uid+'/Seg', data=prob.astype('float16'), dtype="float16", shape=prob.shape)
+                            all_sl_uids += [uid]
+                            
+                            if save_bins:
+                                raise ValueError('Saving binary code not updated for h5.')
+
+        # Combine slices into volumes
+        all_pids = set([p.split(KEY_DELIMITER)[-2] for p in all_sl_uids])
+
+        for pid in all_pids:
+
+            slice_seg_paths = [
+                p for p in all_sl_uids if p.split(KEY_DELIMITER)[-2] == pid
+            ]
+            slice_seg_numbers = [int(p.split(KEY_DELIMITER)[-1]) for p in slice_seg_paths]
+            sorted_seg_paths = [
+                p for _, p in sorted(zip(slice_seg_numbers, slice_seg_paths))
+            ]
+            pred_seg = []
+            with h5py.File(os.path.join(filepath,split+'_images.h5'), mode="a") as h5file:
+                for slice_seg_path in sorted_seg_paths:
+                    pred_seg += [h5file[slice_seg_path]['Seg'][:]]
+                pred_seg = np.stack(pred_seg, 2).astype("float16")  # type: ignore
+                h5file.create_dataset(name=pid+'/Seg', data=pred_seg, dtype="float16", shape=pred_seg.shape)
+                for slice_seg_path in sorted_seg_paths:
+                    del h5file[slice_seg_path]
+    
     @torch.no_grad()
     def save_preds_to_numpy(
         self,
