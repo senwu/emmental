@@ -376,10 +376,7 @@ class EmmentalLearner(object):
         valid_dataloaders = [
             dataloader for dataloader in dataloaders if dataloader.split in valid_split
         ]
-        if torch.distributed.is_initialized():
-            return model.module.score(valid_dataloaders)
-        else:
-            return model.score(valid_dataloaders)
+        return model.score(valid_dataloaders)
 
     def _logging(
         self,
@@ -399,6 +396,10 @@ class EmmentalLearner(object):
         """
         # Switch to eval mode for evaluation
         model.eval()
+
+        model_for_action = model
+        if torch.distributed.is_initialized():
+            model_for_action = model.module  # type: ignore
 
         metric_dict = dict()
 
@@ -420,7 +421,9 @@ class EmmentalLearner(object):
             # Log task specific metric
             metric_dict.update(
                 self._evaluate(
-                    model, dataloaders, Meta.config["learner_config"]["valid_split"]
+                    model_for_action,
+                    dataloaders,
+                    Meta.config["learner_config"]["valid_split"],
                 )
             )
 
@@ -443,7 +446,7 @@ class EmmentalLearner(object):
         # Checkpoint the model
         if self.logging_manager.trigger_checkpointing():
             self.logging_manager.checkpoint_model(
-                model, self.optimizer, self.lr_scheduler, metric_dict
+                model_for_action, self.optimizer, self.lr_scheduler, metric_dict
             )
 
             self.logging_manager.write_log(metric_dict)
