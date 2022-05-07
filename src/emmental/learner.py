@@ -376,7 +376,10 @@ class EmmentalLearner(object):
         valid_dataloaders = [
             dataloader for dataloader in dataloaders if dataloader.split in valid_split
         ]
-        return model.score(valid_dataloaders)
+        if torch.distributed.is_initialized():
+            return model.module.score(valid_dataloaders)
+        else:
+            return model.score(valid_dataloaders)
 
     def _logging(
         self,
@@ -652,16 +655,29 @@ class EmmentalLearner(object):
                 opt_level=Meta.config["learner_config"]["fp16_opt_level"],
             )
 
+        model_getter = model
+        any_cpu_device = torch.device("cpu") in model.module_device.values()
         # Multi-gpu training (after apex fp16 initialization)
         if (
             Meta.config["learner_config"]["local_rank"] == -1
             and Meta.config["model_config"]["dataparallel"]
         ):
-            model._to_dataparallel()
+            if any_cpu_device:
+                raise ValueError("Do not support CPU device with DP")
+            model = torch.nn.DataParallel(model)  # type: ignore
 
         # Distributed training (after apex fp16 initialization)
         if Meta.config["learner_config"]["local_rank"] != -1:
-            model._to_distributed_dataparallel()
+            # TODO support multiple device with DistributedDataParallel
+            if any_cpu_device:
+                raise ValueError("Do not support CPU device with DDP")
+            model = torch.nn.parallel.DistributedDataParallel(  # type: ignore
+                model,
+                device_ids=[Meta.config["learner_config"]["local_rank"]],
+                output_device=Meta.config["learner_config"]["local_rank"],
+                find_unused_parameters=True,
+            )
+            model_getter = model.module  # type: ignore
 
         # Set to training mode
         model.train()
@@ -737,7 +753,7 @@ class EmmentalLearner(object):
                             loss_dict[task_name].item() * len(uid_dict[task_name])
                             if len(loss_dict[task_name].size()) == 0
                             else torch.sum(loss_dict[task_name]).item()
-                        ) * model.task_weights[task_name]
+                        ) * model_getter.task_weights[task_name]
                         if (
                             Meta.config["learner_config"]["online_eval"]
                             and prob_dict
@@ -749,9 +765,11 @@ class EmmentalLearner(object):
                     # Calculate the average loss
                     loss = sum(
                         [
-                            model.task_weights[task_name] * task_loss
+                            model_getter.task_weights[task_name] * task_loss
                             if len(task_loss.size()) == 0
-                            else torch.mean(model.task_weights[task_name] * task_loss)
+                            else torch.mean(
+                                model_getter.task_weights[task_name] * task_loss
+                            )
                             for task_name, task_loss in loss_dict.items()
                         ]
                     )

@@ -108,35 +108,6 @@ class EmmentalModel(nn.Module):
                     logger.info(f"Moving {module_name} module to CPU.")
                 self.module_pool[module_name].to(torch.device("cpu"))
 
-    def _to_dataparallel(self) -> None:
-        default_device = self._get_default_device()
-
-        for module_name in self.module_pool.keys():
-            device = (
-                self.module_device[module_name]
-                if module_name in self.module_device
-                else default_device
-            )
-            if device != torch.device("cpu"):
-                self.module_pool[module_name] = torch.nn.DataParallel(
-                    self.module_pool[module_name]
-                )
-
-    def _to_distributed_dataparallel(self) -> None:
-        # TODO support multiple device with DistributedDataParallel
-        for key in self.module_pool.keys():
-            # Ensure there is some gradient parameter for DDP
-            if not any(p.requires_grad for p in self.module_pool[key].parameters()):
-                continue
-            self.module_pool[
-                key
-            ] = torch.nn.parallel.DistributedDataParallel(  # type: ignore
-                self.module_pool[key],
-                device_ids=[Meta.config["learner_config"]["local_rank"]],
-                output_device=Meta.config["learner_config"]["local_rank"],
-                find_unused_parameters=True,
-            )
-
     def add_tasks(self, tasks: Union[EmmentalTask, List[EmmentalTask]]) -> None:
         """Build the MTL network using all tasks.
 
