@@ -11,6 +11,8 @@ def spearman_correlation_scorer(
     probs: ndarray,
     preds: Optional[ndarray],
     uids: Optional[List[str]] = None,
+    sample_scores: Optional[Dict[str, float]] = None,
+    return_sample_scores: bool = False,
     return_pvalue: bool = False,
 ) -> Dict[str, float]:
     """Spearman rank-order correlation coefficient and the p-value.
@@ -20,11 +22,16 @@ def spearman_correlation_scorer(
       probs: Predicted probabilities.
       preds: Predicted values.
       uids: Unique ids, defaults to None.
+      sample_scores: Scores for each samples, defaults to None.
+      return_sample_scores: Whether return score for each sample, default to False.
       return_pvalue: Whether return pvalue or not, defaults to False.
 
     Returns:
       Spearman rank-order correlation coefficient with pvalue if return_pvalue is True.
     """
+    assert sample_scores is None
+    assert return_sample_scores is False
+
     probs = np.vstack(probs).squeeze()  # type: ignore
     correlation, pvalue = spearmanr(golds, probs)
 

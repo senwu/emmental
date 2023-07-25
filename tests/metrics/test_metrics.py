@@ -67,6 +67,36 @@ def test_accuracy(caplog):
 
     assert isequal(metric_dict, {"accuracy@2": 6})
 
+    metric_dict = accuracy_scorer(
+        PROB_GOLDS, PROBS, PREDS, return_sample_scores=True, topk=2
+    )
+    assert isequal(metric_dict, {"accuracy@2": np.array([1, 1, 1, 1, 1, 1])})
+
+    metric_dict = accuracy_scorer(
+        PROB_GOLDS,
+        PROBS,
+        PREDS,
+        sample_scores={"accuracy": [1, 1, 1, 1, 1, 0]},
+        normalize=False,
+    )
+    assert isequal(metric_dict, {"accuracy": 5})
+
+    metric_dict = accuracy_scorer(
+        PROB_GOLDS,
+        PROBS,
+        PREDS,
+        sample_scores={"accuracy@2": [1, 1, 1, 1, 0]},
+        topk=2,
+        normalize=True,
+    )
+    assert isequal(metric_dict, {"accuracy@2": 0.8})
+
+    metric_dict1 = accuracy_scorer(PROB_GOLDS, None, PREDS)
+    metric_dict2 = accuracy_scorer(PROB_GOLDS, None, PREDS, return_sample_scores=True)
+    metric_dict3 = accuracy_scorer(PROB_GOLDS, None, PREDS, sample_scores=metric_dict2)
+
+    assert isequal(metric_dict1, metric_dict3)
+
 
 def test_precision(caplog):
     """Unit test of precision_scorer."""
@@ -287,3 +317,13 @@ def test_accuracy_f1(caplog):
     metric_dict = accuracy_f1_scorer(PROB_GOLDS, None, PREDS)
 
     assert isequal(metric_dict, {"accuracy_f1": 0.5833333333333333})
+
+    metric_dict1 = accuracy_scorer(GOLDS, PROBS, PREDS, topk=2)
+    metric_dict2 = f1_scorer(GOLDS, PROBS, PREDS, pos_label=1)
+    metric_dict3 = accuracy_f1_scorer(GOLDS, PROBS, PREDS, pos_label=1, topk=2)
+
+    assert (
+        metric_dict1["accuracy@2"]
+        + metric_dict2["f1"]
+        - 2 * metric_dict3["accuracy@2_f1"]
+    ) < 1e-6

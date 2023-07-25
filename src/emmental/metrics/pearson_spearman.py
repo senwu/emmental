@@ -13,6 +13,8 @@ def pearson_spearman_scorer(
     probs: ndarray,
     preds: Optional[ndarray],
     uids: Optional[List[str]] = None,
+    sample_scores: Optional[Dict[str, float]] = None,
+    return_sample_scores: bool = False,
 ) -> Dict[str, float]:
     """Average of Pearson and Spearman rank-order correlation coefficients.
 
@@ -21,11 +23,16 @@ def pearson_spearman_scorer(
       probs: Predicted probabilities.
       preds: Predicted values.
       uids: Unique ids, defaults to None.
+      sample_scores: Scores for each samples, defaults to None.
+      return_sample_scores: Whether return score for each sample, default to False.
 
     Returns:
       The average of Pearson correlation coefficient and Spearman rank-order
       correlation coefficient.
     """
+    assert sample_scores is None
+    assert return_sample_scores is False
+
     metrics = dict()
     pearson_correlation = pearson_correlation_scorer(golds, probs, preds, uids)
     spearman_correlation = spearman_correlation_scorer(golds, probs, preds, uids)

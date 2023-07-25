@@ -1,5 +1,5 @@
 """Emmental model."""
-import importlib
+import glob
 import itertools
 import logging
 import os
@@ -7,11 +7,13 @@ from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
+import h5py  # type: ignore
 import numpy as np
 import torch
 from numpy import ndarray
 from torch import Tensor, nn
 from torch.nn import ModuleDict
+from tqdm.auto import tqdm
 
 from emmental.data import EmmentalDataLoader
 from emmental.meta import Meta
@@ -23,11 +25,6 @@ from emmental.utils.utils import (
     move_to_device,
     prob_to_pred,
 )
-
-if importlib.util.find_spec("ipywidgets") is not None:
-    from tqdm.auto import tqdm
-else:
-    from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +53,7 @@ class EmmentalModel(nn.Module):
         self.loss_funcs: Dict[str, Callable] = dict()
         self.output_funcs: Dict[str, Callable] = dict()
         self.scorers: Dict[str, Scorer] = dict()
+        self.sample_scorers: Dict[str, Scorer] = dict()
         self.action_outputs: Dict[
             str, Optional[List[Union[Tuple[str, str], Tuple[str, int]]]]
         ] = dict()
@@ -183,6 +181,8 @@ class EmmentalModel(nn.Module):
         self.module_device.update(task.module_device)
         # Collect scorer
         self.scorers[task.name] = task.scorer
+        # Collect sample scorer
+        self.sample_scorers[task.name] = task.sample_scorer
         # Collect weight
         self.task_weights[task.name] = task.weight
         # Collect require prob for eval
@@ -215,6 +215,8 @@ class EmmentalModel(nn.Module):
         self.module_device.update(task.module_device)
         # Update scorer
         self.scorers[task.name] = task.scorer
+        # Update sample scorer
+        self.sample_scorers[task.name] = task.sample_scorer
         # Update weight
         self.task_weights[task.name] = task.weight
         # Update require prob for eval
@@ -246,6 +248,7 @@ class EmmentalModel(nn.Module):
         del self.output_funcs[task_name]
         del self.action_outputs[task_name]
         del self.scorers[task_name]
+        del self.sample_scorers[task_name]
         del self.task_weights[task_name]
         del self.require_prob_for_evals[task_name]
         del self.require_pred_for_evals[task_name]
@@ -451,6 +454,221 @@ class EmmentalModel(nn.Module):
             return uid_dict, loss_dict, prob_dict, gold_dict
 
     @torch.no_grad()
+    def save_preds_to_h5(
+        self,
+        dataloader: EmmentalDataLoader,
+        filepath: str,
+        split: str,
+        KEY_DELIMITER: str,
+        save_bins: bool = False,
+    ) -> None:
+        """Predict from dataloader and save to numpys in batches.
+
+        Args:
+         dataloader: The dataloader to predict.
+         filepath: File path to save the predicted arrays.
+         KEY_DELIMITER: delimiter that separates split, patient ID, and slice number.
+         save_bins: Whether to save the binarized predictions.
+        """
+        self.eval()
+
+        # Check if Y_dict exists
+        has_y_dict = False if isinstance(dataloader.dataset[0], dict) else True
+        all_sl_uids = []
+
+        # Save all slices
+        with torch.no_grad():
+            for bdict in tqdm(
+                dataloader,
+                total=len(dataloader),
+                desc=f"Evaluating {dataloader.data_name} ({dataloader.split})",
+            ):
+                if has_y_dict:
+                    X_bdict, Y_bdict = bdict
+                else:
+                    X_bdict = bdict
+                    Y_bdict = None
+
+                (
+                    uid_bdict,
+                    loss_bdict,
+                    prob_bdict,
+                    gold_bdict,
+                ) = self.forward(  # type: ignore
+                    X_bdict[dataloader.uid],
+                    X_bdict,
+                    Y_bdict,
+                    dataloader.task_to_label_dict,
+                    return_loss=False,
+                    return_action_outputs=False,
+                    return_probs=True,
+                )
+
+                for task_name in uid_bdict.keys():
+
+                    uids = uid_bdict[task_name]
+                    probs = array_to_numpy(prob_bdict[task_name])
+                    preds = array_to_numpy(prob_to_pred(prob_bdict[task_name]))
+
+                    if not os.path.exists(filepath):
+                        os.makedirs(filepath)
+
+                    with h5py.File(
+                        os.path.join(filepath, split + "_images.h5"), mode="a"
+                    ) as h5file:
+                        for uid, prob, pred in zip(uids, probs, preds):
+
+                            h5file.create_dataset(
+                                name=uid + "/Seg",
+                                data=prob.astype("float16"),
+                                dtype="float16",
+                                shape=prob.shape,
+                            )
+                            all_sl_uids += [uid]
+
+                            if save_bins:
+                                raise ValueError(
+                                    "Saving binary code not updated for h5."
+                                )
+
+        # Combine slices into volumes
+        all_pids = set([p.split(KEY_DELIMITER)[-2] for p in all_sl_uids])
+
+        for pid in all_pids:
+
+            slice_seg_paths = [
+                p for p in all_sl_uids if p.split(KEY_DELIMITER)[-2] == pid
+            ]
+            slice_seg_numbers = [
+                int(p.split(KEY_DELIMITER)[-1]) for p in slice_seg_paths
+            ]
+            sorted_seg_paths = [
+                p for _, p in sorted(zip(slice_seg_numbers, slice_seg_paths))
+            ]
+            pred_seg = []
+            with h5py.File(
+                os.path.join(filepath, split + "_images.h5"), mode="a"
+            ) as h5file:
+                for slice_seg_path in sorted_seg_paths:
+                    pred_seg += [h5file[slice_seg_path]["Seg"][:]]
+                pred_seg = np.stack(pred_seg, 2).astype("float16")  # type: ignore
+                h5file.create_dataset(
+                    name=pid + "/Seg",
+                    data=pred_seg,
+                    dtype="float16",
+                    shape=pred_seg.shape,  # type: ignore
+                )
+                for slice_seg_path in sorted_seg_paths:
+                    del h5file[slice_seg_path]
+
+    @torch.no_grad()
+    def save_preds_to_numpy(
+        self,
+        dataloader: EmmentalDataLoader,
+        filepath: str,
+        KEY_DELIMITER: str,
+        save_bins: bool = False,
+    ) -> None:
+        """Predict from dataloader and save to numpys in batches.
+
+        Args:
+         dataloader: The dataloader to predict.
+         filepath: File path to save the predicted arrays.
+         KEY_DELIMITER: delimiter that separates split, patient ID, and slice number.
+         save_bins: Whether to save the binarized predictions.
+        """
+        self.eval()
+
+        # Check if Y_dict exists
+        has_y_dict = False if isinstance(dataloader.dataset[0], dict) else True
+
+        # Save all slices
+        with torch.no_grad():
+            for bdict in tqdm(
+                dataloader,
+                total=len(dataloader),
+                desc=f"Evaluating {dataloader.data_name} ({dataloader.split})",
+            ):
+                if has_y_dict:
+                    X_bdict, Y_bdict = bdict
+                else:
+                    X_bdict = bdict
+                    Y_bdict = None
+
+                (
+                    uid_bdict,
+                    loss_bdict,
+                    prob_bdict,
+                    gold_bdict,
+                ) = self.forward(  # type: ignore
+                    X_bdict[dataloader.uid],
+                    X_bdict,
+                    Y_bdict,
+                    dataloader.task_to_label_dict,
+                    return_loss=False,
+                    return_action_outputs=False,
+                    return_probs=True,
+                )
+
+                for task_name in uid_bdict.keys():
+
+                    uids = uid_bdict[task_name]
+                    probs = array_to_numpy(prob_bdict[task_name])
+                    preds = array_to_numpy(prob_to_pred(prob_bdict[task_name]))
+
+                    if not os.path.exists(filepath):
+                        os.makedirs(filepath)
+
+                    for uid, prob, pred in zip(uids, probs, preds):
+
+                        save_path = os.path.join(filepath, uid + "_seg.npy")
+                        np.save(save_path, prob.astype("float32"))
+
+                        if save_bins:
+                            save_path = os.path.join(filepath, uid + "_binarized.npy")
+                            np.save(save_path, pred.astype("float32"))
+
+        # Combine slices into volumes
+        all_binarized_paths = glob.glob(os.path.join(filepath, "*binarized*"))
+        all_seg_paths = glob.glob(os.path.join(filepath, "*seg*"))
+        all_pids = set([p.split(KEY_DELIMITER)[-2] for p in all_seg_paths])
+
+        for pid in all_pids:
+            if save_bins:
+                slice_bin_paths = [
+                    p for p in all_binarized_paths if p.split(KEY_DELIMITER)[-2] == pid
+                ]
+                slice_bin_numbers = [int(p.split("_")[-2]) for p in slice_bin_paths]
+                sorted_bin_paths = [
+                    p for _, p in sorted(zip(slice_bin_numbers, slice_bin_paths))
+                ]
+                pred_bin = []
+                for slice_bin_path in sorted_bin_paths:
+                    pred_bin += [np.load(slice_bin_path)]
+                pred_bin = np.stack(pred_bin, 2).astype("float16")  # type: ignore
+                np.save(
+                    os.path.join(filepath, pid + "_binarized.npy"),
+                    pred_bin,
+                )
+                for slice_bin_path in sorted_bin_paths:
+                    os.remove(slice_bin_path)
+
+            slice_seg_paths = [
+                p for p in all_seg_paths if p.split(KEY_DELIMITER)[-2] == pid
+            ]
+            slice_seg_numbers = [int(p.split("_")[-2]) for p in slice_seg_paths]
+            sorted_seg_paths = [
+                p for _, p in sorted(zip(slice_seg_numbers, slice_seg_paths))
+            ]
+            pred_seg = []
+            for slice_seg_path in sorted_seg_paths:
+                pred_seg += [np.load(slice_seg_path)]
+            pred_seg = np.stack(pred_seg, 2).astype("float16")  # type: ignore
+            np.save(os.path.join(filepath, pid + "_seg.npy"), pred_seg)
+            for slice_seg_path in sorted_seg_paths:
+                os.remove(slice_seg_path)
+
+    @torch.no_grad()
     def predict(
         self,
         dataloader: EmmentalDataLoader,
@@ -458,6 +676,7 @@ class EmmentalModel(nn.Module):
         return_probs: bool = True,
         return_preds: bool = False,
         return_action_outputs: bool = False,
+        return_sample_scores: bool = False,
     ) -> Dict[str, Any]:
         """Predict from dataloader.
 
@@ -467,7 +686,8 @@ class EmmentalModel(nn.Module):
           return_probs: Whether return probs or not, defaults to True.
           return_preds: Whether return predictions or not, defaults to False.
           return_action_outputs: Whether return action_outputs or not,
-          defaults to False.
+            defaults to False.
+          return_sample_scores: Whether return sample scores or not, default to False.
 
         Returns:
           The result dict.
@@ -492,6 +712,9 @@ class EmmentalModel(nn.Module):
         )
         gold_dict: Dict[str, List[Union[ndarray, int, float]]] = (
             defaultdict(list) if has_y_dict else None
+        )
+        sample_score_dict: Dict[str, Dict[str, List[Union[ndarray, int, float]]]] = (
+            defaultdict(lambda: defaultdict(list)) if return_sample_scores else None
         )
 
         with torch.no_grad():
@@ -520,7 +743,9 @@ class EmmentalModel(nn.Module):
                         dataloader.task_to_label_dict,
                         return_loss=return_loss,
                         return_action_outputs=return_action_outputs,
-                        return_probs=return_probs or return_preds,
+                        return_probs=return_probs
+                        or return_preds
+                        or return_sample_scores,
                     )
                 else:
                     (
@@ -535,7 +760,9 @@ class EmmentalModel(nn.Module):
                         dataloader.task_to_label_dict,
                         return_loss=return_loss,
                         return_action_outputs=return_action_outputs,
-                        return_probs=return_probs or return_preds,
+                        return_probs=return_probs
+                        or return_preds
+                        or return_sample_scores,
                     )
                     out_bdict = None
                 for task_name in uid_bdict.keys():
@@ -559,8 +786,24 @@ class EmmentalModel(nn.Module):
                         pred_dict[task_name].extend(  # type: ignore
                             prob_to_pred(prob_bdict[task_name])
                         )
-                    if has_y_dict:
+                    if has_y_dict and not return_sample_scores:
                         gold_dict[task_name].extend(gold_bdict[task_name])
+
+                    if return_sample_scores and self.sample_scorers[task_name]:
+                        for metric_name, metric_score in (
+                            self.sample_scorers[task_name]
+                            .score(
+                                gold_bdict[task_name],
+                                prob_bdict[task_name],
+                                prob_to_pred(prob_bdict[task_name]),
+                                uid_bdict[task_name],
+                                return_sample_scores=True,
+                            )
+                            .items()
+                        ):
+                            sample_score_dict[task_name][metric_name].extend(
+                                metric_score  # type: ignore
+                            )
                 if return_action_outputs and out_bdict:
                     for task_name in out_bdict.keys():
                         for action_name in out_bdict[task_name].keys():
@@ -576,9 +819,11 @@ class EmmentalModel(nn.Module):
 
         res = {
             "uids": uid_dict,
-            "golds": gold_dict,
             "losses": loss_dict,
         }
+
+        if not return_sample_scores:
+            res["golds"] = gold_dict
 
         if return_probs:
             for task_name in prob_dict.keys():
@@ -592,6 +837,9 @@ class EmmentalModel(nn.Module):
 
         if return_action_outputs:
             res["outputs"] = out_dict
+
+        if return_sample_scores:
+            res["sample_scores"] = sample_score_dict
 
         return res
 
@@ -625,16 +873,22 @@ class EmmentalModel(nn.Module):
         for dataloader in dataloaders:
             return_probs = False
             return_preds = False
+            return_sample_scores = False
 
             for task_name in dataloader.task_to_label_dict:
                 return_probs = return_probs or self.require_prob_for_evals[task_name]
                 return_preds = return_preds or self.require_pred_for_evals[task_name]
-
+                return_sample_scores = (
+                    return_sample_scores or self.sample_scorers[task_name] is not None
+                )
+                return_probs = return_probs and not return_sample_scores
+                return_preds = return_preds and not return_sample_scores
             predictions = self.predict(
                 dataloader,
                 return_probs=return_probs,
                 return_preds=return_preds,
                 return_action_outputs=False,
+                return_sample_scores=return_sample_scores,
             )
             for task_name in predictions["uids"].keys():
                 # Store the loss
@@ -648,14 +902,18 @@ class EmmentalModel(nn.Module):
                     macro_loss_dict[dataloader.split].append(
                         metric_score_dict[identifier]
                     )
-
                 # Store the task specific metric score
                 if self.scorers[task_name]:
                     metric_score = self.scorers[task_name].score(
-                        predictions["golds"][task_name],
+                        predictions["golds"][task_name]
+                        if not return_sample_scores
+                        else None,
                         predictions["probs"][task_name] if return_probs else None,
                         predictions["preds"][task_name] if return_preds else None,
                         predictions["uids"][task_name],
+                        predictions["sample_scores"][task_name]
+                        if return_sample_scores
+                        else None,
                     )
 
                     for metric_name, metric_value in metric_score.items():

@@ -15,6 +15,8 @@ def roc_auc_scorer(
     probs: ndarray,
     preds: Optional[ndarray],
     uids: Optional[List[str]] = None,
+    sample_scores: Optional[Dict[str, float]] = None,
+    return_sample_scores: bool = False,
 ) -> Dict[str, float]:
     """ROC AUC.
 
@@ -24,10 +26,15 @@ def roc_auc_scorer(
       preds: Predicted values.
       uids: Unique ids, defaults to None.
       pos_label: The positive class label, defaults to 1.
+      sample_scores: Scores for each samples, defaults to None.
+      return_sample_scores: Whether return score for each sample, default to False.
 
     Returns:
       ROC AUC score.
     """
+    assert sample_scores is None
+    assert return_sample_scores is False
+
     if len(probs.shape) == 2 and probs.shape[1] == 1:
         probs = probs.reshape(probs.shape[0])
 

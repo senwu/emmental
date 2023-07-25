@@ -9,3 +9,4 @@ pytest
 sphinx>=3.0.0
 sphinx_rtd_theme
 sphinx_autodoc_typehints
+h5py
